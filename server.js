@@ -33,7 +33,7 @@ const cuteWords = {
         { display: '🐕いぬ', answers: ['いぬ', 'イヌ', '犬', 'わんこ', 'dog'] },
         { display: '🐰うさぎ', answers: ['うさぎ', 'ウサギ', '兎', 'rabbit'] },
         { display: '🐧ぺんぎん', answers: ['ぺんぎん', 'ペンギン', 'penguin'] },
-        { display: '🐘ぺりかん...じゃなくてゾウ', answers: ['ぞう', 'ゾウ', '象', 'elephant'] },
+        { display: '🐘ゾウ', answers: ['ぞう', 'ゾウ', '象', 'elephant'] },
         { display: '🦒きりん', answers: ['きりん', 'キリン', 'giraffe'] },
         { display: '🦁らいおん', answers: ['らいおん', 'ライオン', 'lion'] },
         { display: '🐒ごりら...じゃなくて猿', answers: ['さる', 'サル', '猿', 'さるやま', 'monkey', 'ごりら', 'ゴリラ', 'gorilla'] },
@@ -158,9 +158,97 @@ const cuteWords = {
         { display: '🙌万歳', answers: ['ばんざい', '万歳', 'バンザイ'] },
         { display: '💪ガッツポーズ', answers: ['がっつぽーず', 'ガッツポーズ', 'よっしゃ'] },
         { display: '🐶四つん這い', answers: ['よつんばい', '四つん這い', '犬のポーズ'] }
+    ],
+    job: [
+        { display: '👮警察官', answers: ['けいさつかん', '警察官', 'おまわりさん', '警察'] },
+        { display: '🧑‍🚒消防士', answers: ['しょうぼうし', '消防士'] },
+        { display: '🧑‍⚕️医者', answers: ['いしゃ', '医者', 'ドクター', 'お医者さん'] },
+        { display: '🩺看護師', answers: ['かんごし', '看護師', 'ナース'] },
+        { display: '👨‍✈️パイロット', answers: ['ぱいろっと', 'パイロット'] },
+        { display: '🧑‍🏫先生', answers: ['せんせい', '先生', '教師', 'きょうし'] },
+        { display: '🪚大工', answers: ['だいく', '大工', '大工さん'] },
+        { display: '🧑‍🍳コック', answers: ['こっく', 'コック', 'シェフ', '料理人'] },
+        { display: '✂️美容師', answers: ['びようし', '美容師'] },
+        { display: '🧑‍🚀宇宙飛行士', answers: ['うちゅうひこうし', '宇宙飛行士'] },
+        { display: '📹ユーチューバー', answers: ['ゆーちゅーばー', 'ユーチューバー', 'youtuber'] },
+        { display: '🎤歌手', answers: ['かしゅ', '歌手', 'シンガー', 'ボーカル'] },
+        { display: '✨アイドル', answers: ['あいどる', 'アイドル'] },
+        { display: '⚾野球選手', answers: ['やきゅうせんしゅ', '野球選手', 'プロ野球選手'] },
+        { display: '🕵️探偵', answers: ['たんてい', '探偵'] },
+        { display: '💼サラリーマン', answers: ['さらりーまん', 'サラリーマン', '会社員'] },
+        { display: '🧑‍🌾農家', answers: ['のうか', '農家', 'お百姓さん'] },
+        { display: '🎩マジシャン', answers: ['まじしゃん', 'マジシャン', '手品師'] },
+        { display: '✍️漫画家', answers: ['まんがか', '漫画家'] },
+        { display: '⚖️弁護士', answers: ['べんごし', '弁護士'] }
+    ],
+    vehicle: [
+        { display: '🚗車', answers: ['くるま', '車', '自動車'] },
+        { display: '🚲自転車', answers: ['じてんしゃ', '自転車', 'チャリ'] },
+        { display: '🚃電車', answers: ['でんしゃ', '電車', '列車'] },
+        { display: '🚅新幹線', answers: ['しんかんせん', '新幹線'] },
+        { display: '✈️飛行機', answers: ['ひこうき', '飛行機'] },
+        { display: '🚁ヘリコプター', answers: ['へりこぷたー', 'ヘリコプター', 'ヘリ'] },
+        { display: '🚢船', answers: ['ふね', '船', '客船', 'ボート'] },
+        { display: '⛵ヨット', answers: ['よっと', 'ヨット'] },
+        { display: '🛥️潜水艦', answers: ['せんすいかん', '潜水艦'] },
+        { display: '🚑救急車', answers: ['きゅうきゅうしゃ', '救急車'] },
+        { display: '🚓パトカー', answers: ['ぱとかー', 'パトカー'] },
+        { display: '🚒消防車', answers: ['しょうぼうしゃ', '消防車'] },
+        { display: '🚜トラクター', answers: ['とらくたー', 'トラクター'] },
+        { display: '🚚トラック', answers: ['とらっく', 'トラック'] },
+        { display: '🚌バス', answers: ['ばす', 'バス'] },
+        { display: '🚕タクシー', answers: ['たくしー', 'タクシー'] },
+        { display: '🚀ロケット', answers: ['ろけっと', 'ロケット'] },
+        { display: '🛸ＵＦＯ', answers: ['ゆーふぉー', 'うぉー', 'UFO', 'ユーフォー'] },
+        { display: '🎈気球', answers: ['ききゅう', '気球'] },
+        { display: '🏍️バイク', answers: ['ばいく', 'バイク', 'オートバイ'] }
+    ],
+    landmark: [
+        { display: '🗼東京タワー', answers: ['とうきょうたわー', '東京タワー'] },
+        { display: '🗼スカイツリー', answers: ['すかいつりー', 'スカイツリー', '東京スカイツリー'] },
+        { display: '🗽自由の女神', answers: ['じゆうのめがみ', '自由の女神'] },
+        { display: '🗼エッフェル塔', answers: ['えっふぇるとう', 'エッフェル塔'] },
+        { display: '🏜️ピラミッド', answers: ['ぴらみっど', 'ピラミッド'] },
+        { display: '🏢ピサの斜塔', answers: ['ぴさのしゃとう', 'ピサの斜塔'] },
+        { display: '🦁スフィンクス', answers: ['すふぃんくす', 'スフィンクス'] },
+        { display: '🏛️凱旋門', answers: ['がいせんもん', '凱旋門'] },
+        { display: '🧱万里の長城', answers: ['ばんりのちょうじょう', '万里の長城'] },
+        { display: '🎭オペラハウス', answers: ['おぺらはうす', 'オペラハウス'] },
+        { display: '🕌タージマハル', answers: ['たーじまはる', 'タージマハル'] },
+        { display: '🏟️コロッセオ', answers: ['ころっせお', 'コロッセオ'] },
+        { display: '🕰️ビッグベン', answers: ['びっぐべん', 'ビッグベン'] },
+        { display: '🏮雷門', answers: ['かみなりもん', '雷門', '浅草寺'] },
+        { display: '🏯金閣寺', answers: ['きんかくじ', '金閣寺'] },
+        { display: '🏯大阪城', answers: ['おおさかじょう', '大阪城'] },
+        { display: '🗿モアイ像', answers: ['もあいぞう', 'モアイ像', 'モアイ'] },
+        { display: '⛪サグラダファミリア', answers: ['さぐらだふぁみりあ', 'サグラダファミリア'] },
+        { display: '🏯姫路城', answers: ['ひめじじょう', '姫路城'] },
+        { display: '🗿マーライオン', answers: ['まーらいおん', 'マーライオン'] }
+    ],
+    item: [
+        { display: '🪥歯ブラシ', answers: ['はぶらし', '歯ブラシ'] },
+        { display: '🧻トイレットペーパー', answers: ['といれっとぺーぱー', 'トイレットペーパー'] },
+        { display: '🧴シャンプー', answers: ['しゃんぷー', 'シャンプー'] },
+        { display: '✂️ハサミ', answers: ['はさみ', 'ハサミ'] },
+        { display: '🕰️時計', answers: ['とけい', '時計'] },
+        { display: '☂️傘', answers: ['かさ', '傘', 'アンブレラ'] },
+        { display: '👓メガネ', answers: ['めがね', 'メガネ', '眼鏡'] },
+        { display: '📱スマホ', answers: ['すまほ', 'スマホ', 'スマートフォン', '携帯'] },
+        { display: '💻パソコン', answers: ['ぱそこん', 'パソコン', 'PC'] },
+        { display: '🗑️ゴミ箱', answers: ['ごみばこ', 'ゴミ箱'] },
+        { display: '🤧ティッシュ', answers: ['てぃっしゅ', 'ティッシュ'] },
+        { display: '🥄スプーン', answers: ['すぷーん', 'スプーン'] },
+        { display: '🥤コップ', answers: ['こっぷ', 'コップ', 'グラス'] },
+        { display: '🍳フライパン', answers: ['ふらいぱん', 'フライパン'] },
+        { display: '🔪包丁', answers: ['ほうちょう', '包丁', 'ナイフ'] },
+        { display: '📺テレビ', answers: ['てれび', 'テレビ'] },
+        { display: '🧺洗濯機', answers: ['せんたくき', '洗濯機'] },
+        { display: '🧹掃除機', answers: ['そうじき', '掃除機'] },
+        { display: '🔌コンセント', answers: ['こんせんと', 'コンセント', 'プラグ'] },
+        { display: '🔋電池', answers: ['でんち', '電池', 'バッテリー'] }
     ]
 };
-cuteWords.mix = [...cuteWords.animal, ...cuteWords.food, ...cuteWords.daily, ...cuteWords.yabai, ...cuteWords.situation, ...cuteWords.pose];
+cuteWords.mix = [...cuteWords.animal, ...cuteWords.food, ...cuteWords.daily, ...cuteWords.yabai, ...cuteWords.situation, ...cuteWords.pose, ...cuteWords.job, ...cuteWords.vehicle, ...cuteWords.landmark, ...cuteWords.item];
 
 function levenshtein(s, t) {
     if (!s.length) return t.length;
@@ -176,7 +264,7 @@ function levenshtein(s, t) {
 }
 
 function kanaToHira(str) {
-    return str.replace(/[\u30a1-\u30f6]/g, function(match) {
+    return str.replace(/[\u30a1-\u30f6]/g, function (match) {
         return String.fromCharCode(match.charCodeAt(0) - 0x60);
     });
 }
@@ -196,12 +284,12 @@ io.on('connection', (socket) => {
         });
 
         io.emit('update_players', players);
-        socket.emit('game_state', { 
-            phase: gamePhase, 
-            timeLeft, 
-            currentWord: (gamePhase === 'playing' ? (players[currentPlayerIndex]?.id === socket.id ? currentWordObj.display : '????') : '') 
+        socket.emit('game_state', {
+            phase: gamePhase,
+            timeLeft,
+            currentWord: (gamePhase === 'playing' ? (players[currentPlayerIndex]?.id === socket.id ? currentWordObj.display : '????') : '')
         });
-        
+
         if (gamePhase === 'playing' && players[currentPlayerIndex]) {
             io.emit('drawer_update', players[currentPlayerIndex].id);
         }
@@ -209,16 +297,16 @@ io.on('connection', (socket) => {
 
     socket.on('start_game', (settings) => {
         if (players.length < 1) return;
-        
+
         timeLimit = settings.timeLimit || 60;
         maxRounds = settings.rounds || 1;
         const category = settings.category || 'mix';
         currentWordList = cuteWords[category] || cuteWords.mix;
-        
+
         currentRound = 1;
         turnsPlayedInRound = 0;
         currentPlayerIndex = -1;
-        
+
         players.forEach(p => p.score = 0);
         startNextTurn();
     });
@@ -233,15 +321,15 @@ io.on('connection', (socket) => {
     socket.on('draw', (data) => {
         socket.broadcast.emit('draw', data);
     });
-    
+
     socket.on('fill', (data) => {
         socket.broadcast.emit('fill', data);
     });
-    
+
     socket.on('sync_canvas', (dataURL) => {
         socket.broadcast.emit('sync_canvas', dataURL);
     });
-    
+
     socket.on('clear_canvas', () => {
         io.emit('clear_canvas');
     });
@@ -252,7 +340,7 @@ io.on('connection', (socket) => {
 
         if (gamePhase === 'playing') {
             const isDrawer = players[currentPlayerIndex]?.id === socket.id;
-            
+
             let isCorrect = false;
             let isAlmost = false;
 
@@ -279,7 +367,7 @@ io.on('connection', (socket) => {
                 // スコア更新 (回答者+2pt、描いた人+1pt)
                 player.score += 2;
                 if (players[currentPlayerIndex]) {
-                     players[currentPlayerIndex].score += 1;
+                    players[currentPlayerIndex].score += 1;
                 }
 
                 io.emit('chat_message', { sender: 'System', text: `やば！${player.name}さん大正解！🎉✨（回答者+2pt / 出題者+1pt）`, color: '#ff66b2', type: 'correct' });
@@ -294,14 +382,14 @@ io.on('connection', (socket) => {
                 io.emit('chat_message', { sender: player.name, text: msg, color: '#333' });
             }
         } else {
-             io.emit('chat_message', { sender: player.name, text: msg, color: '#333' });
+            io.emit('chat_message', { sender: player.name, text: msg, color: '#333' });
         }
     });
 
     socket.on('disconnect', () => {
         players = players.filter(p => p.id !== socket.id);
         io.emit('update_players', players);
-        
+
         if (players.length === 0) {
             gamePhase = 'waiting';
             if (roundTimer) clearInterval(roundTimer);
@@ -326,33 +414,33 @@ io.on('connection', (socket) => {
 
         gamePhase = 'playing';
         players.forEach(p => p.hasGuessed = false);
-        
+
         currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
         currentWordObj = currentWordList[Math.floor(Math.random() * currentWordList.length)];
-        
+
         timeLeft = timeLimit;
-        
+
         io.emit('clear_canvas');
         io.emit('update_players', players);
-        
+
         const roundInfoTxt = `${currentRound}周目 (${turnsPlayedInRound}/${players.length})`;
         const drawer = players[currentPlayerIndex];
-        
-        io.to(drawer.id).emit('round_start', { 
-            word: currentWordObj.display, 
-            timeLimit, 
+
+        io.to(drawer.id).emit('round_start', {
+            word: currentWordObj.display,
+            timeLimit,
             isDrawer: true,
             roundInfo: roundInfoTxt
         });
-        
+
         players.forEach(p => {
             if (p.id !== drawer.id) {
-                io.to(p.id).emit('round_start', { 
-                    word: '????', 
-                    timeLimit, 
-                    isDrawer: false, 
+                io.to(p.id).emit('round_start', {
+                    word: '????',
+                    timeLimit,
+                    isDrawer: false,
                     drawerName: drawer.name,
-                    roundInfo: roundInfoTxt 
+                    roundInfo: roundInfoTxt
                 });
             }
         });
@@ -370,7 +458,7 @@ io.on('connection', (socket) => {
     function endTurn() {
         if (roundTimer) clearInterval(roundTimer);
         gamePhase = 'between_turns';
-        
+
         let isLastTurn = false;
         if (currentRound >= maxRounds && turnsPlayedInRound >= players.length) {
             isLastTurn = true;
@@ -378,7 +466,7 @@ io.on('connection', (socket) => {
 
         const nextMsg = isLastTurn ? "結果発表にいくよ〜！🏆" : "5秒後に次行くよ！";
         io.emit('chat_message', { sender: 'System', text: `時間終了〜！正解は「${currentWordObj.display}」でした！✨ ${nextMsg}`, color: '#ff66b2', type: 'finish' });
-        
+
         const drawerName = players[currentPlayerIndex] ? players[currentPlayerIndex].name : 'Unknown';
         // ギャラリー用に正解とお絵描き人の情報を送信
         io.emit('round_end', { players, word: currentWordObj.display, drawer: drawerName });
