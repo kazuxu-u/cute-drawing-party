@@ -234,6 +234,7 @@ input[type="text"]:focus, select:focus {
     transition: 0.2s;
     box-shadow: 0 4px 0 #3399cc;
     margin-top: 10px;
+    white-space: nowrap; /* 改行されないようにアゲていく💅✨ */
 }
 
 .cute-btn:active {
@@ -353,6 +354,12 @@ input[type="text"]:focus, select:focus {
     background: #fff0f5;
     border: 3px solid var(--primary-color);
     box-shadow: 0 0 12px var(--primary-color);
+}
+
+/* フォーム要素用の吹き出しが迷子にならないように固定！💍💖 */
+.has-tooltip {
+    position: relative;
+    display: inline-block; /* 収まりがいいようにインラインブロックに！ */
 }
 
 .tool-btn.danger {

@@ -40,7 +40,6 @@ const closeGalleryBtn = document.getElementById('closeGalleryBtn');
 
 const chatBox = document.getElementById('chatBox');
 const chatInput = document.getElementById('chatInput');
-const sendBtn = document.getElementById('sendBtn');
 
 // 保存モーダル関連
 const savePromptModal = document.getElementById('savePromptModal');
@@ -850,7 +849,7 @@ function sendMessage() {
     }
 }
 
-sendBtn.addEventListener('click', sendMessage);
+// 送信ボタンは削除されたので、Enterキーのみで送信するよ💅✨
 
 // 画像検索ボタンのイベント
 if (searchImageBtn) {

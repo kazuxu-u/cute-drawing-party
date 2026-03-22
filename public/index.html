@@ -14,6 +14,7 @@
             <div style="display: flex; gap: 10px; margin-bottom: 20px; justify-content: center;">
                 <button id="bgmToggleBtn" class="tool-btn" style="background:#66ccff;" data-tooltip="BGM ON/OFF🎵">🎵</button>
                 <button id="emojiToggleBtn" class="tool-btn" style="background:#ff99cc;" data-tooltip="スタンプ ON/OFF🧸">🧸</button>
+                <button id="openGalleryBtn" class="tool-btn" style="background:#cc99ff;" data-tooltip="みんなの絵を観る🖼️">🖼️</button>
             </div>
             
             <h2 style="margin-top: 10px; text-align: center;">💖 Players 💖</h2>
@@ -24,7 +25,6 @@
                 <div style="display: flex; gap: 10px; margin-top: 10px; justify-content: center;">
                     <button id="joinBtn" class="tool-btn primary" data-tooltip="入室する！✨">🚪</button>
                     <button id="soloModeBtn" class="tool-btn" style="background:#ff9933;" data-tooltip="一人でお絵描き🎨">🎨</button>
-                    <button id="openGalleryBtn" class="tool-btn" style="background:#cc99ff;" data-tooltip="みんなの絵を観る🖼️">🖼️</button>
                 </div>
                 
                 <div class="settings mt-4 hidden" id="gameSettings">
@@ -63,7 +63,7 @@
                         <option value="bug">むし🐞</option>
                     </select>
                     
-                    <button id="startBtn" class="cute-btn primary" style="width: 100%; margin-top: 20px; font-size: 1.2rem;">💥 ゲームスタート！</button>
+                    <button id="startBtn" class="cute-btn primary" style="width: 100%; margin-top: 20px; font-size: 1.1rem;">💥 ゲームスタート！</button>
                 </div>
             </div>
         </aside>
@@ -119,12 +119,11 @@
 
         <!-- チャットエリア -->
         <aside class="chat-area glass">
-            <h2>💬 Chat & Guess</h2>
+            <h2 style="white-space: nowrap;">💬 チャットで当ててネ！💖</h2>
             <audio id="bgmPlayer" preload="auto"></audio>
             <div id="chatBox" class="chat-box"></div>
             <div class="chat-input-area">
                 <input type="text" id="chatInput" placeholder="答えを入力！♡">
-                <button id="sendBtn" class="cute-btn">送信💌</button>
             </div>
         </aside>
     </div>
