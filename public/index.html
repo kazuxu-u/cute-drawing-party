@@ -10,9 +10,10 @@
 <body>
     <div class="container">
         <aside class="sidebar glass">
-            <h2>💖 Players 💖</h2>
             <button id="bgmToggleBtn" class="cute-btn" style="background:#66ccff; margin-bottom: 10px; width: 100%; border: none; color: #fff;">🎵 BGM: ON中💕</button>
             <button id="emojiToggleBtn" class="cute-btn" style="background:#ff99cc; margin-bottom: 10px; width: 100%; border: none; color: #fff;">🧸 スタンプ: OFF</button>
+            
+            <h2 style="margin-top: 10px;">💖 Players 💖</h2>
             <ul id="playerList"></ul>
             
             <div id="setupArea">
@@ -23,10 +24,11 @@
                 <div class="settings mt-4 hidden" id="gameSettings">
                     <label>⏱️ 制限時間 (秒) 選んでネ！:</label>
                     <select id="timeLimitSelect" style="margin-bottom: 10px;">
-                        <option value="30">30秒（バカ早）</option>
-                        <option value="60" selected>60秒（ふつう）</option>
+                        <option value="60">60秒（早め）</option>
                         <option value="90">90秒（のんびり）</option>
-                        <option value="120">120秒（マジ大作）</option>
+                        <option value="120" selected>120秒（ふつう）</option>
+                        <option value="240">240秒（じっくり）</option>
+                        <option value="300">300秒（マジ大作）</option>
                     </select>
                     
                     <label>🔄 何周する？:</label>

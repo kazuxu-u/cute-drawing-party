@@ -16,8 +16,8 @@ let currentPlayerIndex = -1;
 let currentWordObj = null;
 let gamePhase = 'waiting'; // waiting, playing, between_turns, results
 let roundTimer = null;
-let timeLeft = 60;
-let timeLimit = 60;
+let timeLeft = 120;
+let timeLimit = 120;
 
 // ターン（周）の管理
 let currentRound = 1;
@@ -298,7 +298,7 @@ io.on('connection', (socket) => {
     socket.on('start_game', (settings) => {
         if (players.length < 1) return;
 
-        timeLimit = settings.timeLimit || 60;
+        timeLimit = settings.timeLimit || 120;
         maxRounds = settings.rounds || 1;
         const category = settings.category || 'mix';
         currentWordList = cuteWords[category] || cuteWords.mix;
