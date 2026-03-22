@@ -427,6 +427,13 @@ io.on('connection', (socket) => {
         io.emit('game_state', { phase: 'waiting', timeLeft: 0 });
     });
 
+    socket.on('manual_turn_end', () => {
+        if (gamePhase === 'playing' && players[currentPlayerIndex]?.id === socket.id) {
+            io.emit('chat_message', { sender: 'System', text: `描き手の${players[currentPlayerIndex].name}さんがターンを終了させたよ！✨`, color: '#ff66b2' });
+            endTurn();
+        }
+    });
+
     socket.on('draw', (data) => {
         socket.broadcast.emit('draw', data);
     });

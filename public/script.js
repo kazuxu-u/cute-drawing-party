@@ -62,6 +62,7 @@ const clearBtn = document.getElementById('clearBtn');
 const saveBtn = document.getElementById('saveBtn');
 const gallerySubmitBtn = document.getElementById('gallerySubmitBtn'); // 追加
 const exitSoloBtn = document.getElementById('exitSoloBtn');
+const turnEndBtn = document.getElementById('turnEndBtn'); // 追加
 const toolbar = document.getElementById('toolbar');
 
 let myId = null;
@@ -416,6 +417,14 @@ if (undoBtn) {
         img.src = previousState;
     });
 }
+if (turnEndBtn) {
+    turnEndBtn.addEventListener('click', () => {
+        if (canIDraw && !inSoloMode) {
+            socket.emit('manual_turn_end');
+            turnEndBtn.classList.add('hidden'); // 連打防止
+        }
+    });
+}
 clearBtn.addEventListener('click', () => { 
     if(canIDraw) {
         saveState();
@@ -664,6 +673,7 @@ socket.on('game_state', (state) => {
             overlayText.innerHTML = '次のターンにいくよ〜！✨<br>心の準備してね！';
         }
         canIDraw = false;
+        if (turnEndBtn) turnEndBtn.classList.add('hidden'); // ターン終了時に隠す
         toolbar.style.pointerEvents = 'none';
         toolbar.style.opacity = '0.5';
     }
@@ -705,10 +715,12 @@ socket.on('round_start', (data) => {
                 if (canIDraw) {
                     toolbar.style.pointerEvents = 'auto';
                     toolbar.style.opacity = '1';
+                    if (turnEndBtn) turnEndBtn.classList.remove('hidden'); // 描き手の時だけ表示✨
                     addChatMessage('System', 'あなたの番だよ！絵を描いてね！🖌️✨', '#ff66b2');
                 } else {
                     toolbar.style.pointerEvents = 'none';
                     toolbar.style.opacity = '0.5';
+                    if (turnEndBtn) turnEndBtn.classList.add('hidden'); // 描き手じゃない時は隠す
                     addChatMessage('System', `${data.drawerName}さんがお絵描き中…！当ててみて！👀`, '#ff66b2');
                 }
             }, 500);
@@ -743,6 +755,7 @@ socket.on('round_end', (data) => {
     if (inSoloMode) return;
     const imgData = canvas.toDataURL('image/png');
     gallery.push({ imgData, word: data.word, drawer: data.drawer });
+    if (turnEndBtn) turnEndBtn.classList.add('hidden'); // ターン終わったら確実に隠す
     playSE('finish');
     
     // 自分が描いた番だったらサーバーに保存する！✨
