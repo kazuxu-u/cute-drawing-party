@@ -23,7 +23,7 @@ body {
     color: var(--text-color);
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start; /* 縦長になっても上が見切れないように💅 */
     min-height: 100vh;
 }
 
@@ -48,7 +48,7 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
+    /* overflow-y: auto; */ /* 吹き出しが枠外に出られるように削除！💅✨ */
     padding-right: 5px;
 }
 
