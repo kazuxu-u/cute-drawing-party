@@ -42,6 +42,14 @@ const chatBox = document.getElementById('chatBox');
 const chatInput = document.getElementById('chatInput');
 const sendBtn = document.getElementById('sendBtn');
 
+// 保存モーダル関連
+const savePromptModal = document.getElementById('savePromptModal');
+const modalPromptInput = document.getElementById('modalPromptInput');
+const modalArtistInput = document.getElementById('modalArtistInput');
+const cancelSaveBtn = document.getElementById('cancelSaveBtn');
+const confirmSaveBtn = document.getElementById('confirmSaveBtn');
+let pendingSaveData = null; // 保存待ちの画像データ
+
 const canvas = document.getElementById('drawingCanvas');
 const ctx = canvas.getContext('2d');
 const colorPicker = document.getElementById('colorPicker');
@@ -52,6 +60,7 @@ const fillBtn = document.getElementById('fillBtn'); // 塗りつぶしボタン�
 const undoBtn = document.getElementById('undoBtn'); // 戻すボタン追加
 const clearBtn = document.getElementById('clearBtn');
 const saveBtn = document.getElementById('saveBtn');
+const gallerySubmitBtn = document.getElementById('gallerySubmitBtn'); // 追加
 const exitSoloBtn = document.getElementById('exitSoloBtn');
 const toolbar = document.getElementById('toolbar');
 
@@ -441,6 +450,48 @@ if (saveBtn) {
     });
 }
 
+if (gallerySubmitBtn) {
+    gallerySubmitBtn.addEventListener('click', () => {
+        const imgData = canvas.toDataURL('image/png');
+        const artist = playerNameInput.value.trim() || "ギャル（匿名）";
+        const currentWord = "自由にお絵描き"; // ソロモードのデフォルト
+        
+        showSaveModal(imgData, artist, currentWord);
+    });
+}
+
+// --- 保存モーダルの制御 ---
+function showSaveModal(imgData, artist, prompt) {
+    pendingSaveData = imgData;
+    modalArtistInput.value = artist;
+    modalPromptInput.value = prompt;
+    savePromptModal.classList.remove('hidden');
+    savePromptModal.style.display = 'flex';
+}
+
+function closeSaveModal() {
+    savePromptModal.classList.add('hidden');
+    savePromptModal.style.display = 'none';
+    pendingSaveData = null;
+}
+
+if (cancelSaveBtn) {
+    cancelSaveBtn.addEventListener('click', closeSaveModal);
+}
+
+if (confirmSaveBtn) {
+    confirmSaveBtn.addEventListener('click', () => {
+        const artist = modalArtistInput.value.trim() || "ギャル（匿名）";
+        const prompt = modalPromptInput.value.trim() || "無題";
+        
+        if (pendingSaveData) {
+            saveDrawingToServer(pendingSaveData, artist, prompt);
+            closeSaveModal();
+            addChatMessage('System', 'ギャラリーに保存したよ！🖼️💖', '#ff66b2');
+        }
+    });
+}
+
 // --- 画像検索機能 (保存された絵を検索) ---
 async function searchSavedDrawings(query) {
     if (!query) return;
@@ -548,6 +599,7 @@ if (soloModeBtn) {
         toolbar.style.opacity = '1';
         
         saveBtn.classList.remove('hidden');
+        gallerySubmitBtn.classList.remove('hidden'); // 追加
         exitSoloBtn.classList.remove('hidden');
         
         roundDisplay.textContent = '🎨 ソロお絵描き';
@@ -564,6 +616,7 @@ if (exitSoloBtn) {
         inSoloMode = false;
         canIDraw = false;
         saveBtn.classList.add('hidden');
+        gallerySubmitBtn.classList.add('hidden'); // 追加
         exitSoloBtn.classList.add('hidden');
         socket.emit('return_to_lobby'); 
     });
@@ -694,8 +747,12 @@ socket.on('round_end', (data) => {
     
     // 自分が描いた番だったらサーバーに保存する！✨
     if (canIDraw) {
-        const me = players.find(p => p.id === myId);
-        saveDrawingToServer(imgData, me ? me.name : 'Unknown', data.word);
+        // 自分自身（描いた人）の名前を取得
+        const me = data.players.find(p => p.id === myId);
+        const defaultArtist = me ? me.name : 'Unknown';
+        
+        // カスタムモーダルを出すよ！✨
+        showSaveModal(imgData, defaultArtist, data.word);
     }
 });
 

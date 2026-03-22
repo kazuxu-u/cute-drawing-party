@@ -79,6 +79,7 @@
                 <button id="searchImageBtn" class="tool-btn" style="background:#b3e5fc;">🔍 画像検索</button>
                 <button id="clearBtn" class="tool-btn danger">💣 ぜんぶ消す</button>
                 <button id="saveBtn" class="tool-btn hidden" style="background:#66ccff; color:white;">💾 保存</button>
+                <button id="gallerySubmitBtn" class="tool-btn hidden" style="background:#cc99ff; color:white;">✨ ギャラリーに投稿</button>
                 <button id="exitSoloBtn" class="tool-btn hidden" style="background:#ff9933; color:white;">🚪 やめる</button>
             </div>
             <div class="canvas-container">
@@ -135,6 +136,29 @@
         </div>
 
         <button id="closeGalleryBtn" class="cute-btn primary" style="font-size: 1.5rem; padding: 15px 40px; margin-top: 40px; position: sticky; bottom: 20px;">✖ 閉じる</button>
+    </div>
+
+    <!-- 保存時のお題入力モーダル -->
+    <div id="savePromptModal" class="overlay hidden" style="background: rgba(255, 230, 242, 0.98); flex-direction: column; z-index: 150;">
+        <div class="glass" style="padding: 40px; border-radius: 30px; text-align: center; max-width: 500px; width: 90%; border: 4px solid var(--primary-color);">
+            <h2 style="color: var(--primary-color); margin-bottom: 20px;">🖼️ ギャラリーに保存 ✨</h2>
+            <p style="margin-bottom: 20px; font-weight: bold;">この絵に名前（お題）をつけてね！💕</p>
+            
+            <div style="text-align: left; margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: #888;">🎨 お題（タイトル）:</label>
+                <input type="text" id="modalPromptInput" placeholder="お題を入れてね！" style="width: 100%; padding: 10px; border-radius: 10px; border: 2px solid #ffccdd; font-size: 1.1rem;">
+            </div>
+            
+            <div style="text-align: left; margin-bottom: 30px;">
+                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: #888;">✍️ 描いた人:</label>
+                <input type="text" id="modalArtistInput" placeholder="あなたのなまえ" style="width: 100%; padding: 10px; border-radius: 10px; border: 2px solid #ffccdd; font-size: 1.1rem;">
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button id="cancelSaveBtn" class="cute-btn" style="background: #ccc; flex: 1;">やめる🥺</button>
+                <button id="confirmSaveBtn" class="cute-btn primary" style="flex: 2;">投稿する！💖</button>
+            </div>
+        </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>

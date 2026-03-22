@@ -52,6 +52,7 @@ app.post('/api/save_drawing', express.json({limit: '10mb'}), (req, res) => {
         }
 
         fs.writeFileSync(METADATA_FILE, JSON.stringify(metadata, null, 2));
+        console.log(`[SAVE] Drawing saved by ${artist} (Prompt: ${prompt}) -> ${filename}`);
         res.json({ success: true, filename });
     });
 });
