@@ -113,7 +113,7 @@ const cuteWords = {
         { display: '🐕首輪', answers: ['くびわ', '首輪', 'ぺっと', 'ペット'] },
         { display: '💄キスマーク', answers: ['きすまーく', 'キスマーク'] },
         { display: '📳おもちゃ（意味深）', answers: ['おもちゃ', 'ろーたー', 'ローター', 'バイブ'] },
-        { display: '🔴あかいやつ', answers: ['てんが', 'テンガ', 'TENGA', 'おなほ'] }
+        { display: '🔴テンガ', answers: ['てんが', 'テンガ', 'TENGA', 'おなほ'] }
     ],
     situation: [
         { display: '💑デート', answers: ['でーと', 'デート', 'date'] },
