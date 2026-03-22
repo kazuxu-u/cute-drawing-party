@@ -214,7 +214,7 @@ const cuteWords = {
         { display: '🏛️凱旋門', answers: ['がいせんもん', '凱旋門'] },
         { display: '🧱万里の長城', answers: ['ばんりのちょうじょう', '万里の長城'] },
         { display: '🎭オペラハウス', answers: ['おぺらはうす', 'オペラハウス'] },
-        { display: '🕌タージマハル', answers: ['たーじまはる', 'タージマハル'] },
+        { display: '🏯大仏さん', answers: ['だいぶつ', '大仏', 'だいぶつさん', 'Buddha'] },
         { display: '🏟️コロッセオ', answers: ['ころっせお', 'コロッセオ'] },
         { display: '🕰️ビッグベン', answers: ['びっぐべん', 'ビッグベン'] },
         { display: '🏮雷門', answers: ['かみなりもん', '雷門', '浅草寺'] },
