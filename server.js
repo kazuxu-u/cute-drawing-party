@@ -23,23 +23,54 @@ let timeLimit = 60;
 let currentRound = 1;
 let maxRounds = 1;
 let turnsPlayedInRound = 0;
+let currentWordList = []; // 選ばれたカテゴリー用リスト
 
-const cuteWords = [
-    { display: '🐼パンダ', answers: ['ぱんだ', 'パンダ', 'panda'] },
-    { display: '🍓いちご', answers: ['いちご', 'イチゴ', '苺', 'ストロベリー', 'strawberry'] },
-    { display: '🍔ハンバーガー', answers: ['はんばーがー', 'ハンバーガー', 'ばーがー', 'バーガー', 'hamburger', 'burger'] },
-    { display: '🍦ソフトクリーム', answers: ['そふとくりーむ', 'ソフトクリーム', 'あいす', 'アイス', 'icecream'] },
-    { display: '💩うんこ（笑）', answers: ['うんこ', 'ウンコ', 'うんち', 'ウンチ', 'poop'] },
-    { display: '🍄キノコ', answers: ['きのこ', 'キノコ', 'マッシュルーム', 'mushroom'] },
-    { display: '🐈ねこ', answers: ['ねこ', 'ネコ', '猫', 'にゃんこ', 'cat'] },
-    { display: '🐕いぬ', answers: ['いぬ', 'イヌ', '犬', 'わんこ', 'dog'] },
-    { display: '🌻ひまわり', answers: ['ひまわり', 'ヒマワリ', '向日葵', 'sunflower'] },
-    { display: '🚗くるま', answers: ['くるま', 'クルマ', '車', 'じどうしゃ', 'car', '自動車'] },
-    { display: '👻おばけ', answers: ['おばけ', 'オバケ', '幽霊', 'ゆうれい', 'ghost'] },
-    { display: '🍎りんご', answers: ['りんご', 'リンゴ', '林檎', 'アップル', 'apple'] },
-    { display: '🍌バナナ（意味深）', answers: ['ばなな', 'バナナ', 'banana'] },
-    { display: '🍑もも', answers: ['もも', 'モモ', '桃', 'ピーチ', 'peach'] }
-];
+const cuteWords = {
+    mix: [], // 後でぜんぶまとめる用
+    animal: [
+        { display: '🐼パンダ', answers: ['ぱんだ', 'パンダ', 'panda'] },
+        { display: '🐈ねこ', answers: ['ねこ', 'ネコ', '猫', 'にゃんこ', 'cat'] },
+        { display: '🐕いぬ', answers: ['いぬ', 'イヌ', '犬', 'わんこ', 'dog'] },
+        { display: '🐰うさぎ', answers: ['うさぎ', 'ウサギ', '兎', 'rabbit'] },
+        { display: '🐧ぺんぎん', answers: ['ぺんぎん', 'ペンギン', 'penguin'] },
+        { display: '🐘ぺりかん...じゃなくてゾウ', answers: ['ぞう', 'ゾウ', '象', 'elephant'] },
+        { display: '🦒きりん', answers: ['きりん', 'キリン', 'giraffe'] },
+        { display: '🦁らいおん', answers: ['らいおん', 'ライオン', 'lion'] },
+        { display: '🐒ごりら...じゃなくて猿', answers: ['さる', 'サル', '猿', 'さるやま', 'monkey', 'ごりら', 'ゴリラ', 'gorilla'] }
+    ],
+    food: [
+        { display: '🍓いちご', answers: ['いちご', 'イチゴ', '苺', 'ストロベリー', 'strawberry'] },
+        { display: '🍔ハンバーガー', answers: ['はんばーがー', 'ハンバーガー', 'ばーがー', 'バーガー', 'hamburger', 'burger'] },
+        { display: '🍦ソフトクリーム', answers: ['そふとくりーむ', 'ソフトクリーム', 'あいす', 'アイス', 'icecream'] },
+        { display: '🍄キノコ', answers: ['きのこ', 'キノコ', 'マッシュルーム', 'mushroom'] },
+        { display: '🍎りんご', answers: ['りんご', 'リンゴ', '林檎', 'アップル', 'apple'] },
+        { display: '🍑もも', answers: ['もも', 'モモ', '桃', 'ピーチ', 'peach'] },
+        { display: '🍣すし', answers: ['すし', '寿司', 'スシ', 'おすし', 'sushi'] },
+        { display: '🍜らーめん', answers: ['らーめん', 'ラーメン', 'ramen'] },
+        { display: '🍰けーき', answers: ['けーき', 'ケーキ', 'cake', 'ショートケーキ'] },
+        { display: '🥩やきにく', answers: ['やきにく', '焼肉', '肉', 'にく'] }
+    ],
+    daily: [
+        { display: '🚗くるま', answers: ['くるま', 'クルマ', '車', 'じどうしゃ', 'car', '自動車'] },
+        { display: '🌻ひまわり', answers: ['ひまわり', 'ヒマワリ', '向日葵', 'sunflower'] },
+        { display: '👻おばけ', answers: ['おばけ', 'オバケ', '幽霊', 'ゆうれい', 'ghost'] },
+        { display: '🏠いえ', answers: ['いえ', '家', 'ハウス', 'house', 'おうち'] },
+        { display: '📱すまほ', answers: ['スマホ', 'すまほ', 'スマートフォン', '携帯', 'けいたい', 'iphone'] },
+        { display: '🚲じてんしゃ', answers: ['じてんしゃ', '自転車', 'ちゃり', 'チャリ', 'bicycle'] },
+        { display: '👓めがね', answers: ['めがね', 'メガネ', '眼鏡', 'めがねぇ', 'めがねっ娘', 'glasses'] }
+    ],
+    yabai: [
+        { display: '💩うんこ（笑）', answers: ['うんこ', 'ウンコ', 'うんち', 'ウンチ', 'poop'] },
+        { display: '🍌バナナ（意味深）', answers: ['ばなな', 'バナナ', 'banana', '🍌'] },
+        { display: '🍒さくらんぼ（意味深）', answers: ['さくらんぼ', 'サクランボ', 'ちぇりー', 'チェリー', 'cherry'] },
+        { display: '🍄きのこ（意味深）', answers: ['きのこ', 'キノコ', 'マッシュルーム'] },
+        { display: '💋くちびる', answers: ['くちびる', '唇', 'キス', 'きす', 'ちゅー', 'lip', 'lips'] },
+        { display: '👙びきに', answers: ['びきに', 'ビキニ', 'みずぎ', '水着', 'bikini'] },
+        { display: '🩲ぱんつ', answers: ['ぱんつ', 'パンツ', 'したぎ', '下着', 'panties'] },
+        { display: '🍆なす（意味深）', answers: ['なす', 'ナス', '茄子', 'eggplant'] }
+    ]
+};
+cuteWords.mix = [...cuteWords.animal, ...cuteWords.food, ...cuteWords.daily, ...cuteWords.yabai];
 
 function levenshtein(s, t) {
     if (!s.length) return t.length;
@@ -91,6 +122,8 @@ io.on('connection', (socket) => {
         
         timeLimit = settings.timeLimit || 60;
         maxRounds = settings.rounds || 1;
+        const category = settings.category || 'mix';
+        currentWordList = cuteWords[category] || cuteWords.mix;
         
         currentRound = 1;
         turnsPlayedInRound = 0;
@@ -197,7 +230,7 @@ io.on('connection', (socket) => {
         players.forEach(p => p.hasGuessed = false);
         
         currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
-        currentWordObj = cuteWords[Math.floor(Math.random() * cuteWords.length)];
+        currentWordObj = currentWordList[Math.floor(Math.random() * currentWordList.length)];
         
         timeLeft = timeLimit;
         

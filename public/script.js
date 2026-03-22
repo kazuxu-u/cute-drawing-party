@@ -10,6 +10,7 @@ const setupArea = document.getElementById('setupArea');
 const gameSettings = document.getElementById('gameSettings');
 const timeLimitSelect = document.getElementById('timeLimitSelect');
 const roundsSelect = document.getElementById('roundsSelect');
+const categorySelect = document.getElementById('categorySelect'); // 追加
 const startBtn = document.getElementById('startBtn');
 const timerDisplay = document.getElementById('timerDisplay');
 const wordDisplay = document.getElementById('wordDisplay');
@@ -398,7 +399,8 @@ joinBtn.addEventListener('click', () => {
 startBtn.addEventListener('click', () => {
     socket.emit('start_game', { 
         timeLimit: parseInt(timeLimitSelect.value),
-        rounds: parseInt(roundsSelect.value)
+        rounds: parseInt(roundsSelect.value),
+        category: categorySelect ? categorySelect.value : 'mix'
     });
 });
 
