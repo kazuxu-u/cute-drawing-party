@@ -408,7 +408,7 @@ io.on('connection', (socket) => {
     socket.on('start_game', (settings) => {
         if (players.length < 1) return;
 
-        timeLimit = settings.timeLimit || 120;
+        timeLimit = settings.timeLimit ?? 120;
         maxRounds = settings.rounds || 3;
         const category = settings.category || 'mix';
         currentWordList = cuteWords[category] || cuteWords.mix;
