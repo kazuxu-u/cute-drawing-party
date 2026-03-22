@@ -110,6 +110,7 @@ let gamePhase = 'waiting'; // waiting, playing, between_turns, results
 let roundTimer = null;
 let timeLeft = 120;
 let timeLimit = 120;
+let pointsAwardedThisTurn = false;
 
 // ターン（周）の管理
 let currentRound = 1;
@@ -480,17 +481,21 @@ io.on('connection', (socket) => {
 
             if (isCorrect) {
                 player.hasGuessed = true;
-                // スコア更新 (回答者+1pt、描いた人+1pt)
-                player.score += 1;
-                if (players[currentPlayerIndex]) {
-                    players[currentPlayerIndex].score += 1;
+                
+                if (!pointsAwardedThisTurn) {
+                    pointsAwardedThisTurn = true;
+                    // スコア更新 (回答者+1pt、描いた人+1pt)
+                    player.score += 1;
+                    if (players[currentPlayerIndex]) {
+                        players[currentPlayerIndex].score += 1;
+                    }
+                    io.emit('chat_message', { sender: 'System', text: `やば！${player.name}さんが1番乗りで大正解！🎉✨（回答者+1pt / 出題者+1pt）`, color: '#ff66b2', type: 'correct' });
+                } else {
+                    io.emit('chat_message', { sender: 'System', text: `${player.name}さんも正解！👏（ポイントは最初の人だけだよ！）`, color: '#ff66b2', type: 'correct' });
                 }
-
-                io.emit('chat_message', { sender: 'System', text: `やば！${player.name}さん大正解！🎉✨（回答者+1pt / 出題者+1pt）`, color: '#ff66b2', type: 'correct' });
+                
                 io.emit('update_players', players);
-
-                const allGuessed = players.every((p, idx) => idx === currentPlayerIndex || p.hasGuessed);
-                if (allGuessed) endTurn();
+                // 以前はここで allGuessed チェックをしていたけど、時間まで継続するので削除！💅✨
             } else if (isAlmost && !isCorrect && !isDrawer && !player.hasGuessed) {
                 io.to(socket.id).emit('chat_message', { sender: 'System', text: `「${msg}」…惜しい！あとちょっと！🥺`, color: '#ff9900', type: 'oshii' });
                 io.emit('chat_message', { sender: player.name, text: msg, color: '#333' });
@@ -535,6 +540,7 @@ io.on('connection', (socket) => {
         currentWordObj = currentWordList[Math.floor(Math.random() * currentWordList.length)];
 
         timeLeft = timeLimit;
+        pointsAwardedThisTurn = false;
 
         io.emit('clear_canvas');
         io.emit('update_players', players);
@@ -563,10 +569,15 @@ io.on('connection', (socket) => {
 
         if (roundTimer) clearInterval(roundTimer);
         roundTimer = setInterval(() => {
-            timeLeft--;
-            io.emit('timer', timeLeft);
-            if (timeLeft <= 0) {
-                endTurn();
+            if (timeLimit > 0) {
+                timeLeft--;
+                io.emit('timer', timeLeft);
+                if (timeLeft <= 0) {
+                    endTurn();
+                }
+            } else {
+                // 無限モードの場合は 0 を送り続けるか、あるいは特別な値を送る
+                io.emit('timer', 0);
             }
         }, 1000);
     }
