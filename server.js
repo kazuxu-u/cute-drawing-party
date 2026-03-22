@@ -5,10 +5,54 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 const path = require('path');
+const https = require('https');
 
 const PORT = 3000;
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+// 画像検索プロキシ (Openverse API)
+app.get('/api/search', (req, res) => {
+    const query = req.query.q;
+    if (!query) return res.status(400).json({ error: 'Query is required' });
+
+    const fetchImages = (url) => {
+        const options = {
+            headers: {
+                'User-Agent': 'CuteDrawingParty/1.0 (contact: github.com/your-repo)'
+            }
+        };
+
+        https.get(url, options, (apiRes) => {
+            if (apiRes.statusCode >= 300 && apiRes.statusCode < 400 && apiRes.headers.location) {
+                const nextUrl = new URL(apiRes.headers.location, url).href;
+                console.log(`Redirecting to: ${nextUrl}`);
+                return fetchImages(nextUrl);
+            }
+
+            let data = '';
+            apiRes.on('data', (chunk) => { data += chunk; });
+            apiRes.on('end', () => {
+                try {
+                    if (apiRes.statusCode !== 200) {
+                        console.error(`Openverse API error: ${apiRes.statusCode}`, data);
+                        return res.status(apiRes.statusCode).json({ error: `API returned ${apiRes.statusCode}`, details: data });
+                    }
+                    res.json(JSON.parse(data));
+                } catch (e) {
+                    console.error('Failed to parse Openverse response:', e);
+                    res.status(500).json({ error: 'Failed to parse API response' });
+                }
+            });
+        }).on('error', (err) => {
+            console.error('HTTPS get error:', err);
+            res.status(500).json({ error: err.message });
+        });
+    };
+
+    const initialUrl = `https://api.openverse.engineering/v1/images/?q=${encodeURIComponent(query)}&page_size=12`;
+    fetchImages(initialUrl);
+});
 
 let players = [];
 let maxPlayers = 4;

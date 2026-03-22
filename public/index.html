@@ -75,6 +75,7 @@
                 <button id="eraserBtn" class="tool-btn">🧽 消しゴム</button>
                 <button id="fillBtn" class="tool-btn" style="background:#ffccdd;">🪣 塗りつぶし</button>
                 <button id="undoBtn" class="tool-btn" style="background:#ffdb58;">↩️ 戻す</button>
+                <button id="searchImageBtn" class="tool-btn" style="background:#b3e5fc;">🔍 画像検索</button>
                 <button id="clearBtn" class="tool-btn danger">💣 ぜんぶ消す</button>
                 <button id="saveBtn" class="tool-btn hidden" style="background:#66ccff; color:white;">💾 保存</button>
                 <button id="exitSoloBtn" class="tool-btn hidden" style="background:#ff9933; color:white;">🚪 やめる</button>
@@ -97,6 +98,17 @@
                     <button id="backToWaitingBtn" class="cute-btn primary mt-4" style="font-size: 1.5rem; padding: 15px 30px; flex-shrink: 0;">もう一回遊ぶ！✨</button>
                     
                     <div id="galleryContainer" class="gallery-container"></div>
+                </div>
+            </div>
+
+            <!-- 画像検索結果コンテナ -->
+            <div id="imageSearchContainer" class="image-search-container hidden glass mt-4">
+                <div class="search-header">
+                    <span>💡 お手本画像 (Openverse)</span>
+                    <button id="closeSearchBtn" style="border:none; background:none; cursor:pointer; font-size:1.2rem;">❌</button>
+                </div>
+                <div id="searchResultList" class="search-result-list">
+                    <!-- 画像がここに並ぶ -->
                 </div>
             </div>
         </main>

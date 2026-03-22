@@ -323,3 +323,51 @@ input[type="text"]:focus, select:focus {
     will-change: transform;
     left: 100%;
 }
+
+/* 画像検索コンテナ */
+.image-search-container {
+    width: 600px;
+    padding: 10px !important;
+}
+
+.search-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: var(--primary-color);
+}
+
+.search-result-list {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+}
+
+.search-result-list::-webkit-scrollbar {
+    height: 6px;
+}
+.search-result-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+.search-result-list::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 10px;
+}
+
+.search-result-img {
+    height: 100px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: 0.2s;
+    flex-shrink: 0;
+}
+
+.search-result-img:hover {
+    transform: scale(1.05);
+}

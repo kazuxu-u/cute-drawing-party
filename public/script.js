@@ -26,6 +26,12 @@ const wordPopupText = document.getElementById('wordPopupText');
 const wordPopupSubtext = document.getElementById('wordPopupSubtext');
 const danmakuContainer = document.getElementById('danmakuContainer');
 
+// 画像検索関連の要素
+const searchImageBtn = document.getElementById('searchImageBtn');
+const imageSearchContainer = document.getElementById('imageSearchContainer');
+const searchResultList = document.getElementById('searchResultList');
+const closeSearchBtn = document.getElementById('closeSearchBtn');
+
 const chatBox = document.getElementById('chatBox');
 const chatInput = document.getElementById('chatInput');
 const sendBtn = document.getElementById('sendBtn');
@@ -429,6 +435,41 @@ if (saveBtn) {
     });
 }
 
+// --- 画像検索機能 (Openverse API) ---
+async function fetchOpenverseImages(query) {
+    if (!query) return;
+    
+    // 検索中っぽく表示
+    searchResultList.innerHTML = '<p style="padding:10px; color:#f6b;">検索中だよ…待っててね💖</p>';
+    
+    try {
+        // サーバーのプロキシを叩く
+        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        
+        searchResultList.innerHTML = '';
+        
+        if (data.results && data.results.length > 0) {
+            data.results.forEach(img => {
+                const imgEl = document.createElement('img');
+                imgEl.src = img.thumbnail || img.url;
+                imgEl.className = 'search-result-img';
+                imgEl.title = img.title || '参考画像';
+                
+                // クリックしたら別タブで開く
+                imgEl.onclick = () => window.open(img.url, '_blank');
+                
+                searchResultList.appendChild(imgEl);
+            });
+        } else {
+            searchResultList.innerHTML = '<p style="padding:10px;">画像見つからなかった…ごめんね🥺</p>';
+        }
+    } catch (error) {
+        console.error('Openverse API error:', error);
+        searchResultList.innerHTML = '<p style="padding:10px; color:red;">エラー出ちゃった！ごめん！😭</p>';
+    }
+}
+
 if (soloModeBtn) {
     soloModeBtn.addEventListener('click', () => {
         initAudio();
@@ -662,6 +703,28 @@ function sendMessage() {
 }
 
 sendBtn.addEventListener('click', sendMessage);
+
+// 画像検索ボタンのイベント
+if (searchImageBtn) {
+    searchImageBtn.addEventListener('click', () => {
+        if (!currentWordText || currentWordText === '????') {
+            alert('お題が出てない時は検索できないよ！🥺');
+            return;
+        }
+        
+        // 絵文字を抜いたお題をクエリにする
+        const query = getDisplayText(currentWordText);
+        imageSearchContainer.classList.remove('hidden');
+        fetchOpenverseImages(query);
+    });
+}
+
+// 閉じるボタン
+if (closeSearchBtn) {
+    closeSearchBtn.addEventListener('click', () => {
+        imageSearchContainer.classList.add('hidden');
+    });
+}
 
 let isInputComposing = false;
 chatInput.addEventListener('compositionstart', () => { isInputComposing = true; });
