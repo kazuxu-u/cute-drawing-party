@@ -179,7 +179,7 @@ const cuteWords = {
         { display: '🧑‍🌾農家', answers: ['のうか', '農家', 'お百姓さん'] },
         { display: '🎩マジシャン', answers: ['まじしゃん', 'マジシャン', '手品師'] },
         { display: '✍️漫画家', answers: ['まんがか', '漫画家'] },
-        { display: '⚖️弁護士', answers: ['べんごし', '弁護士'] }
+        { display: '👨‍⚖️裁判官', answers: ['さいばんかん', '裁判官', 'judge'] }
     ],
     vehicle: [
         { display: '🚗車', answers: ['くるま', '車', '自動車'] },
