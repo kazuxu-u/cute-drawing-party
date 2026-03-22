@@ -6,52 +6,99 @@ const { Server } = require("socket.io");
 const io = new Server(server);
 const path = require('path');
 const https = require('https');
+const fs = require('fs');
+
+const DRAWINGS_DIR = path.join(__dirname, 'public', 'drawings');
+const METADATA_FILE = path.join(__dirname, 'drawings_metadata.json');
+
+// 保存用ディレクトリがなければ作成
+if (!fs.existsSync(DRAWINGS_DIR)) {
+    fs.mkdirSync(DRAWINGS_DIR, { recursive: true });
+}
+
+// メタデータファイルの初期化
+if (!fs.existsSync(METADATA_FILE)) {
+    fs.writeFileSync(METADATA_FILE, JSON.stringify([]));
+}
 
 const PORT = 3000;
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 画像検索プロキシ (Openverse API)
+// 画像保存 API
+app.post('/api/save_drawing', express.json({limit: '10mb'}), (req, res) => {
+    const { image, artist, prompt } = req.body;
+    if (!image || !artist || !prompt) return res.status(400).json({ error: 'Missing data' });
+
+    const filename = `drawing_${Date.now()}.png`;
+    const filePath = path.join(DRAWINGS_DIR, filename);
+
+    // Base64を保存
+    const base64Data = image.replace(/^data:image\/png;base64,/, "");
+    fs.writeFile(filePath, base64Data, 'base64', (err) => {
+        if (err) return res.status(500).json({ error: 'Save failed' });
+
+        // メタデータ更新
+        let metadata = JSON.parse(fs.readFileSync(METADATA_FILE));
+        metadata.push({ filename, artist, prompt, timestamp: Date.now() });
+
+        // 1000枚制限
+        if (metadata.length > 1000) {
+            const oldest = metadata.shift();
+            const oldestPath = path.join(DRAWINGS_DIR, oldest.filename);
+            if (fs.existsSync(oldestPath)) {
+                try { fs.unlinkSync(oldestPath); } catch (e) {}
+            }
+        }
+
+        fs.writeFileSync(METADATA_FILE, JSON.stringify(metadata, null, 2));
+        res.json({ success: true, filename });
+    });
+});
+
+// 画像検索プロキシ (ローカル保存された絵を検索)
 app.get('/api/search', (req, res) => {
     const query = req.query.q;
     if (!query) return res.status(400).json({ error: 'Query is required' });
 
-    const fetchImages = (url) => {
-        const options = {
-            headers: {
-                'User-Agent': 'CuteDrawingParty/1.0 (contact: github.com/your-repo)'
-            }
-        };
+    try {
+        const metadata = JSON.parse(fs.readFileSync(METADATA_FILE));
+        
+        // お題（部分一致）で検索
+        const filtered = metadata.filter(m => 
+            m.prompt.toLowerCase().includes(query.toLowerCase())
+        );
 
-        https.get(url, options, (apiRes) => {
-            if (apiRes.statusCode >= 300 && apiRes.statusCode < 400 && apiRes.headers.location) {
-                const nextUrl = new URL(apiRes.headers.location, url).href;
-                console.log(`Redirecting to: ${nextUrl}`);
-                return fetchImages(nextUrl);
-            }
+        const results = filtered.map(m => ({
+            id: m.filename,
+            title: `${m.prompt} (by ${m.artist})`,
+            thumbnail: `/drawings/${m.filename}`,
+            url: `/drawings/${m.filename}`
+        })).reverse();
 
-            let data = '';
-            apiRes.on('data', (chunk) => { data += chunk; });
-            apiRes.on('end', () => {
-                try {
-                    if (apiRes.statusCode !== 200) {
-                        console.error(`Openverse API error: ${apiRes.statusCode}`, data);
-                        return res.status(apiRes.statusCode).json({ error: `API returned ${apiRes.statusCode}`, details: data });
-                    }
-                    res.json(JSON.parse(data));
-                } catch (e) {
-                    console.error('Failed to parse Openverse response:', e);
-                    res.status(500).json({ error: 'Failed to parse API response' });
-                }
-            });
-        }).on('error', (err) => {
-            console.error('HTTPS get error:', err);
-            res.status(500).json({ error: err.message });
-        });
-    };
+        res.json({ results });
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to search drawings' });
+    }
+});
 
-    const initialUrl = `https://api.openverse.engineering/v1/images/?q=${encodeURIComponent(query)}&page_size=12`;
-    fetchImages(initialUrl);
+// ギャラリー全取得 API
+app.get('/api/gallery', (req, res) => {
+    try {
+        const metadata = JSON.parse(fs.readFileSync(METADATA_FILE));
+        const results = metadata.map(m => ({
+            id: m.filename,
+            title: `${m.prompt} (by ${m.artist})`,
+            thumbnail: `/drawings/${m.filename}`,
+            url: `/drawings/${m.filename}`,
+            artist: m.artist,
+            prompt: m.prompt,
+            timestamp: m.timestamp
+        })).reverse();
+        res.json({ results });
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to fetch gallery' });
+    }
 });
 
 let players = [];

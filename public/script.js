@@ -32,6 +32,12 @@ const imageSearchContainer = document.getElementById('imageSearchContainer');
 const searchResultList = document.getElementById('searchResultList');
 const closeSearchBtn = document.getElementById('closeSearchBtn');
 
+// ギャラリー関連の要素
+const openGalleryBtn = document.getElementById('openGalleryBtn');
+const galleryOverlay = document.getElementById('galleryOverlay');
+const fullGalleryContainer = document.getElementById('fullGalleryContainer');
+const closeGalleryBtn = document.getElementById('closeGalleryBtn');
+
 const chatBox = document.getElementById('chatBox');
 const chatInput = document.getElementById('chatInput');
 const sendBtn = document.getElementById('sendBtn');
@@ -435,15 +441,15 @@ if (saveBtn) {
     });
 }
 
-// --- 画像検索機能 (Openverse API) ---
-async function fetchOpenverseImages(query) {
+// --- 画像検索機能 (保存された絵を検索) ---
+async function searchSavedDrawings(query) {
     if (!query) return;
     
     // 検索中っぽく表示
-    searchResultList.innerHTML = '<p style="padding:10px; color:#f6b;">検索中だよ…待っててね💖</p>';
+    searchResultList.innerHTML = '<p style="padding:10px; color:#f6b;">みんなの絵を探してるよ…待っててね💖</p>';
     
     try {
-        // サーバーのプロキシを叩く
+        // サーバーの検索APIを叩く
         const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
         const data = await response.json();
         
@@ -452,9 +458,9 @@ async function fetchOpenverseImages(query) {
         if (data.results && data.results.length > 0) {
             data.results.forEach(img => {
                 const imgEl = document.createElement('img');
-                imgEl.src = img.thumbnail || img.url;
+                imgEl.src = img.thumbnail;
                 imgEl.className = 'search-result-img';
-                imgEl.title = img.title || '参考画像';
+                imgEl.title = img.title;
                 
                 // クリックしたら別タブで開く
                 imgEl.onclick = () => window.open(img.url, '_blank');
@@ -462,11 +468,71 @@ async function fetchOpenverseImages(query) {
                 searchResultList.appendChild(imgEl);
             });
         } else {
-            searchResultList.innerHTML = '<p style="padding:10px;">画像見つからなかった…ごめんね🥺</p>';
+            searchResultList.innerHTML = '<p style="padding:10px;">画像見つからなかった…ごめんね🥺<br>（まだ誰も描いてないかも！）</p>';
         }
     } catch (error) {
-        console.error('Openverse API error:', error);
+        console.error('Search API error:', error);
         searchResultList.innerHTML = '<p style="padding:10px; color:red;">エラー出ちゃった！ごめん！😭</p>';
+    }
+}
+
+// --- ギャラリー表示機能 ---
+async function openGallery() {
+    fullGalleryContainer.innerHTML = '<p style="padding:40px; font-size:1.5rem; color:#f6b;">思い出をロード中…💕</p>';
+    galleryOverlay.classList.remove('hidden');
+    
+    try {
+        const response = await fetch('/api/gallery');
+        const data = await response.json();
+        
+        fullGalleryContainer.innerHTML = '';
+        
+        if (data.results && data.results.length > 0) {
+            data.results.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'gallery-item';
+                // 時間を読みやすくする
+                const date = new Date(item.timestamp).toLocaleString();
+                
+                itemDiv.innerHTML = `
+                    <p style="margin:5px 0; font-size:0.8rem; color:#999;">${date}</p>
+                    <p style="margin:5px 0; font-weight:bold;">${item.artist} が描いた<br>「${item.prompt}」</p>
+                    <img src="${item.thumbnail}" alt="絵" style="width:100%; border:2px solid #eee; border-radius:10px;">
+                    <a href="${item.url}" download="drawing_${index}.png" class="cute-btn" style="text-decoration:none; display:inline-block; margin-top:10px; font-size:0.8rem; padding:5px 15px;">📥 保存</a>
+                `;
+                fullGalleryContainer.appendChild(itemDiv);
+            });
+        } else {
+            fullGalleryContainer.innerHTML = '<p style="padding:40px; font-size:1.5rem;">まだ誰も描いてないみたい…🥺<br>お絵描きして思い出を作ろう！✨</p>';
+        }
+    } catch (error) {
+        console.error('Gallery API error:', error);
+        fullGalleryContainer.innerHTML = '<p style="padding:40px; color:red;">ロードに失敗しちゃった！😭</p>';
+    }
+}
+
+function closeGallery() {
+    galleryOverlay.classList.add('hidden');
+}
+
+if (openGalleryBtn) {
+    openGalleryBtn.addEventListener('click', openGallery);
+}
+if (closeGalleryBtn) {
+    closeGalleryBtn.addEventListener('click', closeGallery);
+}
+
+async function saveDrawingToServer(image, artist, prompt) {
+    try {
+        const response = await fetch('/api/save_drawing', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image, artist, prompt })
+        });
+        const result = await response.json();
+        console.log('Drawing saved:', result);
+    } catch (error) {
+        console.error('Failed to save drawing:', error);
     }
 }
 
@@ -625,6 +691,12 @@ socket.on('round_end', (data) => {
     const imgData = canvas.toDataURL('image/png');
     gallery.push({ imgData, word: data.word, drawer: data.drawer });
     playSE('finish');
+    
+    // 自分が描いた番だったらサーバーに保存する！✨
+    if (canIDraw) {
+        const me = players.find(p => p.id === myId);
+        saveDrawingToServer(imgData, me ? me.name : 'Unknown', data.word);
+    }
 });
 
 socket.on('chat_message', (data) => {
@@ -715,7 +787,7 @@ if (searchImageBtn) {
         // 絵文字を抜いたお題をクエリにする
         const query = getDisplayText(currentWordText);
         imageSearchContainer.classList.remove('hidden');
-        fetchOpenverseImages(query);
+        searchSavedDrawings(query);
     });
 }
 
