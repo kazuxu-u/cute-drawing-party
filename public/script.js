@@ -111,14 +111,14 @@ function initAudio() {
 function startBGM() {
     if (bgmPlayer && isBgmOn) {
         bgmPlayer.play().then(() => {
-            bgmToggleBtn.textContent = '🎵 BGM: ON中💕';
+            bgmToggleBtn.dataset.tooltip = 'BGM: ON中💕';
             bgmToggleBtn.style.background = '#66ccff';
             bgmToggleBtn.style.color = '#fff';
             bgmToggleBtn.style.border = 'none';
         }).catch(e => {
             console.error(e);
             // 自動再生エラーで弾かれた時のフェイルセーフ
-            bgmToggleBtn.textContent = '🎵 BGM: オフ（クリックでON！）';
+            bgmToggleBtn.dataset.tooltip = 'BGM: OFF（クリックでON！）';
             bgmToggleBtn.style.background = '#ffccdd';
             bgmToggleBtn.style.color = '#ff66b2';
             bgmToggleBtn.style.border = '2px solid #ff66b2';
@@ -129,7 +129,7 @@ function startBGM() {
 
 function stopBGM() {
     if (bgmPlayer) bgmPlayer.pause();
-    bgmToggleBtn.textContent = '🎵 BGM: オフ（クリックでON！）';
+    bgmToggleBtn.dataset.tooltip = 'BGM: OFF（クリックでON！）';
     bgmToggleBtn.style.background = '#ffccdd';
     bgmToggleBtn.style.color = '#ff66b2';
     bgmToggleBtn.style.border = '2px solid #ff66b2';
@@ -448,7 +448,7 @@ const emojiToggleBtn = document.getElementById('emojiToggleBtn');
 if (emojiToggleBtn) {
     emojiToggleBtn.addEventListener('click', () => {
         showEmoji = !showEmoji;
-        emojiToggleBtn.textContent = showEmoji ? '🧸 スタンプ: ON✨' : '🧸 スタンプ: OFF';
+        emojiToggleBtn.dataset.tooltip = showEmoji ? 'スタンプ: ON✨' : 'スタンプ: OFF';
         if (currentWordText) {
             wordDisplay.textContent = `お題：${getDisplayText(currentWordText)}`;
         }
