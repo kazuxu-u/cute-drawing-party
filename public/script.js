@@ -60,15 +60,17 @@ const undoBtn = document.getElementById('undoBtn'); // 戻すボタン追加
 const clearBtn = document.getElementById('clearBtn');
 const saveBtn = document.getElementById('saveBtn');
 const gallerySubmitBtn = document.getElementById('gallerySubmitBtn'); // 追加
+const nextWordBtn = document.getElementById('nextWordBtn'); // 追加✨💍
 const exitSoloBtn = document.getElementById('exitSoloBtn');
 const turnEndBtn = document.getElementById('turnEndBtn'); // 追加
+const sidebar = document.querySelector('.sidebar'); // サイドバー取得💅
 const toolbar = document.getElementById('toolbar');
 
 let myId = null;
 let isDrawing = false;
 let canIDraw = false;
 let inSoloMode = false;
-let currentSettings = { color: '#000000', size: 5, isEraser: false, isFill: false };
+let currentSettings = { color: '#000000', size: 5, isEraser: false, isFill: false, isGlow: false, isRainbow: false };
 let gallery = []; 
 let drawHistory = []; // UNDO用の履歴配列 
 let currentWordText = '';
@@ -215,14 +217,36 @@ ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 let lastX = 0, lastY = 0;
 
-function drawLine(x0, y0, x1, y1, color, size, isErase) {
+function drawLine(x0, y0, x1, y1, color, size, isErase, isGlow, isRainbow) {
+    let finalColor = color;
+    if (isRainbow && !isErase) {
+        // 描画タイミングごとに色を絶妙に変えてエモい虹にするよ！🌈✨
+        // 線の場所(x,y)と時間で色を混ぜて、よりオーラ感のあるグラデーションに！💍
+        const hue = (Date.now() / 5 + (x0 + y0) / 2) % 360;
+        finalColor = `hsl(${hue}, 100%, 65%)`; // ちょっとパステル寄りの明るい虹に！💖
+    }
+
+    ctx.save(); // 状態を保存💕
     ctx.beginPath();
     ctx.moveTo(x0, y0);
     ctx.lineTo(x1, y1);
-    ctx.strokeStyle = isErase ? '#ffffff' : color;
+    ctx.strokeStyle = isErase ? '#ffffff' : finalColor;
     ctx.lineWidth = size;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    if (isGlow && !isErase) {
+        // オーラ全開！キラキラ感を3倍以上にアップ！🌟✨
+        ctx.shadowBlur = size * 4; 
+        ctx.shadowColor = finalColor;
+        // 重ねて描画することで、より眩しくするよ！💎
+        ctx.stroke();
+        ctx.shadowBlur = size * 2;
+    }
+
     ctx.stroke();
     ctx.closePath();
+    ctx.restore(); // 状態を戻す✨
 }
 
 // 履歴保存機能（Undo用）
@@ -351,9 +375,15 @@ canvas.addEventListener('mousedown', (e) => {
 });
 canvas.addEventListener('mousemove', (e) => {
     if (!isDrawing || !canIDraw) return;
-    drawLine(lastX, lastY, e.offsetX, e.offsetY, currentSettings.color, currentSettings.size, currentSettings.isEraser);
+    drawLine(lastX, lastY, e.offsetX, e.offsetY, currentSettings.color, currentSettings.size, currentSettings.isEraser, currentSettings.isGlow, currentSettings.isRainbow);
     if (!inSoloMode) {
-        socket.emit('draw', { x0: lastX, y0: lastY, x1: e.offsetX, y1: e.offsetY, color: currentSettings.color, size: currentSettings.size, isEraser: currentSettings.isEraser });
+        socket.emit('draw', { 
+            x0: lastX, y0: lastY, x1: e.offsetX, y1: e.offsetY, 
+            color: currentSettings.color, size: currentSettings.size, 
+            isEraser: currentSettings.isEraser,
+            isGlow: currentSettings.isGlow,
+            isRainbow: currentSettings.isRainbow
+        });
     }
     lastX = e.offsetX; lastY = e.offsetY;
 });
@@ -364,7 +394,8 @@ function setActiveTool(btn) {
     if (penBtn) penBtn.classList.remove('active');
     if (eraserBtn) eraserBtn.classList.remove('active');
     if (fillBtn) fillBtn.classList.remove('active');
-    if (btn) btn.classList.add('active');
+    // 特殊ボタンはトグル方式にするからここでは外さないよ💅✨
+    if (btn && !btn.classList.contains('effect-btn')) btn.classList.add('active');
 }
 // 初期状態はペン
 if (penBtn) setActiveTool(penBtn);
@@ -399,6 +430,24 @@ if (fillBtn) {
         currentSettings.isFill = true; 
         currentSettings.isEraser = false; 
         setActiveTool(fillBtn);
+    });
+}
+
+if (rainbowBtn) {
+    rainbowBtn.addEventListener('click', () => {
+        currentSettings.isRainbow = !currentSettings.isRainbow;
+        rainbowBtn.classList.toggle('active');
+        if (currentSettings.isRainbow) {
+            currentSettings.isEraser = false;
+            setActiveTool(penBtn);
+        }
+    });
+}
+
+if (glowBtn) {
+    glowBtn.addEventListener('click', () => {
+        currentSettings.isGlow = !currentSettings.isGlow;
+        glowBtn.classList.toggle('active');
     });
 }
 if (undoBtn) {
@@ -468,6 +517,16 @@ if (gallerySubmitBtn) {
     });
 }
 
+// --- カテゴリー選択時の演出💍 ---
+categorySelect.addEventListener('change', (e) => {
+    if (e.target.value === 'yabai') {
+        addChatMessage('System', 'キャーッ！ヤバい（笑）カテゴリー選んじゃった！🫣💖 覚悟してね！🤟✨', '#ff00ff');
+        wordDisplay.classList.add('yabai-glow');
+    } else {
+        wordDisplay.classList.remove('yabai-glow');
+    }
+});
+
 // --- 保存モーダルの制御 ---
 function showSaveModal(imgData, artist, prompt) {
     pendingSaveData = imgData;
@@ -520,6 +579,7 @@ async function searchSavedDrawings(query) {
                 imgEl.src = img.thumbnail;
                 imgEl.className = 'search-result-img';
                 imgEl.title = img.title;
+                imgEl.onerror = () => { imgEl.src = 'https://via.placeholder.com/150?text=Error'; console.error('Image load failed:', img.thumbnail); };
                 
                 // クリックしたら別タブで開く
                 imgEl.onclick = () => window.open(img.url, '_blank');
@@ -556,7 +616,7 @@ async function openGallery() {
                 itemDiv.innerHTML = `
                     <p style="margin:5px 0; font-size:0.8rem; color:#999;">${date}</p>
                     <p style="margin:5px 0; font-weight:bold;">${item.artist} が描いた<br>「${item.prompt}」</p>
-                    <img src="${item.thumbnail}" alt="絵" style="width:100%; border:2px solid #eee; border-radius:10px;">
+                    <img src="${item.thumbnail}" alt="絵" style="width:100%; border:2px solid #eee; border-radius:10px;" onerror="console.error('Gallery image load failed:', this.src); this.src='https://via.placeholder.com/300?text=Load+Error';">
                     <a href="${item.url}" download="drawing_${index}.png" class="cute-btn" style="text-decoration:none; display:inline-block; margin-top:10px; font-size:0.8rem; padding:5px 15px;">📥 保存</a>
                 `;
                 fullGalleryContainer.appendChild(itemDiv);
@@ -606,12 +666,16 @@ if (soloModeBtn) {
         toolbar.style.pointerEvents = 'auto';
         toolbar.style.opacity = '1';
         
+        // サイドバーを隠してキャンバスを中央に！チャット見切れ防止💅✨
+        if (sidebar) sidebar.style.display = 'none';
+        
         // 名前を保存💕
         const name = playerNameInput.value.trim();
         if (name) localStorage.setItem('galDrawingName', name);
 
         saveBtn.classList.remove('hidden');
         gallerySubmitBtn.classList.remove('hidden'); // 追加
+        nextWordBtn.classList.remove('hidden'); // 追加✨🎲
         exitSoloBtn.classList.remove('hidden');
         
         roundDisplay.textContent = '🎨 ソロお絵描き';
@@ -623,13 +687,48 @@ if (soloModeBtn) {
     });
 }
 
+if (nextWordBtn) {
+    nextWordBtn.addEventListener('click', async () => {
+        if (!inSoloMode) return;
+        
+        // サーバーからお題リストをもらってくるよ！💎
+        try {
+            const response = await fetch('/api/words');
+            const data = await response.json();
+            
+            // 全カテゴリーからランダムに選ぶよ！✨
+            const allWords = Object.values(data).flat();
+            const randomWord = allWords[Math.floor(Math.random() * allWords.length)];
+            
+            currentWordText = randomWord.display;
+            wordDisplay.textContent = `お題：${getDisplayText(currentWordText)}`;
+            
+            if (currentWordText.includes('yabai') || (categorySelect && categorySelect.value === 'yabai')) {
+                wordDisplay.classList.add('yabai-glow');
+            } else {
+                wordDisplay.classList.remove('yabai-glow');
+            }
+
+            addChatMessage('System', `次のお題は「${getDisplayText(currentWordText)}」だよ！描いてみて！🖌️✨`, '#ff66b2');
+        } catch (e) {
+            console.error('Failed to fetch words for solo mode:', e);
+            wordDisplay.textContent = 'お題：適当に描いちゃえ！🤣';
+        }
+    });
+}
+
 if (exitSoloBtn) {
     exitSoloBtn.addEventListener('click', () => {
         inSoloMode = false;
         canIDraw = false;
         saveBtn.classList.add('hidden');
         gallerySubmitBtn.classList.add('hidden'); // 追加
+        nextWordBtn.classList.add('hidden'); // 追加✨🎲
         exitSoloBtn.classList.add('hidden');
+        
+        // サイドバーを復活させるよ！💅✨
+        if (sidebar) sidebar.style.display = 'flex';
+        
         socket.emit('return_to_lobby'); 
     });
 }
@@ -744,7 +843,7 @@ socket.on('round_start', (data) => {
 });
 
 socket.on('timer', (time) => { if(!inSoloMode) timerDisplay.textContent = `⏱️ ${time}`; });
-socket.on('draw', (data) => { if(!inSoloMode) drawLine(data.x0, data.y0, data.x1, data.y1, data.color, data.size, data.isEraser); });
+socket.on('draw', (data) => { if(!inSoloMode) drawLine(data.x0, data.y0, data.x1, data.y1, data.color, data.size, data.isEraser, data.isGlow, data.isRainbow); });
 socket.on('fill', (data) => { if(!inSoloMode) floodFill(data.x, data.y, data.color); });
 socket.on('sync_canvas', (dataURL) => { 
     if(!inSoloMode) { 
@@ -886,9 +985,17 @@ chatInput.addEventListener('keydown', (e) => {
 });
 
 function addChatMessage(sender, text, color) {
-    const div = document.createElement('div'); div.className = 'chat-msg';
-    div.innerHTML = `<strong style="color: ${color || '#333'}">${sender}:</strong> ${text}`;
-    chatBox.appendChild(div); chatBox.scrollTop = chatBox.scrollHeight;
+    const div = document.createElement('div');
+    // 自分のメッセージならクラスを足すよ💅✨
+    const isMe = sender === (localStorage.getItem('galDrawingName') || '自分');
+    div.className = isMe ? 'chat-msg mine' : 'chat-msg';
+    
+    div.innerHTML = `
+        <strong style="color: ${color || '#333'}">${sender}</strong>
+        <span class="msg-text">${text}</span>
+    `;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
 }
 
 function createDanmaku(text, color, isBig = false) {

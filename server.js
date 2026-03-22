@@ -23,6 +23,20 @@ if (!fs.existsSync(METADATA_FILE)) {
 
 const PORT = 3000;
 
+// ギャラリーの画像がちゃんと読み込まれてるかチェックするためのログ！💍✨
+app.use('/drawings', (req, res, next) => {
+    console.log(`[IMG-REQ] Request for image: ${req.url}`);
+    next();
+});
+
+// 静的ディレクトリのマッピングを強化！💍✨
+app.use('/drawings', express.static(DRAWINGS_DIR));
+
+// ソロモード用にお題リストを全部返すよ！💎✨💍
+// cuteWordsは下の方で定義されてるけど、function宣言じゃないから
+// ここで呼ぶとエラーになる可能性があるため、もっと下に移動するね！💅✨
+// ...と思ったけど、安全のためにapp.listenの直前に書くのが一番確実かも！💍✨
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // 画像保存 API
@@ -59,6 +73,7 @@ app.post('/api/save_drawing', express.json({limit: '10mb'}), (req, res) => {
 
 // 画像検索プロキシ (ローカル保存された絵を検索)
 app.get('/api/search', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     const query = req.query.q;
     if (!query) return res.status(400).json({ error: 'Query is required' });
 
@@ -85,6 +100,7 @@ app.get('/api/search', (req, res) => {
 
 // ギャラリー全取得 API
 app.get('/api/gallery', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     try {
         const metadata = JSON.parse(fs.readFileSync(METADATA_FILE));
         const results = metadata.map(m => ({
@@ -206,7 +222,33 @@ const cuteWords = {
         { display: '🐕首輪', answers: ['くびわ', '首輪', 'ぺっと', 'ペット'] },
         { display: '💄キスマーク', answers: ['きすまーく', 'キスマーク'] },
         { display: '📳おもちゃ（意味深）', answers: ['おもちゃ', 'ろーたー', 'ローター', 'バイブ'] },
-        { display: '🔴テンガ', answers: ['てんが', 'テンガ', 'TENGA', 'おなほ'] }
+        { display: '🔴テンガ', answers: ['てんが', 'テンガ', 'TENGA', 'おなほ'] },
+        { display: '📳マッサージ機（意味深）', answers: ['まっさーじき', 'マッサージ機', 'でんま', '電マ'] },
+        { display: '🧼ソープ', answers: ['そーぷ', 'ソープ', 'お風呂'] },
+        { display: '👙ボディーストッキング', answers: ['ぼでぃーすとっきんぐ', 'ボディーストッキング', 'タイツ'] },
+        { display: '🤤よだれダラダラ', answers: ['よだれ', 'ヨダレ', '涎'] },
+        { display: '🥛怪しい液体', answers: ['あやしいえきたい', '液体', 'みるく', 'ミルク', '精液'] },
+        { display: '🎀リボン緊縛', answers: ['りぼん', 'リボン', 'しばり', '緊縛'] },
+        { display: '🥚ローター（卵型）', answers: ['ろーたー', 'ローター', 'おもちゃ'] },
+        { display: '🤤涎だらだら喘ぎ顔', answers: ['あえぎがお', 'よだれ', 'あえぎ'] },
+        { display: '🍑お尻ペンペン', answers: ['しりぺんぺん', 'しり', 'おしり'] },
+        { display: '🧊氷攻め', answers: ['こおりぜめ', 'こおり'] },
+        { display: '🥛顔射（！？）', answers: ['がんしゃ', 'みるく', 'しおふき'] },
+        { display: '👄ディープキス', answers: ['でぃーぷきす', 'きす'] },
+        { display: '🧴ローションまみれ', answers: ['ろーしょん', 'ぬるぬる'] },
+        { display: '🛀泡風呂で密着', answers: ['あわぶろ', 'おふろ'] },
+        { display: '👘はだけた浴衣', answers: ['ゆかた', 'はだける'] },
+        { display: '👗透け透けワンピ', answers: ['すけすけ', 'わんぴーす'] },
+        { display: '🥵興奮して顔真っ赤', answers: ['こうふん', 'かおまっか'] },
+        { display: '👣足コキ', answers: ['あしこき', 'あし'] },
+        { display: '🖐️手コキ', answers: ['てこき', 'て'] },
+        { display: '🥧パイズリ', answers: ['ぱいずり', 'おっぱい'] },
+        { display: '🐱クリ（意味深）', answers: ['くり', 'くりとりす'] },
+        { display: '💎真珠（意味深）', answers: ['しんじゅ', 'しんじゅいれ', 'ぴあす'] },
+        { display: '🔥発情期', answers: ['はつじょう', 'さかり'] },
+        { display: '🐕‍🦺散歩（SM）', answers: ['さんぽ', 'どえむ', 'SM'] },
+        { display: '🥛ザーメン（直球）', answers: ['ざーめん', 'えきたい', 'みるく'] },
+        { display: '💦潮吹き', answers: ['しおふき', 'みず'] },
     ],
     situation: [
         { display: '💑デート', answers: ['でーと', 'デート', 'date'] },
@@ -228,7 +270,20 @@ const cuteWords = {
         { display: '🥱サボり', answers: ['さぼり', 'サボり', 'さぼる', '休憩'] },
         { display: '🥺ぴえん', answers: ['ぴえん', 'ぴえん🥺', '泣く', 'なき'] },
         { display: '💖推し活', answers: ['おしかつ', '推し活', 'おし', '推し', 'オタク'] },
-        { display: '📸自撮り', answers: ['じどり', '自撮り', 'せるふぃー', '盛り'] }
+        { display: '📸自撮り', answers: ['じどり', '自撮り', 'せるふぃー', '盛り'] },
+        { display: '🚿一緒にお風呂', answers: ['おふろ', '一緒にお風呂', '混浴'] },
+        { display: '🍱あーんして', answers: ['あーん', 'あーんして', '食事'] },
+        { display: '👔ネクタイを緩める', answers: ['ねくたい', 'ネクタイ', 'セクシー'] },
+        { display: '🧼背中を流す', answers: ['せなか', '背中を流す', 'お風呂'] },
+        { display: '🌅朝のひととき', answers: ['あさ', '朝', '添い寝', '朝帰り'] },
+        { display: '🧥シャツ一枚', answers: ['しゃつ', 'シャツ', '裸シャツ'] },
+        { display: '🚃満員電車で密着', answers: ['でんしゃ', 'みっちゃく', 'ちかん', '満員電車'] },
+        { display: '🏫放課後の教室で…', answers: ['ほうかご', 'きょうしつ', 'ないしょ'] },
+        { display: '🎡観覧車の頂上でキス', answers: ['かんらんしゃ', 'きす', 'でーと'] },
+        { display: '🌙夜の公園で二人きり', answers: ['こうえん', 'よる', 'ふたりきり'] },
+        { display: '🏢会社の給湯室で…', answers: ['きゅうとうしつ', 'かいしゃ', 'ふりん', 'ないしょ'] },
+        { display: '👗試着室に二人で入る', answers: ['しちゃくしつ', 'ふたり', 'ないしょ'] },
+        { display: '🏊プールサイドで休憩', answers: ['ぷーる', 'みずぎ', 'きゅうけい'] }
     ],
     pose: [
         { display: '✌️ぴーす', answers: ['ぴーす', 'ピース', 'peace'] },
@@ -250,7 +305,18 @@ const cuteWords = {
         { display: '🥺ぶりっ子', answers: ['ぶりっこ', 'ぶりっ子', 'あざとい'] },
         { display: '🙌万歳', answers: ['ばんざい', '万歳', 'バンザイ'] },
         { display: '💪ガッツポーズ', answers: ['がっつぽーず', 'ガッツポーズ', 'よっしゃ'] },
-        { display: '🐶四つん這い', answers: ['よつんばい', '四つん這い', '犬のポーズ'] }
+        { display: '🐶四つん這い', answers: ['よつんばい', '四つん這い', '犬のポーズ'] },
+        { display: '👅ペロペロ', answers: ['ぺろぺろ', '舌出し', 'ベロ出し'] },
+        { display: '🤟内緒ポーズ', answers: ['ないしょ', 'しーっ', '秘密'] },
+        { display: '👙胸を寄せる', answers: ['おっぱい', '胸', '寄せる', '谷間'] },
+        { display: '🦵網タイツ', answers: ['あみたいつ', '網タイツ', '足', '脚'] },
+        { display: '💃自撮りポーズ', answers: ['じどり', 'せるふぃー', 'もり'] },
+        { display: '💋舌ぺろポーズ', answers: ['したぺろ', 'てへぺろ', 'べろ'] },
+        { display: '👗スカートをめくる', answers: ['すかーと', 'ぱんつ', 'めくる'] },
+        { display: '🤱授乳ポーズ（！？）', answers: ['じゅにゅう', 'おっぱい'] },
+        { display: '🛌誘ってる寝ポーズ', answers: ['ねそべり', 'うわめづかい', 'ねころび'] },
+        { display: '🦵太ももを強調', answers: ['ふともも', 'あし', 'ぜったいりょういき'] },
+        { display: '🙆‍♀️手で胸を隠す', answers: ['てぶら', 'おっぱい', 'かくす'] }
     ],
     job: [
         { display: '👮警察官', answers: ['けいさつかん', '警察官', 'おまわりさん', '警察'] },
@@ -359,6 +425,11 @@ const cuteWords = {
     ]
 };
 cuteWords.mix = [...cuteWords.animal, ...cuteWords.food, ...cuteWords.daily, ...cuteWords.yabai, ...cuteWords.situation, ...cuteWords.pose, ...cuteWords.job, ...cuteWords.vehicle, ...cuteWords.landmark, ...cuteWords.item, ...cuteWords.bug];
+
+// ソロモード用にお題リストを全部返すよ！💎✨💍
+app.get('/api/words', (req, res) => {
+    res.json(cuteWords);
+});
 
 function levenshtein(s, t) {
     if (!s.length) return t.length;
@@ -613,6 +684,12 @@ io.on('connection', (socket) => {
         const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
         io.emit('game_over', sortedPlayers);
     }
+});
+
+// ソロモード用にお題リストを全部返すよ！💎✨💍
+// ここならcuteWordsも定義済みだから絶対動く！🤟✨💍
+app.get('/api/words', (req, res) => {
+    res.json(cuteWords);
 });
 
 server.listen(PORT, () => {

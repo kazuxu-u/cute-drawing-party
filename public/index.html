@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cute Drawing Party 🎨✨</title>
-    <link rel="stylesheet" href="style.css?v=11">
+    <link rel="stylesheet" href="style.css?v=12">
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -17,7 +17,7 @@
                 <button id="openGalleryBtn" class="tool-btn" style="background:#cc99ff;" data-tooltip="みんなの絵を観る🖼️">🖼️</button>
             </div>
             
-            <h2 style="margin-top: 10px; text-align: center;">💖 Players 💖</h2>
+            <h2 style="margin-top: 10px; text-align: center;">💖 参加してるみんな 💖</h2>
             <ul id="playerList"></ul>
             
             <div id="setupArea">
@@ -87,6 +87,9 @@
                 <button id="saveBtn" class="tool-btn hidden" style="background:#66ccff; color:white;" data-tooltip="保存💾">💾</button>
                 <button id="gallerySubmitBtn" class="tool-btn hidden" style="background:#cc99ff; color:white;" data-tooltip="ギャラリーに投稿✨">✨</button>
                 <button id="exitSoloBtn" class="tool-btn hidden" style="background:#ff9933; color:white;" data-tooltip="やめる🚪">🚪</button>
+                <button id="rainbowBtn" class="tool-btn effect-btn" data-tooltip="虹色ペン🌈✨">🌈</button>
+                <button id="glowBtn" class="tool-btn effect-btn" data-tooltip="オーラペン🌟✨">✨</button>
+                <button id="nextWordBtn" class="tool-btn hidden" style="background:#ffcc00;" data-tooltip="次のお題！🎲">🎲</button>
             </div>
             
             <div class="canvas-container" style="position: relative;">
@@ -178,6 +181,6 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="script.js?v=11"></script>
+    <script src="script.js?v=12"></script>
 </body>
 </html>

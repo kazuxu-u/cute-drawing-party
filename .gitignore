@@ -1,7 +1,7 @@
 node_modules
-public/drawings/*.png
+# public/drawings/*.png  (ギャラリー同期のためにコメントアウト💅)
 !public/drawings/.gitkeep
-drawings_metadata.json
+# drawings_metadata.json (ギャラリー同期のためにコメントアウト💅)
 package-lock.json
 .DS_Store
 Thumbs.db
