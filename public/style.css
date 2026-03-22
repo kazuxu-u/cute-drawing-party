@@ -1,3 +1,7 @@
+* {
+    box-sizing: border-box;
+}
+
 :root {
     --bg-color: #ffe6f2; /* パステルピンク */
     --primary-color: #ff66b2;
@@ -79,8 +83,33 @@ ul#playerList li {
     margin-bottom: 20px;
 }
 
+.horizontal-status {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+    max-width: 600px; /* キャンバスの幅に合わせる💅 */
+    padding: 10px 15px;
+    background: white;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border: 3px solid var(--primary-color);
+    flex-wrap: wrap; /* 長すぎても折り返してはみ出さない！✨ */
+    gap: 10px;
+}
+
+.horizontal-status h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .status-area {
-    margin-top: auto;
+    margin-top: 20px;
     background: white;
     padding: 15px;
     border-radius: 15px;
