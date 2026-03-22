@@ -473,13 +473,13 @@ io.on('connection', (socket) => {
 
             if (isCorrect) {
                 player.hasGuessed = true;
-                // スコア更新 (回答者+2pt、描いた人+1pt)
-                player.score += 2;
+                // スコア更新 (回答者+1pt、描いた人+1pt)
+                player.score += 1;
                 if (players[currentPlayerIndex]) {
                     players[currentPlayerIndex].score += 1;
                 }
 
-                io.emit('chat_message', { sender: 'System', text: `やば！${player.name}さん大正解！🎉✨（回答者+2pt / 出題者+1pt）`, color: '#ff66b2', type: 'correct' });
+                io.emit('chat_message', { sender: 'System', text: `やば！${player.name}さん大正解！🎉✨（回答者+1pt / 出題者+1pt）`, color: '#ff66b2', type: 'correct' });
                 io.emit('update_players', players);
 
                 const allGuessed = players.every((p, idx) => idx === currentPlayerIndex || p.hasGuessed);
