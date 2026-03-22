@@ -103,7 +103,7 @@ const cuteWords = {
         { display: '🩲ぱんつ', answers: ['ぱんつ', 'パンツ', 'したぎ', '下着', 'panties'] },
         { display: '🍆なす（意味深）', answers: ['なす', 'ナス', '茄子', 'eggplant'] },
         { display: '🍈メロン（意味深）', answers: ['めろん', 'メロン', 'おっぱい', '巨乳', '胸'] },
-        { display: '🍈巨乳', answers: ['きょにゅう', '巨乳', 'おっぱい', '胸', 'big breasts'] },
+        { display: '🍑デカ尻', answers: ['でかしり', 'デカ尻', 'お尻', 'しり', 'butt'] },
         { display: '🍼哺乳瓶（バブみ）', answers: ['ほにゅうびん', '哺乳瓶', 'みるく', 'ミルク', 'ばぶ'] },
         { display: '🛏️ベッドイン', answers: ['べっどいん', 'ベッドイン', 'べっど', 'おとまり', 'えっち'] },
         { display: '🏩ラブホ', answers: ['らぶほ', 'ラブホ', 'ホテル', 'ほてる'] },
