@@ -1,0 +1,7 @@
+node_modules
+public/drawings/*.png
+!public/drawings/.gitkeep
+drawings_metadata.json
+package-lock.json
+.DS_Store
+Thumbs.db

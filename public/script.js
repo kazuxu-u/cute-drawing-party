@@ -676,6 +676,7 @@ socket.on('game_state', (state) => {
         if (turnEndBtn) turnEndBtn.classList.add('hidden'); // ターン終了時に隠す
         toolbar.style.pointerEvents = 'none';
         toolbar.style.opacity = '0.5';
+        timerDisplay.textContent = '⏱️ --'; // ターン間は -- にするよ！💖
     }
 });
 
@@ -772,8 +773,8 @@ socket.on('round_end', (data) => {
 socket.on('chat_message', (data) => {
     if (inSoloMode) return;
     addChatMessage(data.sender, data.text, data.color);
-    if (data.sender !== 'System') {
-        createDanmaku(data.text, data.color);
+    if (data.sender !== 'System' || data.type === 'correct') {
+        createDanmaku(data.text, data.color, data.type === 'correct');
     }
     if (data.type === 'correct') playSE('correct');
     else if (data.type === 'oshii') playSE('oshii');
@@ -886,34 +887,34 @@ function addChatMessage(sender, text, color) {
     chatBox.appendChild(div); chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-function createDanmaku(text, color) {
+function createDanmaku(text, color, isBig = false) {
     if (!danmakuContainer) return;
     
     const div = document.createElement('div');
-    div.className = 'danmaku-item';
-    div.textContent = text;
-    // 送信者の色を反映させることも可能ですが、基本はCSSの白文字＋黒フチでいきます✨
+    div.className = isBig ? 'danmaku-item big' : 'danmaku-item';
+    div.textContent = isBig ? `✨💖 ${text} 💖✨` : text;
     
-    // 表示予定の最大の高さ (文字がはみ出さないように -50px)
-    const maxHeight = danmakuContainer.clientHeight - 50; 
-    const topPos = Math.random() * (maxHeight > 0 ? maxHeight : 450); 
+    // 表示予定の最大の高さ (文字がはみ出さないように)
+    const padding = isBig ? 150 : 50;
+    const maxHeight = danmakuContainer.clientHeight - padding; 
+    const topPos = Math.random() * (maxHeight > 0 ? maxHeight : (isBig ? 300 : 450)); 
     div.style.top = `${topPos}px`;
     
     danmakuContainer.appendChild(div);
     
     requestAnimationFrame(() => {
-        // 幅を計算して画面外までしっかり移動させる
         const textWidth = div.clientWidth;
         const containerWidth = danmakuContainer.clientWidth || 600;
         
-        div.style.transition = `transform 5s linear`;
-        div.style.transform = `translateX(-${containerWidth + textWidth + 100}px)`;
+        // デカい弾幕はちょっとゆっくり見せたいから 7秒、通常は 5秒にするよ✨
+        const duration = isBig ? 7 : 5;
+        div.style.transition = `transform ${duration}s linear`;
+        div.style.transform = `translateX(-${containerWidth + textWidth + 150}px)`;
     });
     
-    // アニメーションが終わったらDOMからポイする
     setTimeout(() => {
         if (div && div.parentNode) {
             div.remove();
         }
-    }, 5500);
+    }, 7500);
 }

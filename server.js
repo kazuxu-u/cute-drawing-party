@@ -568,6 +568,10 @@ io.on('connection', (socket) => {
         });
 
         if (roundTimer) clearInterval(roundTimer);
+        
+        // 開始直後に現在の残り時間を全プレイヤーに通知！秒単位のズレをなくすよ💅✨
+        io.emit('timer', timeLeft);
+
         roundTimer = setInterval(() => {
             if (timeLimit > 0) {
                 timeLeft--;
@@ -576,8 +580,8 @@ io.on('connection', (socket) => {
                     endTurn();
                 }
             } else {
-                // 無限モードの場合は 0 を送り続けるか、あるいは特別な値を送る
-                io.emit('timer', 0);
+                // 無限モード（timeLimit === 0）のときは ∞ を送るよ！💖
+                io.emit('timer', '∞');
             }
         }, 1000);
     }

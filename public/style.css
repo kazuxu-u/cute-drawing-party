@@ -328,6 +328,18 @@ input[type="text"]:focus, select:focus {
     left: 100%;
 }
 
+/* 正解時のデカ弾幕！祝・合格！㊗️✨ */
+.danmaku-item.big {
+    font-size: 5.5rem;
+    color: #ffff00;
+    text-shadow: 
+        4px 4px 0 #ff0066, -4px -4px 0 #ff0066, 4px -4px 0 #ff0066, -4px 4px 0 #ff0066,
+        0px 4px 0 #ff0066, 4px 0px 0 #ff0066, -4px 0px 0 #ff0066, 0px -4px 0 #ff0066,
+        0 0 20px rgba(255, 255, 255, 0.8);
+    z-index: 100;
+    font-weight: 900;
+}
+
 /* 画像検索コンテナ */
 .image-search-container {
     width: 600px;
