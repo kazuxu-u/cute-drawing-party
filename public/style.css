@@ -48,8 +48,9 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    /* overflow-y: auto; */ /* 吹き出しが枠外に出られるように削除！💅✨ */
+    /* overflow-y: auto; */
     padding-right: 5px;
+    z-index: 1000; /* 中央のメイン枠より手前に表示されるように！💅✨ */
 }
 
 ul#playerList {
@@ -294,7 +295,7 @@ input[type="text"]:focus, select:focus {
     pointer-events: none;
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    z-index: 100;
+    z-index: 2000000; /* マジで何よりも手前に！爆アゲの最前面！💅✨💍💖 */
 }
 
 /* 吹き出しのしっぽ 🎈 */
@@ -309,11 +310,16 @@ input[type="text"]:focus, select:focus {
     border-color: rgba(255, 102, 178, 0.95) transparent transparent transparent;
     opacity: 0;
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: 100;
+    z-index: 2000000; /* しっぽも最前面！💅✨ */
 }
 
 .tool-btn:hover::after,
-.tool-btn:hover::before,
+.tool-btn:hover::before {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* フォーム要素用のツールチップ対応 💍 */
 .has-tooltip:hover::after,
 .has-tooltip:hover::before {
     opacity: 1;
@@ -339,6 +345,7 @@ input[type="text"]:focus, select:focus {
 
 .sidebar [data-tooltip]:hover::after,
 .sidebar [data-tooltip]:hover::before {
+    opacity: 1; /* 消えてたかもしれないから明示的にアゲ！💅✨ */
     transform: translateY(0);
 }
 
