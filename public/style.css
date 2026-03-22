@@ -44,12 +44,15 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
+    padding-right: 5px;
 }
 
 ul#playerList {
     list-style: none;
     padding: 0;
     margin-bottom: 20px;
+    flex-shrink: 0;
 }
 
 ul#playerList li {
@@ -71,12 +74,18 @@ ul#playerList li {
     display: none !important;
 }
 
+#setupArea {
+    flex-shrink: 0;
+    margin-bottom: 20px;
+}
+
 .status-area {
     margin-top: auto;
     background: white;
     padding: 15px;
     border-radius: 15px;
     text-align: center;
+    flex-shrink: 0;
 }
 
 /* Main Area */
@@ -223,6 +232,12 @@ input[type="text"]:focus, select:focus {
 }
 .tool-btn:hover {
     background: #e0e0e0;
+}
+
+.tool-btn.active {
+    border: 3px solid var(--primary-color);
+    box-shadow: 0 0 8px var(--primary-color);
+    transform: scale(1.05);
 }
 
 .tool-btn.danger {

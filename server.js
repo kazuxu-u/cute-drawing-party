@@ -36,7 +36,18 @@ const cuteWords = {
         { display: '🐘ぺりかん...じゃなくてゾウ', answers: ['ぞう', 'ゾウ', '象', 'elephant'] },
         { display: '🦒きりん', answers: ['きりん', 'キリン', 'giraffe'] },
         { display: '🦁らいおん', answers: ['らいおん', 'ライオン', 'lion'] },
-        { display: '🐒ごりら...じゃなくて猿', answers: ['さる', 'サル', '猿', 'さるやま', 'monkey', 'ごりら', 'ゴリラ', 'gorilla'] }
+        { display: '🐒ごりら...じゃなくて猿', answers: ['さる', 'サル', '猿', 'さるやま', 'monkey', 'ごりら', 'ゴリラ', 'gorilla'] },
+        { display: '🦊きつね', answers: ['きつね', 'キツネ', '狐', 'fox'] },
+        { display: '🐻くま', answers: ['くま', 'クマ', '熊', 'bear'] },
+        { display: '🐨こあら', answers: ['こあら', 'コアラ', 'koala'] },
+        { display: '🐷ぶた', answers: ['ぶた', 'ブタ', '豚', 'pig'] },
+        { display: '🐭ねずみ', answers: ['ねずみ', 'ネズミ', '鼠', 'mouse'] },
+        { display: '🐯とら', answers: ['とら', 'トラ', '虎', 'tiger'] },
+        { display: '🐮うし', answers: ['うし', 'ウシ', '牛', 'cow'] },
+        { display: '🐴うま', answers: ['うま', 'ウマ', '馬', 'horse'] },
+        { display: '🐸かえる', answers: ['かえる', 'カエル', '蛙', 'frog'] },
+        { display: '🐍へび', answers: ['へび', 'ヘビ', '蛇', 'snake'] },
+        { display: '🐬いるか', answers: ['いるか', 'イルカ', 'dolphin'] }
     ],
     food: [
         { display: '🍓いちご', answers: ['いちご', 'イチゴ', '苺', 'ストロベリー', 'strawberry'] },
@@ -48,7 +59,17 @@ const cuteWords = {
         { display: '🍣すし', answers: ['すし', '寿司', 'スシ', 'おすし', 'sushi'] },
         { display: '🍜らーめん', answers: ['らーめん', 'ラーメン', 'ramen'] },
         { display: '🍰けーき', answers: ['けーき', 'ケーキ', 'cake', 'ショートケーキ'] },
-        { display: '🥩やきにく', answers: ['やきにく', '焼肉', '肉', 'にく'] }
+        { display: '🥩やきにく', answers: ['やきにく', '焼肉', '肉', 'にく'] },
+        { display: '🍕ぴざ', answers: ['ぴざ', 'ピザ', 'pizza'] },
+        { display: '🍩どーなつ', answers: ['どーなつ', 'ドーナツ', 'donut'] },
+        { display: '🍫ちょこ', answers: ['ちょこ', 'チョコ', 'チョコレート', 'chocolate'] },
+        { display: '🍮ぷりん', answers: ['ぷりん', 'プリン', 'pudding'] },
+        { display: '🍙おにぎり', answers: ['おにぎり', 'オニギリ', 'おむすび', 'riceball'] },
+        { display: '🍛かれー', answers: ['かれー', 'カレー', 'カレーライス', 'curry'] },
+        { display: '🍞ぱん', answers: ['ぱん', 'パン', '食パン', 'bread'] },
+        { display: '🍳めだまやき', answers: ['めだまやき', '目玉焼き', 'フライエッグ', 'fried egg'] },
+        { display: '🍟ふらいどぽてと', answers: ['ぽてと', 'ポテト', 'フライドポテト', 'potato'] },
+        { display: '🍈めろん', answers: ['めろん', 'メロン', 'melon'] }
     ],
     daily: [
         { display: '🚗くるま', answers: ['くるま', 'クルマ', '車', 'じどうしゃ', 'car', '自動車'] },
@@ -57,7 +78,20 @@ const cuteWords = {
         { display: '🏠いえ', answers: ['いえ', '家', 'ハウス', 'house', 'おうち'] },
         { display: '📱すまほ', answers: ['スマホ', 'すまほ', 'スマートフォン', '携帯', 'けいたい', 'iphone'] },
         { display: '🚲じてんしゃ', answers: ['じてんしゃ', '自転車', 'ちゃり', 'チャリ', 'bicycle'] },
-        { display: '👓めがね', answers: ['めがね', 'メガネ', '眼鏡', 'めがねぇ', 'めがねっ娘', 'glasses'] }
+        { display: '👓めがね', answers: ['めがね', 'メガネ', '眼鏡', 'めがねぇ', 'めがねっ娘', 'glasses'] },
+        { display: '⏰めざましどけい', answers: ['めざましどけい', '目覚まし時計', '時計', 'とけい'] },
+        { display: '🧻といれっとぺーぱー', answers: ['といれっとぺーぱー', 'トイレットペーパー', 'ペーパー'] },
+        { display: '📺てれび', answers: ['てれび', 'テレビ', 'tv'] },
+        { display: '💻ぱそこん', answers: ['ぱそこん', 'パソコン', 'pc'] },
+        { display: '🛌べっど', answers: ['べっど', 'ベッド', 'ふとん', '布団', 'bed'] },
+        { display: '🚿しゃわー', answers: ['しゃわー', 'シャワー', 'shower'] },
+        { display: '🦷はぶらし', answers: ['はぶらし', '歯ブラシ', '歯みがき'] },
+        { display: '🌂かさ', answers: ['かさ', '傘', 'アンブレラ', 'umbrella'] },
+        { display: '🔑かぎ', answers: ['かぎ', '鍵', 'キー', 'key'] },
+        { display: '👠はいひーる', answers: ['はいひーる', 'ハイヒール', 'ヒール', '靴', 'くつ'] },
+        { display: '👗わんぴーす', answers: ['わんぴーす', 'ワンピース', 'ふく', '服'] },
+        { display: '👜かばん', answers: ['かばん', '鞄', 'バッグ', 'カバン', 'bag'] },
+        { display: '🧴けしょうすい', answers: ['けしょうすい', '化粧水', 'コスメ', 'スキンケア'] }
     ],
     yabai: [
         { display: '💩うんこ（笑）', answers: ['うんこ', 'ウンコ', 'うんち', 'ウンチ', 'poop'] },
@@ -67,10 +101,66 @@ const cuteWords = {
         { display: '💋くちびる', answers: ['くちびる', '唇', 'キス', 'きす', 'ちゅー', 'lip', 'lips'] },
         { display: '👙びきに', answers: ['びきに', 'ビキニ', 'みずぎ', '水着', 'bikini'] },
         { display: '🩲ぱんつ', answers: ['ぱんつ', 'パンツ', 'したぎ', '下着', 'panties'] },
-        { display: '🍆なす（意味深）', answers: ['なす', 'ナス', '茄子', 'eggplant'] }
+        { display: '🍆なす（意味深）', answers: ['なす', 'ナス', '茄子', 'eggplant'] },
+        { display: '🍈メロン（意味深）', answers: ['めろん', 'メロン', 'おっぱい', '巨乳', '胸'] },
+        { display: '🍑ピーチ（意味深）', answers: ['ぴーち', 'ピーチ', '桃', 'しり', 'お尻', 'おしり'] },
+        { display: '🍼哺乳瓶（バブみ）', answers: ['ほにゅうびん', '哺乳瓶', 'みるく', 'ミルク', 'ばぶ'] },
+        { display: '🛏️ベッドイン', answers: ['べっどいん', 'ベッドイン', 'べっど', 'おとまり', 'えっち'] },
+        { display: '🏩ラブホ', answers: ['らぶほ', 'ラブホ', 'ホテル', 'ほてる'] },
+        { display: '⛓️手錠', answers: ['てじょう', '手錠', '拘束', 'こうそく'] },
+        { display: '💥ムチ（SM）', answers: ['むち', 'ムチ', '鞭', 'SM'] },
+        { display: '🕯️ロウソク', answers: ['ろうそく', 'ロウソク', '蝋燭'] },
+        { display: '🐕首輪', answers: ['くびわ', '首輪', 'ぺっと', 'ペット'] },
+        { display: '💄キスマーク', answers: ['きすまーく', 'キスマーク'] },
+        { display: '📳おもちゃ（意味深）', answers: ['おもちゃ', 'ろーたー', 'ローター', 'バイブ'] },
+        { display: '🔴あかいやつ', answers: ['てんが', 'テンガ', 'TENGA', 'おなほ'] }
+    ],
+    situation: [
+        { display: '🌙お泊まり', answers: ['おとまり', 'お泊まり', 'お泊り', 'sleepover'] },
+        { display: '🛁お風呂', answers: ['おふろ', 'お風呂', 'ふろ', 'bath'] },
+        { display: '💕壁ドン', answers: ['かべどん', '壁ドン', 'kabedon'] },
+        { display: '🛏️添い寝', answers: ['そいね', '添い寝', 'soine'] },
+        { display: '💋キス待ち', answers: ['きすまち', 'キス待ち', 'きす'] },
+        { display: '💏密着', answers: ['みっちゃく', '密着', 'ぎゅー', 'ハグ'] },
+        { display: '💰パパ活', answers: ['ぱぱかつ', 'パパ活', 'ぢぢい', 'おぢ'] },
+        { display: '💔浮気発覚', answers: ['うわき', '浮気', 'うわきはっかく', '修羅場'] },
+        { display: '🍻合コン', answers: ['ごうこん', '合コン', '飲み会', 'のみかい'] },
+        { display: '👀ナンパ待ち', answers: ['なんぱ', 'ナンパ', 'ナンパ待ち', '声かけられ待ち'] },
+        { display: '🌅朝帰り', answers: ['あさがえり', '朝帰り', '始発'] },
+        { display: '😘キス', answers: ['きす', 'キス', 'ちゅー'] },
+        { display: '💌告白', answers: ['こくはく', '告白', 'すき', '好き'] },
+        { display: '💍プロポーズ', answers: ['ぷろぽーず', 'プロポーズ', '結婚', 'けっこん'] },
+        { display: '💢喧嘩', answers: ['けんか', '喧嘩', 'ケンカ', '怒り'] },
+        { display: '🍺酔っ払い', answers: ['よっぱらい', '酔っ払い', 'よいどれ'] },
+        { display: '🥱サボり', answers: ['さぼり', 'サボり', 'さぼる', '休憩'] },
+        { display: '🥺ぴえん', answers: ['ぴえん', 'ぴえん🥺', '泣く', 'なき'] },
+        { display: '💖推し活', answers: ['おしかつ', '推し活', 'おし', '推し', 'オタク'] },
+        { display: '📸自撮り', answers: ['じどり', '自撮り', 'せるふぃー', '盛り'] }
+    ],
+    pose: [
+        { display: '✌️ぴーす', answers: ['ぴーす', 'ピース', 'peace'] },
+        { display: '😉ウインク', answers: ['ういんく', 'ウインク', 'wink'] },
+        { display: '🫶ハート作る', answers: ['はーと', 'ハート', 'heart'] },
+        { display: '🫦セクシーポーズ', answers: ['せくしー', 'セクシーポーズ', 'グラビア'] },
+        { display: '💦アヘ顔（笑）', answers: ['あへがお', 'アヘ顔', 'ahegao'] },
+        { display: '🦵M字開脚（ヤバ', answers: ['えむじかいきゃく', 'M字開脚', 'm字'] },
+        { display: '👀振り向き', answers: ['ふりむき', '振り向き', 'みかえり'] },
+        { display: '💅ギャルピース', answers: ['ぎゃるぴーす', 'ギャルピ', 'ギャル'] },
+        { display: '🐰ルダハート', answers: ['るだはーと', 'ルダハート', 'ほっぺハート'] },
+        { display: '🫰指ハート', answers: ['ゆびはーと', '指ハート', 'きゅんです'] },
+        { display: '🦷虫歯ポーズ', answers: ['むしばぽーず', '虫歯ポーズ', '小顔'] },
+        { display: '👅あっかんべー', answers: ['あっかんべー', '舌出し', 'ベロ出し'] },
+        { display: '🥺体育座り', answers: ['たいいくずわり', '体育座り', '三角座り'] },
+        { display: '🙇‍♀️土下座', answers: ['どげざ', '土下座', 'ごめんなさい'] },
+        { display: '🌟ジョジョ立ち', answers: ['じょじょだち', 'ジョジョ立ち', 'ジョジョ'] },
+        { display: '🦷シェー', answers: ['しぇー', 'シェー', 'おそ松'] },
+        { display: '🥺ぶりっ子', answers: ['ぶりっこ', 'ぶりっ子', 'あざとい'] },
+        { display: '🙌万歳', answers: ['ばんざい', '万歳', 'バンザイ'] },
+        { display: '💪ガッツポーズ', answers: ['がっつぽーず', 'ガッツポーズ', 'よっしゃ'] },
+        { display: '🐶四つん這い', answers: ['よつんばい', '四つん這い', '犬のポーズ'] }
     ]
 };
-cuteWords.mix = [...cuteWords.animal, ...cuteWords.food, ...cuteWords.daily, ...cuteWords.yabai];
+cuteWords.mix = [...cuteWords.animal, ...cuteWords.food, ...cuteWords.daily, ...cuteWords.yabai, ...cuteWords.situation, ...cuteWords.pose];
 
 function levenshtein(s, t) {
     if (!s.length) return t.length;
@@ -142,6 +232,14 @@ io.on('connection', (socket) => {
 
     socket.on('draw', (data) => {
         socket.broadcast.emit('draw', data);
+    });
+    
+    socket.on('fill', (data) => {
+        socket.broadcast.emit('fill', data);
+    });
+    
+    socket.on('sync_canvas', (dataURL) => {
+        socket.broadcast.emit('sync_canvas', dataURL);
     });
     
     socket.on('clear_canvas', () => {

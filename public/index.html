@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cute Drawing Party 🎨✨</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=6">
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -42,6 +42,8 @@
                         <option value="food">たべもの🍔</option>
                         <option value="daily">にちじょう🏠</option>
                         <option value="yabai">ヤバいやつ（笑）🔞</option>
+                        <option value="situation">シチュエーション🌙</option>
+                        <option value="pose">ポーズ🦵</option>
                     </select>
                     
                     <button id="startBtn" class="cute-btn primary mt-4">💥 ゲームスタート！</button>
@@ -59,7 +61,10 @@
             <div class="toolbar" id="toolbar" style="pointer-events: none; opacity: 0.5;">
                 <input type="color" id="colorPicker" value="#000000" title="色選んでね！">
                 <input type="range" id="sizePicker" min="1" max="50" value="5" title="太さ！">
+                <button id="penBtn" class="tool-btn" style="background:#ccffcc;">🖋️ ペン</button>
                 <button id="eraserBtn" class="tool-btn">🧽 消しゴム</button>
+                <button id="fillBtn" class="tool-btn" style="background:#ffccdd;">🪣 塗りつぶし</button>
+                <button id="undoBtn" class="tool-btn" style="background:#ffdb58;">↩️ 戻す</button>
                 <button id="clearBtn" class="tool-btn danger">💣 ぜんぶ消す</button>
                 <button id="saveBtn" class="tool-btn hidden" style="background:#66ccff; color:white;">💾 保存</button>
                 <button id="exitSoloBtn" class="tool-btn hidden" style="background:#ff9933; color:white;">🚪 やめる</button>
@@ -68,6 +73,11 @@
                 <canvas id="drawingCanvas" width="600" height="500"></canvas>
                 <div id="overlay" class="overlay">
                     <h2 id="overlayText">ゲームに参加してね！💕<br>（ヤラシイ絵は描かないように！🙅‍♀️笑）</h2>
+                </div>
+                
+                <div id="wordPopupOverlay" class="overlay hidden" style="background: rgba(255, 230, 242, 0.95); flex-direction: column; z-index: 20; transition: opacity 0.5s;">
+                    <h1 id="wordPopupText" style="color: var(--primary-color); font-size: 3rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px;"></h1>
+                    <p id="wordPopupSubtext" style="font-size: 1.5rem; font-weight: bold; color: #555;"></p>
                 </div>
                 
                 <div id="podiumOverlay" class="overlay hidden" style="background: rgba(255, 230, 242, 0.95); flex-direction: column; overflow-y:auto; padding: 20px 0;">
@@ -92,6 +102,6 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="script.js"></script>
+    <script src="script.js?v=9"></script>
 </body>
 </html>

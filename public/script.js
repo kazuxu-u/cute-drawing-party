@@ -21,6 +21,9 @@ const podiumOverlay = document.getElementById('podiumOverlay');
 const podiumContainer = document.getElementById('podiumContainer');
 const backToWaitingBtn = document.getElementById('backToWaitingBtn');
 const galleryContainer = document.getElementById('galleryContainer');
+const wordPopupOverlay = document.getElementById('wordPopupOverlay');
+const wordPopupText = document.getElementById('wordPopupText');
+const wordPopupSubtext = document.getElementById('wordPopupSubtext');
 
 const chatBox = document.getElementById('chatBox');
 const chatInput = document.getElementById('chatInput');
@@ -30,7 +33,10 @@ const canvas = document.getElementById('drawingCanvas');
 const ctx = canvas.getContext('2d');
 const colorPicker = document.getElementById('colorPicker');
 const sizePicker = document.getElementById('sizePicker');
+const penBtn = document.getElementById('penBtn'); // ペンボタン追加
 const eraserBtn = document.getElementById('eraserBtn');
+const fillBtn = document.getElementById('fillBtn'); // 塗りつぶしボタン追加
+const undoBtn = document.getElementById('undoBtn'); // 戻すボタン追加
 const clearBtn = document.getElementById('clearBtn');
 const saveBtn = document.getElementById('saveBtn');
 const exitSoloBtn = document.getElementById('exitSoloBtn');
@@ -40,8 +46,9 @@ let myId = null;
 let isDrawing = false;
 let canIDraw = false;
 let inSoloMode = false;
-let currentSettings = { color: '#000000', size: 5, isEraser: false };
+let currentSettings = { color: '#000000', size: 5, isEraser: false, isFill: false };
 let gallery = []; 
+let drawHistory = []; // UNDO用の履歴配列 
 
 // 音声関連
 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -194,8 +201,127 @@ function drawLine(x0, y0, x1, y1, color, size, isErase) {
     ctx.closePath();
 }
 
+// 履歴保存機能（Undo用）
+function saveState() {
+    if (drawHistory.length > 20) drawHistory.shift(); // 最大20回まで戻れるように
+    drawHistory.push(canvas.toDataURL());
+}
+
+// 塗りつぶし（バケツ）アルゴリズム
+function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+        a: 255
+    } : { r: 0, g: 0, b: 0, a: 255 };
+}
+
+function floodFill(startX, startY, fillColorHex) {
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imgData.data;
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    startX = Math.floor(startX);
+    startY = Math.floor(startY);
+    
+    if(startX < 0 || startX >= width || startY < 0 || startY >= height) return;
+    
+    const startPos = (startY * width + startX) * 4;
+    const startR = data[startPos];
+    const startG = data[startPos + 1];
+    const startB = data[startPos + 2];
+    const startA = data[startPos + 3];
+    
+    const fillRgb = hexToRgb(fillColorHex);
+    
+    // 同じ色の場合は何もしない（無限ループ防止）
+    if (startR === fillRgb.r && startG === fillRgb.g && startB === fillRgb.b && startA === fillRgb.a) {
+        return;
+    }
+
+    const matchStartColor = (pos) => {
+        // アルファ値が0（透明）のピクセルも白(255,255,255)として扱うなどの調整も可能ですが、
+        // 今回はシンプルにRGBとAの完全一致で判定
+        return data[pos] === startR && data[pos + 1] === startG && data[pos + 2] === startB && data[pos + 3] === startA;
+    };
+    
+    const colorPixel = (pos) => {
+        data[pos] = fillRgb.r;
+        data[pos + 1] = fillRgb.g;
+        data[pos + 2] = fillRgb.b;
+        data[pos + 3] = 255;
+    };
+
+    const pixelStack = [[startX, startY]];
+    
+    while (pixelStack.length) {
+        const newPos = pixelStack.pop();
+        const x = newPos[0];
+        let y = newPos[1];
+        
+        let pixelPos = (y * width + x) * 4;
+        
+        while (y-- >= 0 && matchStartColor(pixelPos)) {
+            pixelPos -= width * 4;
+        }
+        
+        pixelPos += width * 4;
+        y++;
+        
+        let reachLeft = false;
+        let reachRight = false;
+        
+        while (y++ < height - 1 && matchStartColor(pixelPos)) {
+            colorPixel(pixelPos);
+            
+            if (x > 0) {
+                if (matchStartColor(pixelPos - 4)) {
+                    if (!reachLeft) {
+                        pixelStack.push([x - 1, y]);
+                        reachLeft = true;
+                    }
+                } else if (reachLeft) {
+                    reachLeft = false;
+                }
+            }
+            
+            if (x < width - 1) {
+                if (matchStartColor(pixelPos + 4)) {
+                    if (!reachRight) {
+                        pixelStack.push([x + 1, y]);
+                        reachRight = true;
+                    }
+                } else if (reachRight) {
+                    reachRight = false;
+                }
+            }
+            
+            pixelPos += width * 4;
+        }
+    }
+    
+    ctx.putImageData(imgData, 0, 0);
+}
+
 canvas.addEventListener('mousedown', (e) => {
     if (!canIDraw) return;
+    
+    // 描画・塗りつぶしが始まる前に現在の状態を保存
+    saveState();
+    
+    if (currentSettings.isFill) {
+        // 塗りつぶしモード
+        const color = currentSettings.color;
+        floodFill(e.offsetX, e.offsetY, color);
+        if (!inSoloMode) {
+            socket.emit('fill', { x: e.offsetX, y: e.offsetY, color: color });
+        }
+        return; // 線を引かないようにここでreturn
+    }
+
     isDrawing = true;
     lastX = e.offsetX; lastY = e.offsetY;
 });
@@ -210,11 +336,65 @@ canvas.addEventListener('mousemove', (e) => {
 canvas.addEventListener('mouseup', () => isDrawing = false);
 canvas.addEventListener('mouseout', () => isDrawing = false);
 
-colorPicker.addEventListener('change', (e) => { currentSettings.color = e.target.value; currentSettings.isEraser = false; });
+function setActiveTool(btn) {
+    if (penBtn) penBtn.classList.remove('active');
+    if (eraserBtn) eraserBtn.classList.remove('active');
+    if (fillBtn) fillBtn.classList.remove('active');
+    if (btn) btn.classList.add('active');
+}
+// 初期状態はペン
+if (penBtn) setActiveTool(penBtn);
+
+colorPicker.addEventListener('input', (e) => {
+    currentSettings.color = e.target.value; 
+});
+
+colorPicker.addEventListener('change', (e) => { 
+    currentSettings.color = e.target.value; 
+    if (currentSettings.isEraser) {
+        currentSettings.isEraser = false; 
+        setActiveTool(penBtn);
+    }
+    // 塗りつぶしの時は塗りつぶしモードを維持する
+});
 sizePicker.addEventListener('input', (e) => currentSettings.size = e.target.value);
-eraserBtn.addEventListener('click', () => currentSettings.isEraser = true);
+if (penBtn) {
+    penBtn.addEventListener('click', () => { 
+        currentSettings.isEraser = false; 
+        currentSettings.isFill = false; 
+        setActiveTool(penBtn);
+    });
+}
+eraserBtn.addEventListener('click', () => { 
+    currentSettings.isEraser = true; 
+    currentSettings.isFill = false; 
+    setActiveTool(eraserBtn);
+});
+if (fillBtn) {
+    fillBtn.addEventListener('click', () => { 
+        currentSettings.isFill = true; 
+        currentSettings.isEraser = false; 
+        setActiveTool(fillBtn);
+    });
+}
+if (undoBtn) {
+    undoBtn.addEventListener('click', () => {
+        if (!canIDraw || drawHistory.length === 0) return;
+        const previousState = drawHistory.pop();
+        const img = new Image();
+        img.onload = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+            if (!inSoloMode) {
+                socket.emit('sync_canvas', previousState);
+            }
+        };
+        img.src = previousState;
+    });
+}
 clearBtn.addEventListener('click', () => { 
     if(canIDraw) {
+        saveState();
         if (!inSoloMode) socket.emit('clear_canvas'); 
         else { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
     }
@@ -317,20 +497,65 @@ socket.on('round_start', (data) => {
     wordDisplay.textContent = `お題：${data.word}`;
     roundDisplay.textContent = `🏁 ${data.roundInfo}`;
     
+    drawHistory = []; // 新しいターンの時に履歴リセット
     canIDraw = data.isDrawer;
-    if (canIDraw) {
-        toolbar.style.pointerEvents = 'auto';
-        toolbar.style.opacity = '1';
-        addChatMessage('System', 'あなたの番だよ！絵を描いてね！🖌️✨', '#ff66b2');
-    } else {
+    
+    if (wordPopupOverlay) {
+        wordPopupOverlay.style.opacity = '1';
+        wordPopupOverlay.classList.remove('hidden');
+        
+        if (canIDraw) {
+            wordPopupText.innerHTML = `<span style="font-size:1.5rem; color:#666;">お題：</span><br>${data.word}`;
+            wordPopupSubtext.textContent = 'あなたが描く番だよ！🖌️✨';
+        } else {
+            wordPopupText.innerHTML = `${data.drawerName} <span style="font-size:1.5rem; color:#666;">の番！</span>`;
+            wordPopupSubtext.textContent = '何を描いてるか当てよう！👀';
+        }
+        
+        // ポップアップ中は操作無効
         toolbar.style.pointerEvents = 'none';
         toolbar.style.opacity = '0.5';
-        addChatMessage('System', `${data.drawerName}さんがお絵描き中…！当ててみて！👀`, '#ff66b2');
+
+        setTimeout(() => {
+            wordPopupOverlay.style.opacity = '0';
+            setTimeout(() => {
+                wordPopupOverlay.classList.add('hidden');
+                // フェードアウト後に操作可能にする
+                if (canIDraw) {
+                    toolbar.style.pointerEvents = 'auto';
+                    toolbar.style.opacity = '1';
+                    addChatMessage('System', 'あなたの番だよ！絵を描いてね！🖌️✨', '#ff66b2');
+                } else {
+                    toolbar.style.pointerEvents = 'none';
+                    toolbar.style.opacity = '0.5';
+                    addChatMessage('System', `${data.drawerName}さんがお絵描き中…！当ててみて！👀`, '#ff66b2');
+                }
+            }, 500);
+        }, 2000);
+    } else {
+        // フォールバック
+        if (canIDraw) {
+            toolbar.style.pointerEvents = 'auto';
+            toolbar.style.opacity = '1';
+            addChatMessage('System', 'あなたの番だよ！絵を描いてね！🖌️✨', '#ff66b2');
+        } else {
+            toolbar.style.pointerEvents = 'none';
+            toolbar.style.opacity = '0.5';
+            addChatMessage('System', `${data.drawerName}さんがお絵描き中…！当ててみて！👀`, '#ff66b2');
+        }
     }
 });
 
 socket.on('timer', (time) => { if(!inSoloMode) timerDisplay.textContent = `⏱️ ${time}`; });
 socket.on('draw', (data) => { if(!inSoloMode) drawLine(data.x0, data.y0, data.x1, data.y1, data.color, data.size, data.isEraser); });
+socket.on('fill', (data) => { if(!inSoloMode) floodFill(data.x, data.y, data.color); });
+socket.on('sync_canvas', (dataURL) => { 
+    if(!inSoloMode) { 
+        const img = new Image();
+        img.onload = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0); };
+        img.src = dataURL;
+    }
+});
 socket.on('clear_canvas', () => { if(!inSoloMode) { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }});
 
 socket.on('round_end', (data) => {
