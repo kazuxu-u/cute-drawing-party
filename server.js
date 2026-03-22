@@ -116,7 +116,7 @@ const cuteWords = {
         { display: '🔴あかいやつ', answers: ['てんが', 'テンガ', 'TENGA', 'おなほ'] }
     ],
     situation: [
-        { display: '🌙お泊まり', answers: ['おとまり', 'お泊まり', 'お泊り', 'sleepover'] },
+        { display: '💑デート', answers: ['でーと', 'デート', 'date'] },
         { display: '🛁お風呂', answers: ['おふろ', 'お風呂', 'ふろ', 'bath'] },
         { display: '💕壁ドン', answers: ['かべどん', '壁ドン', 'kabedon'] },
         { display: '🛏️添い寝', answers: ['そいね', '添い寝', 'soine'] },
