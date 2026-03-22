@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cute Drawing Party 🎨✨</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar glass">
+            <h2>💖 Players 💖</h2>
+            <button id="bgmToggleBtn" class="cute-btn" style="background:#66ccff; margin-bottom: 10px; width: 100%; border: none; color: #fff;">🎵 BGM: ON中💕</button>
+            <ul id="playerList"></ul>
+            
+            <div id="setupArea">
+                <input type="text" id="playerNameInput" placeholder="なまえ（ギャルネーム可😎）" maxlength="10">
+                <button id="joinBtn" class="cute-btn">ジョインする！✨</button>
+                <button id="soloModeBtn" class="cute-btn" style="background:#ff9933; margin-top:10px;">🎨 一人でじっくりお絵描き</button>
+                
+                <div class="settings mt-4 hidden" id="gameSettings">
+                    <label>⏱️ 制限時間 (秒) 選んでネ！:</label>
+                    <select id="timeLimitSelect" style="margin-bottom: 10px;">
+                        <option value="30">30秒（バカ早）</option>
+                        <option value="60" selected>60秒（ふつう）</option>
+                        <option value="90">90秒（のんびり）</option>
+                        <option value="120">120秒（マジ大作）</option>
+                    </select>
+                    
+                    <label>🔄 何周する？:</label>
+                    <select id="roundsSelect">
+                        <option value="1" selected>1周（サクッと）</option>
+                        <option value="2">2周（ふつう）</option>
+                        <option value="3">3周（ガッツリ）</option>
+                    </select>
+                    <button id="startBtn" class="cute-btn primary mt-4">💥 ゲームスタート！</button>
+                </div>
+            </div>
+            
+            <div class="status-area">
+                <h3 id="roundDisplay">🏁 --周目</h3>
+                <h3 id="timerDisplay">⏱️ --</h3>
+                <h3 id="wordDisplay">お題：----</h3>
+            </div>
+        </aside>
+
+        <main class="main-area glass">
+            <div class="toolbar" id="toolbar" style="pointer-events: none; opacity: 0.5;">
+                <input type="color" id="colorPicker" value="#000000" title="色選んでね！">
+                <input type="range" id="sizePicker" min="1" max="50" value="5" title="太さ！">
+                <button id="eraserBtn" class="tool-btn">🧽 消しゴム</button>
+                <button id="clearBtn" class="tool-btn danger">💣 ぜんぶ消す</button>
+                <button id="saveBtn" class="tool-btn hidden" style="background:#66ccff; color:white;">💾 保存</button>
+                <button id="exitSoloBtn" class="tool-btn hidden" style="background:#ff9933; color:white;">🚪 やめる</button>
+            </div>
+            <div class="canvas-container">
+                <canvas id="drawingCanvas" width="600" height="500"></canvas>
+                <div id="overlay" class="overlay">
+                    <h2 id="overlayText">ゲームに参加してね！💕<br>（ヤラシイ絵は描かないように！🙅‍♀️笑）</h2>
+                </div>
+                
+                <div id="podiumOverlay" class="overlay hidden" style="background: rgba(255, 230, 242, 0.95); flex-direction: column; overflow-y:auto; padding: 20px 0;">
+                    <h1 style="color: var(--primary-color); font-size: 3rem; margin-bottom: 20px; flex-shrink: 0;">🏆 結果発表 🏆</h1>
+                    <div id="podiumContainer" class="podium-container" style="flex-shrink: 0;"></div>
+                    <button id="backToWaitingBtn" class="cute-btn primary mt-4" style="font-size: 1.5rem; padding: 15px 30px; flex-shrink: 0;">もう一回遊ぶ！✨</button>
+                    
+                    <div id="galleryContainer" class="gallery-container"></div>
+                </div>
+            </div>
+        </main>
+
+        <aside class="chat-area glass">
+            <h2>💬 Chat & Guess</h2>
+            <audio id="bgmPlayer" preload="auto"></audio>
+            <div id="chatBox" class="chat-box"></div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="答えを入力！(ｴﾁなのはﾀﾞﾒ♡)">
+                <button id="sendBtn" class="cute-btn">送信💌</button>
+            </div>
+        </aside>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
