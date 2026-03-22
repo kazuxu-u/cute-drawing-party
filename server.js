@@ -246,9 +246,26 @@ const cuteWords = {
         { display: '🧹掃除機', answers: ['そうじき', '掃除機'] },
         { display: '🔌コンセント', answers: ['こんせんと', 'コンセント', 'プラグ'] },
         { display: '🔋電池', answers: ['でんち', '電池', 'バッテリー'] }
+    ],
+    bug: [
+        { display: '🦋ちょうちょ', answers: ['ちょう', 'ちょうちょ', 'チョウ', 'butterfly'] },
+        { display: '🐝はち', answers: ['はち', 'ハチ', '蜂', 'bee'] },
+        { display: '🐞てんとう虫', answers: ['てんとうむし', 'テントウムシ', 'てんとう虫', 'ladybug'] },
+        { display: '🐜あり', answers: ['あり', 'アリ', 'ant'] },
+        { display: '🕷️くも', answers: ['くも', 'クモ', '蜘蛛', 'spider'] },
+        { display: '🦗バッタ', answers: ['ばった', 'バッタ', 'grasshopper'] },
+        { display: '🪲カブトムシ', answers: ['かぶとむし', 'カブトムシ', 'beetle'] },
+        { display: '🦟か（蚊）', answers: ['か', 'カ', '蚊', 'mosquito'] },
+        { display: '🪰はえ', answers: ['はえ', 'ハエ', 'fly'] },
+        { display: '🐛いもむし', answers: ['いもむし', 'イモムシ', 'caterpillar'] },
+        { display: '🐌かたつむり', answers: ['かたつむり', 'カタツムリ', 'snail'] },
+        { display: '🪳ゴキブリ（笑）', answers: ['ごきぶり', 'ゴキブリ', 'G', 'cockroach'] },
+        { display: '🐜カマキリ', answers: ['かまきり', 'カマキリ', 'mantis'] },
+        { display: '🦟セミ', answers: ['せみ', 'セミ', '蝉', 'cicada'] },
+        { display: '🏮ホタル', answers: ['ほたる', 'ホタル', '蛍', 'firefly'] }
     ]
 };
-cuteWords.mix = [...cuteWords.animal, ...cuteWords.food, ...cuteWords.daily, ...cuteWords.yabai, ...cuteWords.situation, ...cuteWords.pose, ...cuteWords.job, ...cuteWords.vehicle, ...cuteWords.landmark, ...cuteWords.item];
+cuteWords.mix = [...cuteWords.animal, ...cuteWords.food, ...cuteWords.daily, ...cuteWords.yabai, ...cuteWords.situation, ...cuteWords.pose, ...cuteWords.job, ...cuteWords.vehicle, ...cuteWords.landmark, ...cuteWords.item, ...cuteWords.bug];
 
 function levenshtein(s, t) {
     if (!s.length) return t.length;
