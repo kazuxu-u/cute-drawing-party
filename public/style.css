@@ -223,21 +223,84 @@ input[type="text"]:focus, select:focus {
 .tool-btn {
     background: #f0f0f0;
     border: none;
-    padding: 5px 10px;
-    border-radius: 10px;
+    padding: 10px;
+    border-radius: 12px;
     cursor: pointer;
     font-family: inherit;
     font-weight: bold;
     transition: 0.2s;
+    font-size: 1.4rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 45px;
+    height: 45px;
+    position: relative;
+    box-shadow: 0 3px 0 #bbb;
 }
+
 .tool-btn:hover {
     background: #e0e0e0;
 }
 
+.tool-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 0 0 transparent;
+}
+
+/* 吹き出し（ツールチップ）スタイル 💎✨ */
+.tool-btn::after, .has-tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: rgba(255, 102, 178, 0.95); /* ギャルピンク💕 */
+    color: white;
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    z-index: 100;
+}
+
+/* 吹き出しのしっぽ 🎈 */
+.tool-btn::before, .has-tooltip::before {
+    content: "";
+    position: absolute;
+    bottom: 105%;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    border-width: 8px 8px 0 8px;
+    border-style: solid;
+    border-color: rgba(255, 102, 178, 0.95) transparent transparent transparent;
+    opacity: 0;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 100;
+}
+
+.tool-btn:hover::after,
+.tool-btn:hover::before,
+.has-tooltip:hover::after,
+.has-tooltip:hover::before {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.has-tooltip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
 .tool-btn.active {
+    background: #fff0f5;
     border: 3px solid var(--primary-color);
-    box-shadow: 0 0 8px var(--primary-color);
-    transform: scale(1.05);
+    box-shadow: 0 0 12px var(--primary-color);
 }
 
 .tool-btn.danger {

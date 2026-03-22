@@ -9,6 +9,7 @@
 </head>
 <body>
     <div class="container">
+        <!-- サイドバー（設定・プレイヤー） -->
         <aside class="sidebar glass">
             <button id="bgmToggleBtn" class="cute-btn" style="background:#66ccff; margin-bottom: 10px; width: 100%; border: none; color: #fff;">🎵 BGM: ON中💕</button>
             <button id="emojiToggleBtn" class="cute-btn" style="background:#ff99cc; margin-bottom: 10px; width: 100%; border: none; color: #fff;">🧸 スタンプ: OFF</button>
@@ -69,39 +70,33 @@
             </div>
         </aside>
 
+        <!-- メインエリア（キャンバス） -->
         <main class="main-area glass">
             <div class="toolbar" id="toolbar" style="pointer-events: none; opacity: 0.5;">
-                <input type="color" id="colorPicker" value="#000000" title="色選んでね！">
-                <input type="range" id="sizePicker" min="1" max="50" value="5" title="太さ！">
-                <button id="penBtn" class="tool-btn" style="background:#ccffcc;">🖋️ ペン</button>
-                <button id="eraserBtn" class="tool-btn">🧽 消しゴム</button>
-                <button id="fillBtn" class="tool-btn" style="background:#ffccdd;">🪣 塗りつぶし</button>
-                <button id="undoBtn" class="tool-btn" style="background:#ffdb58;">↩️ 戻す</button>
-                <button id="searchImageBtn" class="tool-btn" style="background:#b3e5fc;">🔍 画像検索</button>
-                <button id="turnEndBtn" class="tool-btn hidden" style="background:#ff66b2; color:white; font-weight:bold;">✨ ターン終了</button>
-                <button id="clearBtn" class="tool-btn danger">💣 ぜんぶ消す</button>
-                <button id="saveBtn" class="tool-btn hidden" style="background:#66ccff; color:white;">💾 保存</button>
-                <button id="gallerySubmitBtn" class="tool-btn hidden" style="background:#cc99ff; color:white;">✨ ギャラリーに投稿</button>
-                <button id="exitSoloBtn" class="tool-btn hidden" style="background:#ff9933; color:white;">🚪 やめる</button>
+                <div class="has-tooltip" data-tooltip="色選んでね！🎨">
+                    <input type="color" id="colorPicker" value="#000000">
+                </div>
+                <div class="has-tooltip" data-tooltip="太さ！📏">
+                    <input type="range" id="sizePicker" min="1" max="50" value="5">
+                </div>
+                <button id="penBtn" class="tool-btn" style="background:#ccffcc;" data-tooltip="ペン🖋️">🖋️</button>
+                <button id="eraserBtn" class="tool-btn" data-tooltip="消しゴム🧽">🧽</button>
+                <button id="fillBtn" class="tool-btn" style="background:#ffccdd;" data-tooltip="塗りつぶし🪣">🪣</button>
+                <button id="undoBtn" class="tool-btn" style="background:#ffdb58;" data-tooltip="元に戻す↩️">↩️</button>
+                <button id="searchImageBtn" class="tool-btn" style="background:#b3e5fc;" data-tooltip="画像検索🔍">🔍</button>
+                <button id="turnEndBtn" class="tool-btn hidden" style="background:#ff66b2; color:white; font-weight:bold;" data-tooltip="ターン終了✨">✨</button>
+                <button id="clearBtn" class="tool-btn danger" data-tooltip="ぜんぶ消す💣">💣</button>
+                <button id="saveBtn" class="tool-btn hidden" style="background:#66ccff; color:white;" data-tooltip="保存💾">💾</button>
+                <button id="gallerySubmitBtn" class="tool-btn hidden" style="background:#cc99ff; color:white;" data-tooltip="ギャラリーに投稿✨">✨</button>
+                <button id="exitSoloBtn" class="tool-btn hidden" style="background:#ff9933; color:white;" data-tooltip="やめる🚪">🚪</button>
             </div>
-            <div class="canvas-container">
+            <div class="canvas-container" style="position: relative;">
                 <canvas id="drawingCanvas" width="600" height="500"></canvas>
                 <div id="danmakuContainer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 15;"></div>
+                
+                <!-- キャンバス上の初期オーバーレイ（単なる背景） -->
                 <div id="overlay" class="overlay">
                     <h2 id="overlayText">ゲームに参加してね！💕<br>（ヤラシイ絵は描かないように！🙅‍♀️笑）</h2>
-                </div>
-                
-                <div id="wordPopupOverlay" class="overlay hidden" style="background: rgba(255, 230, 242, 0.95); flex-direction: column; z-index: 20; transition: opacity 0.5s;">
-                    <h1 id="wordPopupText" style="color: var(--primary-color); font-size: 3rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px;"></h1>
-                    <p id="wordPopupSubtext" style="font-size: 1.5rem; font-weight: bold; color: #555;"></p>
-                </div>
-                
-                <div id="podiumOverlay" class="overlay hidden" style="background: rgba(255, 230, 242, 0.95); flex-direction: column; overflow-y:auto; padding: 20px 0; justify-content: flex-start;">
-                    <h1 style="color: var(--primary-color); font-size: 3rem; margin-bottom: 20px; flex-shrink: 0;">🏆 結果発表 🏆</h1>
-                    <div id="podiumContainer" class="podium-container" style="flex-shrink: 0;"></div>
-                    <button id="backToWaitingBtn" class="cute-btn primary mt-4" style="font-size: 1.5rem; padding: 15px 30px; flex-shrink: 0;">もう一回遊ぶ！✨</button>
-                    
-                    <div id="galleryContainer" class="gallery-container"></div>
                 </div>
             </div>
 
@@ -117,6 +112,7 @@
             </div>
         </main>
 
+        <!-- チャットエリア -->
         <aside class="chat-area glass">
             <h2>💬 Chat & Guess</h2>
             <audio id="bgmPlayer" preload="auto"></audio>
@@ -128,37 +124,60 @@
         </aside>
     </div>
 
-    <!-- ギャラリー観覧モードのオーバーレイ -->
-    <div id="galleryOverlay" class="overlay hidden" style="background: rgba(255, 230, 242, 0.98); flex-direction: column; overflow-y:auto; padding: 40px 20px; z-index: 100; justify-content: flex-start;">
-        <h1 style="color: var(--primary-color); font-size: 3.5rem; margin-bottom: 20px; flex-shrink: 0; text-shadow: 2px 2px 0 white;">✨ みんなのギャラリー ✨</h1>
-        <p style="font-size: 1.2rem; margin-bottom: 30px; font-weight: bold; color: #888;">これまでに保存された傑作たちだよ！🖼️💖</p>
-        
-        <div id="fullGalleryContainer" class="gallery-container" style="max-width: 1200px;">
-            <!-- ここに全部の絵が並ぶよ！ -->
-        </div>
+    <!-- ✅ 以下、画面全体を覆うオーバーレイ系（body直下へ移動） -->
 
-        <button id="closeGalleryBtn" class="cute-btn primary" style="font-size: 1.5rem; padding: 15px 40px; margin-top: 40px; position: sticky; bottom: 20px;">✖ 閉じる</button>
+    <!-- お題ポップアップ（新ラウンド等） -->
+    <div id="wordPopupOverlay" class="overlay hidden" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(255, 230, 242, 0.95); flex-direction: column; z-index: 5000; transition: opacity 0.5s; justify-content: center; align-items: center;">
+        <h1 id="wordPopupText" style="color: var(--primary-color); font-size: 3rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); margin-bottom: 10px;"></h1>
+        <p id="wordPopupSubtext" style="font-size: 1.5rem; font-weight: bold; color: #555;"></p>
     </div>
 
-    <!-- 保存時のお題入力モーダル -->
-    <div id="savePromptModal" class="overlay hidden" style="background: rgba(255, 230, 242, 0.98); flex-direction: column; z-index: 150;">
-        <div class="glass" style="padding: 40px; border-radius: 30px; text-align: center; max-width: 500px; width: 90%; border: 4px solid var(--primary-color);">
-            <h2 style="color: var(--primary-color); margin-bottom: 20px;">🖼️ ギャラリーに保存 ✨</h2>
-            <p style="margin-bottom: 20px; font-weight: bold;">この絵に名前（お題）をつけてね！💕</p>
+    <!-- 🏆 結果発表オーバーレイ -->
+    <div id="podiumOverlay" class="overlay hidden" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(255, 230, 242, 1); flex-direction: column; overflow-y:auto; padding: 0; z-index: 10000; justify-content: flex-start; align-items: center;">
+        <!-- 固定ヘッダー部分 -->
+        <div style="position: sticky; top: 0; background: rgba(255, 230, 242, 1); width: 100%; display: flex; flex-direction: column; align-items: center; padding: 30px 0; z-index: 10010; border-bottom: 2px dashed #ff66b2; box-shadow: 0 4px 15px rgba(255,102,178,0.2);">
+            <h1 style="color: var(--primary-color); font-size: 3rem; margin-bottom: 20px; flex-shrink: 0; text-shadow: 2px 2px 0 white;">🏆 結果発表 🏆</h1>
+            <div id="podiumContainer" class="podium-container" style="flex-shrink: 0;"></div>
+            <button id="backToWaitingBtn" class="cute-btn primary mt-4" style="font-size: 1.5rem; padding: 15px 40px; flex-shrink: 0;">もう一回遊ぶ！✨</button>
+            <p style="margin: 20px 0 0; color: #ff66b2; font-weight: bold; font-size: 1.3rem; text-shadow: 1px 1px 0 white;">👇 下にスクロールすると、みんなが描いた絵が見れるよ！💖</p>
+        </div>
+        <!-- スクロール可能な絵のリスト -->
+        <div id="galleryContainer" class="gallery-container" style="padding: 40px 20px; max-width: 1200px; width: 100%;">
+            <!-- ここに絵が並ぶよ！ -->
+        </div>
+    </div>
+
+    <!-- ✨ みんなのギャラリー（観覧用） -->
+    <div id="galleryOverlay" class="overlay hidden" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(255, 230, 242, 1); flex-direction: column; overflow-y:auto; padding: 40px 20px; z-index: 10000; justify-content: flex-start; align-items: center;">
+        <h1 style="color: var(--primary-color); font-size: 3.5rem; margin-bottom: 20px; flex-shrink: 0; text-shadow: 2px 2px 0 white;">✨ みんなのギャラリー ✨</h1>
+        <p style="font-size: 1.4rem; margin-bottom: 30px; font-weight: bold; color: #cc6699;">これまでに保存された傑作たちだよ！🖼️💖</p>
+        
+        <div id="fullGalleryContainer" class="gallery-container" style="max-width: 1200px; width: 100%;">
+            <!-- 傑作が並ぶ！ -->
+        </div>
+
+        <button id="closeGalleryBtn" class="cute-btn" style="background:#ff66b2; color:white; font-size: 1.8rem; padding: 15px 50px; margin-top: 50px; position: sticky; bottom: 30px; border:none; border-radius: 50px; box-shadow: 0 5px 0 #cc3388;">✖ 閉じる</button>
+    </div>
+
+    <!-- 💾 保存時のお題入力モーダル -->
+    <div id="savePromptModal" class="overlay hidden" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.4); flex-direction: column; z-index: 15000; justify-content: center; align-items: center; backdrop-filter: blur(8px);">
+        <div class="glass" style="padding: 40px; border-radius: 30px; text-align: center; max-width: 500px; width: 90%; background: white; border: 6px solid var(--primary-color);">
+            <h2 style="color: var(--primary-color); margin-bottom: 20px; font-size: 2rem;">🖼️ ギャラリーに保存 ✨</h2>
+            <p style="margin-bottom: 20px; font-weight: bold; font-size: 1.2rem;">この絵に名前（お題）をつけてね！💕</p>
             
             <div style="text-align: left; margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: #888;">🎨 お題（タイトル）:</label>
-                <input type="text" id="modalPromptInput" placeholder="お題を入れてね！" style="width: 100%; padding: 10px; border-radius: 10px; border: 2px solid #ffccdd; font-size: 1.1rem;">
+                <label style="display: block; margin-bottom: 8px; font-size: 1rem; color: #888; font-weight: bold;">🎨 お題（タイトル）:</label>
+                <input type="text" id="modalPromptInput" placeholder="お題を入れてね！" style="width: 100%; padding: 12px; border-radius: 15px; border: 3px solid #ffccdd; font-size: 1.2rem; outline:none;">
             </div>
             
             <div style="text-align: left; margin-bottom: 30px;">
-                <label style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: #888;">✍️ 描いた人:</label>
-                <input type="text" id="modalArtistInput" placeholder="あなたのなまえ" style="width: 100%; padding: 10px; border-radius: 10px; border: 2px solid #ffccdd; font-size: 1.1rem;">
+                <label style="display: block; margin-bottom: 8px; font-size: 1rem; color: #888; font-weight: bold;">✍️ 描いた人:</label>
+                <input type="text" id="modalArtistInput" placeholder="あなたのなまえ" style="width: 100%; padding: 12px; border-radius: 15px; border: 3px solid #ffccdd; font-size: 1.2rem; outline:none;">
             </div>
 
-            <div style="display: flex; gap: 10px; justify-content: center;">
-                <button id="cancelSaveBtn" class="cute-btn" style="background: #ccc; flex: 1;">やめる🥺</button>
-                <button id="confirmSaveBtn" class="cute-btn primary" style="flex: 2;">投稿する！💖</button>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button id="cancelSaveBtn" class="cute-btn" style="background: #ccc; flex: 1; box-shadow: 0 4px 0 #999;">やめる🥺</button>
+                <button id="confirmSaveBtn" class="cute-btn primary" style="flex: 2; padding: 15px;">投稿する！💖</button>
             </div>
         </div>
     </div>
