@@ -618,6 +618,10 @@ if (soloModeBtn) {
         toolbar.style.pointerEvents = 'auto';
         toolbar.style.opacity = '1';
         
+        // 名前を保存💕
+        const name = playerNameInput.value.trim();
+        if (name) localStorage.setItem('galDrawingName', name);
+
         saveBtn.classList.remove('hidden');
         gallerySubmitBtn.classList.remove('hidden'); // 追加
         exitSoloBtn.classList.remove('hidden');
@@ -837,6 +841,7 @@ joinBtn.addEventListener('click', () => {
     if (isBgmOn) startBGM();
     const name = playerNameInput.value.trim();
     if(name === "") return alert("名前入れてよね！🥺");
+    localStorage.setItem('galDrawingName', name); // 名前を保存💍✨
     socket.emit('join_game', name);
 });
 
@@ -929,3 +934,11 @@ function createDanmaku(text, color, isBig = false) {
         }
     }, 7500);
 }
+
+// ページ読み込み時に保存された名前を復元するよ！💅✨
+window.addEventListener('DOMContentLoaded', () => {
+    const savedName = localStorage.getItem('galDrawingName');
+    if (savedName && playerNameInput) {
+        playerNameInput.value = savedName;
+    }
+});

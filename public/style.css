@@ -320,10 +320,26 @@ input[type="text"]:focus, select:focus {
     transform: translateX(-50%) translateY(0);
 }
 
-.has-tooltip {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
+/* サイドバーの要素のツールチップ位置調整（画面端で見切れないように） 💅✨ */
+.sidebar [data-tooltip]::after {
+    left: 0;
+    bottom: auto;
+    top: 120%;
+    transform: translateY(-10px);
+}
+
+.sidebar [data-tooltip]::before {
+    left: 15px;
+    bottom: auto;
+    top: 105%;
+    transform: translateY(-10px);
+    border-width: 0 8px 8px 8px;
+    border-color: transparent transparent rgba(255, 102, 178, 0.95) transparent;
+}
+
+.sidebar [data-tooltip]:hover::after,
+.sidebar [data-tooltip]:hover::before {
+    transform: translateY(0);
 }
 
 .tool-btn.active {
