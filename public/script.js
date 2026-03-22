@@ -59,6 +59,7 @@ const eraserBtn = document.getElementById('eraserBtn');
 const fillBtn = document.getElementById('fillBtn'); // 塗りつぶしボタン追加
 const undoBtn = document.getElementById('undoBtn'); // 戻すボタン追加
 const clearBtn = document.getElementById('clearBtn');
+const opacityPicker = document.getElementById('opacityPicker'); // 追加
 const saveBtn = document.getElementById('saveBtn');
 const gallerySubmitBtn = document.getElementById('gallerySubmitBtn'); // 追加
 const exitSoloBtn = document.getElementById('exitSoloBtn');
@@ -69,7 +70,7 @@ let myId = null;
 let isDrawing = false;
 let canIDraw = false;
 let inSoloMode = false;
-let currentSettings = { color: '#000000', size: 5, isEraser: false, isFill: false };
+let currentSettings = { color: '#000000', size: 5, opacity: 1, isEraser: false, isFill: false };
 let gallery = []; 
 let drawHistory = []; // UNDO用の履歴配列 
 let currentWordText = '';
@@ -216,14 +217,17 @@ ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 let lastX = 0, lastY = 0;
 
-function drawLine(x0, y0, x1, y1, color, size, isErase) {
+function drawLine(x0, y0, x1, y1, color, size, isErase, opacity = 1) {
+    ctx.save(); // 状態を保存💕
     ctx.beginPath();
     ctx.moveTo(x0, y0);
     ctx.lineTo(x1, y1);
     ctx.strokeStyle = isErase ? '#ffffff' : color;
     ctx.lineWidth = size;
+    ctx.globalAlpha = isErase ? 1 : opacity; // 消しゴムの時は不透明にするのが自然かな？🌫️
     ctx.stroke();
     ctx.closePath();
+    ctx.restore(); // 状態を戻す✨
 }
 
 // 履歴保存機能（Undo用）
@@ -352,9 +356,13 @@ canvas.addEventListener('mousedown', (e) => {
 });
 canvas.addEventListener('mousemove', (e) => {
     if (!isDrawing || !canIDraw) return;
-    drawLine(lastX, lastY, e.offsetX, e.offsetY, currentSettings.color, currentSettings.size, currentSettings.isEraser);
+    drawLine(lastX, lastY, e.offsetX, e.offsetY, currentSettings.color, currentSettings.size, currentSettings.isEraser, currentSettings.opacity);
     if (!inSoloMode) {
-        socket.emit('draw', { x0: lastX, y0: lastY, x1: e.offsetX, y1: e.offsetY, color: currentSettings.color, size: currentSettings.size, isEraser: currentSettings.isEraser });
+        socket.emit('draw', { 
+            x0: lastX, y0: lastY, x1: e.offsetX, y1: e.offsetY, 
+            color: currentSettings.color, size: currentSettings.size, 
+            isEraser: currentSettings.isEraser, opacity: currentSettings.opacity 
+        });
     }
     lastX = e.offsetX; lastY = e.offsetY;
 });
@@ -383,6 +391,9 @@ colorPicker.addEventListener('change', (e) => {
     // 塗りつぶしの時は塗りつぶしモードを維持する
 });
 sizePicker.addEventListener('input', (e) => currentSettings.size = e.target.value);
+if (opacityPicker) {
+    opacityPicker.addEventListener('input', (e) => currentSettings.opacity = parseFloat(e.target.value));
+}
 if (penBtn) {
     penBtn.addEventListener('click', () => { 
         currentSettings.isEraser = false; 
@@ -741,7 +752,7 @@ socket.on('round_start', (data) => {
 });
 
 socket.on('timer', (time) => { if(!inSoloMode) timerDisplay.textContent = `⏱️ ${time}`; });
-socket.on('draw', (data) => { if(!inSoloMode) drawLine(data.x0, data.y0, data.x1, data.y1, data.color, data.size, data.isEraser); });
+socket.on('draw', (data) => { if(!inSoloMode) drawLine(data.x0, data.y0, data.x1, data.y1, data.color, data.size, data.isEraser, data.opacity); });
 socket.on('fill', (data) => { if(!inSoloMode) floodFill(data.x, data.y, data.color); });
 socket.on('sync_canvas', (dataURL) => { 
     if(!inSoloMode) { 
