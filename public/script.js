@@ -24,6 +24,7 @@ const galleryContainer = document.getElementById('galleryContainer');
 const wordPopupOverlay = document.getElementById('wordPopupOverlay');
 const wordPopupText = document.getElementById('wordPopupText');
 const wordPopupSubtext = document.getElementById('wordPopupSubtext');
+const danmakuContainer = document.getElementById('danmakuContainer');
 
 const chatBox = document.getElementById('chatBox');
 const chatInput = document.getElementById('chatInput');
@@ -588,6 +589,9 @@ socket.on('round_end', (data) => {
 socket.on('chat_message', (data) => {
     if (inSoloMode) return;
     addChatMessage(data.sender, data.text, data.color);
+    if (data.sender !== 'System') {
+        createDanmaku(data.text, data.color);
+    }
     if (data.type === 'correct') playSE('correct');
     else if (data.type === 'oshii') playSE('oshii');
 });
@@ -675,4 +679,36 @@ function addChatMessage(sender, text, color) {
     const div = document.createElement('div'); div.className = 'chat-msg';
     div.innerHTML = `<strong style="color: ${color || '#333'}">${sender}:</strong> ${text}`;
     chatBox.appendChild(div); chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function createDanmaku(text, color) {
+    if (!danmakuContainer) return;
+    
+    const div = document.createElement('div');
+    div.className = 'danmaku-item';
+    div.textContent = text;
+    // 送信者の色を反映させることも可能ですが、基本はCSSの白文字＋黒フチでいきます✨
+    
+    // 表示予定の最大の高さ (文字がはみ出さないように -50px)
+    const maxHeight = danmakuContainer.clientHeight - 50; 
+    const topPos = Math.random() * (maxHeight > 0 ? maxHeight : 450); 
+    div.style.top = `${topPos}px`;
+    
+    danmakuContainer.appendChild(div);
+    
+    requestAnimationFrame(() => {
+        // 幅を計算して画面外までしっかり移動させる
+        const textWidth = div.clientWidth;
+        const containerWidth = danmakuContainer.clientWidth || 600;
+        
+        div.style.transition = `transform 5s linear`;
+        div.style.transform = `translateX(-${containerWidth + textWidth + 100}px)`;
+    });
+    
+    // アニメーションが終わったらDOMからポイする
+    setTimeout(() => {
+        if (div && div.parentNode) {
+            div.remove();
+        }
+    }, 5500);
 }
