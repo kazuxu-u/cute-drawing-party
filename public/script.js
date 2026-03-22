@@ -49,6 +49,8 @@ let inSoloMode = false;
 let currentSettings = { color: '#000000', size: 5, isEraser: false, isFill: false };
 let gallery = []; 
 let drawHistory = []; // UNDO用の履歴配列 
+let currentWordText = '';
+let showEmoji = false;
 
 // 音声関連
 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -400,6 +402,22 @@ clearBtn.addEventListener('click', () => {
     }
 });
 
+const emojiToggleBtn = document.getElementById('emojiToggleBtn');
+if (emojiToggleBtn) {
+    emojiToggleBtn.addEventListener('click', () => {
+        showEmoji = !showEmoji;
+        emojiToggleBtn.textContent = showEmoji ? '🧸 スタンプ: ON✨' : '🧸 スタンプ: OFF';
+        if (currentWordText) {
+            wordDisplay.textContent = `お題：${getDisplayText(currentWordText)}`;
+        }
+    });
+}
+
+function getDisplayText(word) {
+    if (showEmoji || !word) return word;
+    return word.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]\s*/gu, '');
+}
+
 if (saveBtn) {
     saveBtn.addEventListener('click', () => {
         const dataUrl = canvas.toDataURL('image/png');
@@ -494,7 +512,9 @@ socket.on('round_start', (data) => {
     if (inSoloMode) return;
     overlay.classList.add('hidden');
     podiumOverlay.classList.add('hidden');
-    wordDisplay.textContent = `お題：${data.word}`;
+    
+    currentWordText = data.word;
+    wordDisplay.textContent = `お題：${getDisplayText(data.word)}`;
     roundDisplay.textContent = `🏁 ${data.roundInfo}`;
     
     drawHistory = []; // 新しいターンの時に履歴リセット
@@ -505,7 +525,7 @@ socket.on('round_start', (data) => {
         wordPopupOverlay.classList.remove('hidden');
         
         if (canIDraw) {
-            wordPopupText.innerHTML = `<span style="font-size:1.5rem; color:#666;">お題：</span><br>${data.word}`;
+            wordPopupText.innerHTML = `<span style="font-size:1.5rem; color:#666;">お題：</span><br>${getDisplayText(data.word)}`;
             wordPopupSubtext.textContent = 'あなたが描く番だよ！🖌️✨';
         } else {
             wordPopupText.innerHTML = `${data.drawerName} <span style="font-size:1.5rem; color:#666;">の番！</span>`;
