@@ -221,7 +221,7 @@ const cuteWords = {
         { display: '🏯金閣寺', answers: ['きんかくじ', '金閣寺'] },
         { display: '🏯大阪城', answers: ['おおさかじょう', '大阪城'] },
         { display: '🗿モアイ像', answers: ['もあいぞう', 'モアイ像', 'モアイ'] },
-        { display: '⛪サグラダファミリア', answers: ['さぐらだふぁみりあ', 'サグラダファミリア'] },
+        { display: '🏯五重塔', answers: ['ごじゅうのとう', '五重塔', 'pagoda'] },
         { display: '🏯姫路城', answers: ['ひめじじょう', '姫路城'] },
         { display: '🗿マーライオン', answers: ['まーらいおん', 'マーライオン'] }
     ],
