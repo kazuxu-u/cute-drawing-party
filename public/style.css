@@ -3,591 +3,500 @@
 }
 
 :root {
-    --bg-color: #ffe6f2; /* パステルピンク */
-    --primary-color: #ff66b2;
-    --secondary-color: #66ccff;
-    --text-color: #555;
-    --glass-bg: rgba(255, 255, 255, 0.6);
-    --glass-border: rgba(255, 255, 255, 0.8);
-}
-
-body {
-    margin: 0;
-    padding: 20px;
-    font-family: 'M PLUS Rounded 1c', sans-serif;
-    background: var(--bg-color);
-    background-image: radial-gradient(#ffccdd 20%, transparent 20%),
-                      radial-gradient(#ffccdd 20%, transparent 20%);
-    background-size: 50px 50px;
-    background-position: 0 0, 25px 25px;
-    color: var(--text-color);
-    display: flex;
-    justify-content: center;
-    align-items: flex-start; /* 縦長になっても上が見切れないように💅 */
-    min-height: 100vh;
-}
-
-.container {
-    display: flex;
-    gap: 20px;
-    max-width: 1200px;
-    width: 100%;
-}
-
-.glass {
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    border: 2px solid var(--glass-border);
-    border-radius: 20px;
-    padding: 20px;
-    box-shadow: 0 8px 32px rgba(255, 102, 178, 0.2);
-}
-
-/* Sidebar */
-.sidebar {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    /* overflow-y: auto; */
-    padding-right: 5px;
-    z-index: 1000; /* 中央のメイン枠より手前に表示されるように！💅✨ */
-}
-
-ul#playerList {
-    list-style: none;
-    padding: 0;
-    margin-bottom: 20px;
-    flex-shrink: 0;
-}
-
-ul#playerList li {
-    background: white;
-    margin: 5px 0;
-    padding: 10px;
-    border-radius: 10px;
-    font-weight: bold;
-    display: flex;
-    justify-content: space-between;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-
-.mt-4 {
-    margin-top: 20px;
+    --bg-color-1: #ff99cc; /* Vibrant Pink */
+    --bg-color-2: #ffccff; /* Light Pink */
+    --bg-color-3: #cc99ff; /* Soft Purple */
+    --primary-color: #ff3399;
+    --secondary-color: #00d2ff;
+    --accent-color: #ffea00;
+    --glass-bg: rgba(255, 255, 255, 0.2);
+    --glass-border: rgba(255, 255, 255, 0.4);
+    --glass-shadow: 0 15px 35px rgba(255, 51, 153, 0.2);
+    --text-color: #2d3436;
 }
 
 .hidden {
     display: none !important;
 }
 
-#setupArea {
-    flex-shrink: 0;
-    margin-bottom: 20px;
-}
-
-.horizontal-status {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    width: 100%;
-    max-width: 600px; /* キャンバスの幅に合わせる💅 */
-    padding: 10px 15px;
-    background: white;
-    border-radius: 50px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    border: 3px solid var(--primary-color);
-    flex-wrap: wrap; /* 長すぎても折り返してはみ出さない！✨ */
-    gap: 10px;
-}
-
-.horizontal-status h3 {
+html, body {
+    height: 100%;
     margin: 0;
-    font-size: 1.2rem;
-    color: var(--primary-color);
-    font-weight: bold;
+    padding: 0;
+    overflow: hidden; /* 全体スクロールは絶対禁止！💅 */
+}
+
+body {
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    background: linear-gradient(-45deg, var(--bg-color-1), var(--bg-color-2), var(--bg-color-3), #ffccdd);
+    background-size: 400% 400%;
+    animation: meshGradient 15s ease infinite;
+    color: var(--text-color);
     display: flex;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
+    height: 100%;
 }
 
-.status-area {
-    margin-top: 20px;
-    background: white;
-    padding: 15px;
-    border-radius: 15px;
-    text-align: center;
-    flex-shrink: 0;
+@keyframes meshGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
-/* Main Area */
+.container {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    padding: 60px 20px 20px 20px; /* 上に余裕を持たせないとタイトルが死ぬ！💅 */
+    box-sizing: border-box;
+    overflow: hidden; /* 親要素もはみ出し禁止！💎 */
+}
+
+.glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 2px solid var(--glass-border);
+    border-radius: 40px;
+    padding: 25px;
+    box-shadow: var(--glass-shadow);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Sidebar & Chat Area Positioning */
+.sidebar, .chat-area {
+    flex: 0 0 360px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* 枠自体は固定！💎 */
+}
+
 .main-area {
-    flex: 2;
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 15px;
+    height: 100%;
+    overflow-y: auto; /* メインも入り切らない時はスクロール！💅 */
+    padding: 10px;
 }
 
+/* Titles */
+h2, h3 {
+    margin: 0;
+    color: var(--primary-color);
+    text-shadow: 2px 2px 0px white;
+    font-weight: 700;
+    text-align: center;
+}
+
+/* Player List */
+#playerList {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+#playerList li {
+    background: rgba(255, 255, 255, 0.6);
+    margin: 12px 0;
+    padding: 15px 25px;
+    border-radius: 20px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 8px solid var(--primary-color);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+    animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* Toolbar */
 .toolbar {
     display: flex;
     gap: 15px;
-    margin-bottom: 15px;
-    background: white;
-    padding: 12px 25px;
-    border-radius: 50px;
-    box-shadow: 0 4px 20px rgba(255, 102, 178, 0.3);
-    align-items: center;
-    border: 2px solid #ffccdd;
-    background: linear-gradient(135deg, #fff, #ffe6f2);
+    padding: 15px 35px;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 100px;
+    box-shadow: 0 15px 35px rgba(255, 51, 153, 0.3);
+    border: 3px solid var(--primary-color);
+    z-index: 100;
 }
 
+/* Tool Buttons */
+.tool-btn {
+    background: white;
+    border: none;
+    padding: 10px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.6rem;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 6px 0 #eee;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+}
+
+.tool-btn:hover {
+    transform: scale(1.2) translateY(-8px) rotate(5deg);
+    box-shadow: 0 12px 25px rgba(255, 51, 153, 0.5);
+    background: var(--primary-color);
+    color: white !important;
+}
+
+.tool-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 0px 0 transparent;
+}
+
+.tool-btn.active {
+    background: var(--primary-color);
+    color: white !important;
+    box-shadow: 0 0 30px var(--primary-color);
+    transform: scale(1.1);
+}
+
+.tool-btn.danger {
+    color: #ff4757;
+}
+
+.tool-btn.danger:hover {
+    background: #ff4757;
+}
+
+/* Canvas Container */
 .canvas-container {
     position: relative;
+    padding: 15px;
     background: white;
-    border-radius: 15px;
-    overflow: hidden;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
-    border: 3px solid var(--primary-color);
+    border-radius: 30px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+    border: 8px solid var(--primary-color);
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* overflow: hidden;  ツールチップが見えなくなるから削除！💅 */
+}
+
+.canvas-container:hover {
+    transform: scale(1.02);
 }
 
 canvas {
+    border-radius: 15px;
     cursor: crosshair;
     display: block;
 }
 
-.overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255,255,255,0.85);
+/* Status Area */
+.horizontal-status {
     display: flex;
-    justify-content: center;
+    gap: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 18px 50px;
+    border-radius: 100px;
+    border: 4px solid var(--primary-color);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+}
+
+.horizontal-status h3 {
+    margin: 0;
+    font-size: 1.4rem;
+    display: flex;
     align-items: center;
-    z-index: 10;
-    text-align: center;
-    backdrop-filter: blur(5px);
-}
-
-h2#overlayText {
-    color: var(--primary-color);
-    line-height: 1.5;
-}
-
-/* Chat Area */
-.chat-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.chat-box {
-    flex-grow: 1;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px);
-    border-radius: 15px;
-    padding: 15px;
-    overflow-y: auto;
-    margin-bottom: 15px;
-    height: 400px;
-    box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
-    display: flex;
-    flex-direction: column;
     gap: 12px;
 }
 
+/* Chat Bubbles */
+.chat-box {
+    flex-grow: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 30px;
+    box-shadow: inset 0 10px 30px rgba(0,0,0,0.05);
+    overflow-x: hidden; /* 横はみ出し禁止！💅 */
+}
+
 .chat-msg {
-    max-width: 85%;
-    padding: 10px 18px;
-    border-radius: 20px;
-    line-height: 1.4;
-    word-break: break-all;
-    font-size: 0.95rem;
-    position: relative;
-    box-shadow: 0 4px 12px rgba(255, 102, 178, 0.15);
-    animation: bubblePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    max-width: 80%;
+    padding: 15px 25px;
+    border-radius: 30px;
     background: white;
-    align-self: flex-start;
-    border-bottom-left-radius: 4px;
-    border: 1px solid #ffccdd;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    position: relative;
+    animation: bubblePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 2px solid var(--glass-border);
+    overflow-wrap: break-word; /* 長い単語を折り返す！💎 */
+    word-wrap: break-word;
+    word-break: break-word;
 }
 
 .chat-msg.mine {
-    background: #ffccff;
     align-self: flex-end;
-    border-bottom-left-radius: 18px;
-    border-bottom-right-radius: 4px;
+    background: linear-gradient(135deg, #ff99ff, #ff66ff);
+    color: white;
+    border-bottom-right-radius: 6px;
+    box-shadow: 0 8px 25px rgba(255, 51, 153, 0.3);
+}
+
+.chat-msg.mine strong {
+    color: #fff;
+    opacity: 0.9;
+}
+
+.chat-msg:not(.mine) {
+    align-self: flex-start;
+    border-bottom-left-radius: 6px;
 }
 
 @keyframes bubblePop {
-    0% { transform: scale(0.5); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
+    0% { transform: scale(0.6) translateY(30px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
 }
 
-.chat-msg strong {
-    display: block;
-    font-size: 0.75rem;
-    color: #888;
-    margin-bottom: 2px;
-}
-
-.chat-input-area {
-    display: flex;
-    gap: 10px;
-}
-
-input[type="text"], select {
-    flex-grow: 1;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 10px 15px;
-    border: 2px solid #ccc;
-    border-radius: 20px;
-    font-family: inherit;
-    outline: none;
-    transition: 0.3s;
-}
-
-input[type="text"]:focus, select:focus {
-    border-color: var(--primary-color);
-}
-
-/* Buttons */
+/* Cute Buttons */
 .cute-btn {
-    background: var(--secondary-color);
-    color: white;
+    padding: 18px 40px;
+    border-radius: 100px;
     border: none;
-    padding: 10px 20px;
-    border-radius: 20px;
-    font-weight: bold;
+    font-weight: 1000;
+    font-size: 1.2rem;
     cursor: pointer;
-    font-family: inherit;
-    transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 4px 0 #3399cc;
-    margin-top: 10px;
-    white-space: nowrap; /* 改行されないようにアゲていく💅✨ */
+    background: linear-gradient(to bottom, var(--primary-color), #cc0066);
+    color: white;
+    box-shadow: 0 8px 0 #99004d;
+    transition: all 0.2s;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
 }
 
 .cute-btn:hover {
-    transform: scale(1.05) rotate(-1deg);
+    transform: scale(1.08) translateY(-4px);
+    box-shadow: 0 12px 0 #99004d;
     filter: brightness(1.1);
 }
 
 .cute-btn:active {
-    transform: translateY(4px);
-    box-shadow: 0 0 0 transparent;
+    transform: translateY(6px);
+    box-shadow: 0 2px 0 #99004d;
 }
 
 .cute-btn.primary {
-    background: var(--primary-color);
-    box-shadow: 0 4px 0 #cc3388;
+    background: linear-gradient(to bottom, var(--secondary-color), #0099cc);
+    box-shadow: 0 8px 0 #0077aa;
 }
 
-.cute-btn.primary:active {
-    box-shadow: 0 0 0 transparent;
+.cute-btn.primary:hover {
+    box-shadow: 0 12px 0 #0077aa;
 }
 
-.tool-btn {
-    background: #f0f0f0;
-    border: none;
-    padding: 10px;
-    border-radius: 12px;
-    cursor: pointer;
-    font-family: inherit;
-    font-weight: bold;
-    transition: 0.2s;
-    font-size: 1.4rem;
+/* Inputs */
+input[type="text"], select {
+    padding: 18px 30px;
+    border-radius: 100px;
+    border: 3px solid #eee;
+    outline: none;
+    font-size: 1.1rem;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+input[type="text"]:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 25px rgba(255, 51, 153, 0.3);
+}
+
+/* Overlays */
+.overlay {
+    position: absolute; /* 親要素（キャンバス枠）に収める！💎 */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px);
+    border-radius: 22px; /* キャンバスの枠にフィットさせる！💎 */
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    justify-content: center; /* ど真ん中に配置！💎 */
     align-items: center;
-    min-width: 45px;
-    height: 45px;
-    position: relative;
-    box-shadow: 0 3px 0 #bbb;
+    z-index: 10000;
+    transition: opacity 0.3s ease;
 }
 
-.tool-btn:hover {
-    background: #fff;
-    transform: scale(1.15) rotate(3deg);
-    box-shadow: 0 5px 15px rgba(255, 102, 178, 0.4);
-    z-index: 10;
-}
-
-.tool-btn:active {
-    transform: translateY(3px);
-    box-shadow: 0 0 0 transparent;
-}
-
-/* 吹き出し（ツールチップ）スタイル 💎✨ */
-.tool-btn::after, .has-tooltip::after {
+/* Tooltips 💎 */
+[data-tooltip]::after {
     content: attr(data-tooltip);
     position: absolute;
-    bottom: 120%;
+    top: 130%; /* 原則、下に出す！天井にぶつかるから！💅 */
     left: 50%;
-    transform: translateX(-50%) translateY(10px);
-    background: rgba(255, 102, 178, 0.95); /* ギャルピンク💕 */
+    transform: translateX(-50%) translateY(-15px);
+    background: rgba(255, 51, 153, 0.95);
     color: white;
-    padding: 6px 12px;
-    border-radius: 10px;
-    font-size: 0.85rem;
+    padding: 10px 18px;
+    border-radius: 15px;
+    font-size: 0.95rem;
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
-    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    z-index: 2000000; /* マジで何よりも手前に！爆アゲの最前面！💅✨💍💖 */
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    z-index: 10000;
 }
 
-/* 吹き出しのしっぽ 🎈 */
-.tool-btn::before, .has-tooltip::before {
-    content: "";
+[data-tooltip]:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* チャット入力だけは上に出さないと足元で見えない！💎 */
+.chat-input-area [data-tooltip]::after {
+    top: auto;
+    bottom: 130%;
+    transform: translateX(-50%) translateY(15px);
+}
+
+.chat-input-area [data-tooltip]:hover::after {
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Yabai Glow✨ */
+.yabai-glow {
+    animation: galaxyGlow 2s infinite alternate;
+}
+
+@keyframes galaxyGlow {
+    0% { color: #ff00ff; text-shadow: 0 0 15px #ff00ff, 0 0 30px #ff00ff; }
+    50% { color: #00ffff; text-shadow: 0 0 15px #00ffff, 0 0 30px #00ffff; }
+    100% { color: #ffff00; text-shadow: 0 0 15px #ffff00, 0 0 30px #ffff00; }
+}
+
+/* Custom Effects */
+.effect-btn.active {
+    animation: pulseGlow 1.5s infinite;
+}
+
+@keyframes pulseGlow {
+    0% { transform: scale(1.1); box-shadow: 0 0 10px var(--primary-color); }
+    50% { transform: scale(1.2); box-shadow: 0 0 30px var(--primary-color); }
+    100% { transform: scale(1.1); box-shadow: 0 0 10px var(--primary-color); }
+}
+
+/* スパークルエフェクト✨ */
+.sparkle {
     position: absolute;
-    bottom: 105%;
-    left: 50%;
-    transform: translateX(-50%) translateY(10px);
-    border-width: 8px 8px 0 8px;
-    border-style: solid;
-    border-color: rgba(255, 102, 178, 0.95) transparent transparent transparent;
-    opacity: 0;
-    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: 2000000; /* しっぽも最前面！💅✨ */
-}
-
-.tool-btn:hover::after,
-.tool-btn:hover::before {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-}
-
-/* フォーム要素用のツールチップ対応 💍 */
-.has-tooltip:hover::after,
-.has-tooltip:hover::before {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-}
-
-/* サイドバーの要素のツールチップ位置調整（画面端で見切れないように） 💅✨ */
-.sidebar [data-tooltip]::after {
-    left: 0;
-    bottom: auto;
-    top: 120%;
-    transform: translateY(-10px);
-}
-
-.sidebar [data-tooltip]::before {
-    left: 15px;
-    bottom: auto;
-    top: 105%;
-    transform: translateY(-10px);
-    border-width: 0 8px 8px 8px;
-    border-color: transparent transparent rgba(255, 102, 178, 0.95) transparent;
-}
-
-.sidebar [data-tooltip]:hover::after,
-.sidebar [data-tooltip]:hover::before {
-    opacity: 1; /* 消えてたかもしれないから明示的にアゲ！💅✨ */
-    transform: translateY(0);
-}
-
-.tool-btn.active {
-    background: #fff0f5;
-    border: 3px solid var(--primary-color);
-    box-shadow: 0 0 12px var(--primary-color);
-}
-
-/* フォーム要素用の吹き出しが迷子にならないように固定！💍💖 */
-.has-tooltip {
-    position: relative;
-    display: inline-block; /* 収まりがいいようにインラインブロックに！ */
-}
-
-.tool-btn.danger {
-    color: #cc0000;
-}
-
-.tool-btn.effect-btn {
-    background: #ff99cc;
-    font-size: 1.2rem;
-}
-
-.tool-btn.effect-btn.active {
-    background: #ff3399 !important;
-    box-shadow: 0 0 15px #ff66cc;
-    transform: scale(1.1);
-}
-
-/* 表彰台スタイル */
-.podium-container {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 10000;
+    animation: sparkleAnim 1s ease-out forwards;
     display: flex;
-    align-items: flex-end;
     justify-content: center;
-    gap: 15px;
-    height: 300px;
-}
-.podium-item {
-    display: flex;
-    flex-direction: column;
     align-items: center;
-    width: 120px;
+    user-select: none;
 }
-.podium-rank {
-    width: 100%;
-    color: white;
-    font-weight: bold;
-    font-size: 2rem;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding-top: 10px;
-    border-radius: 10px 10px 0 0;
-    box-shadow: inset 0 5px 10px rgba(255,255,255,0.3);
-}
-.podium-name {
-    font-size: 1.2rem;
-    font-weight: bold;
-    margin-bottom: 10px;
-    color: var(--text-color);
-    text-align: center;
-    word-break: break-all;
-}
-.podium-score {
-    font-size: 1.5rem;
-    color: var(--primary-color);
-    font-weight: bold;
-    margin-bottom: 5px;
-}
-.rank-1 .podium-rank { height: 180px; background: linear-gradient(135deg, #ffd700, #ffae00); }
-.rank-2 .podium-rank { height: 130px; background: linear-gradient(135deg, #c0c0c0, #909090); }
-.rank-3 .podium-rank { height: 90px; background: linear-gradient(135deg, #cd7f32, #a0522d); }
 
-/* ギャラリースタイル */
+@keyframes sparkleAnim {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--vx), var(--vy)) scale(0);
+        opacity: 0;
+    }
+}
+
+/* ギャラリースタイル（復活＆爆アゲ！） 🖼️✨ */
 .gallery-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 15px;
-    justify-content: center;
-    margin-top: 30px;
+    gap: 25px;
+    justify-content: center; /* ど真ん中命！💅 */
+    align-items: flex-start;
+    padding: 30px;
+    overflow-y: visible;
     width: 100%;
+    margin: 0 auto;
 }
+
 .gallery-item {
     background: white;
-    padding: 10px;
-    border-radius: 10px;
+    border: 4px solid #ffccdd;
+    padding: 15px;
+    border-radius: 30px;
     width: 250px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     text-align: center;
-}
-.gallery-item img {
-    margin: 10px 0;
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-.gallery-item:hover img {
-    transform: scale(1.08) rotate(2deg);
+    box-shadow: 0 10px 30px rgba(255, 51, 153, 0.15);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
 }
 
-/* 弾幕スタイル */
-.danmaku-item {
+.gallery-item::before {
+    content: '💖';
     position: absolute;
-    white-space: nowrap;
-    font-size: 2rem;
-    font-family: inherit;
-    font-weight: bold;
-    color: white;
-    text-shadow: 
-        2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000,
-        0px 2px 0 #000, 2px 0px 0 #000, -2px 0px 0 #000, 0px -2px 0 #000;
-    will-change: transform;
-    left: 100%;
+    top: 5px;
+    right: 5px;
+    font-size: 1.2rem;
+    opacity: 0.3;
 }
 
-/* 正解時のデカ弾幕！祝・合格！㊗️✨ */
-.danmaku-item.big {
-    font-size: 5.5rem;
-    color: #ffff00;
-    text-shadow: 
-        4px 4px 0 #ff0066, -4px -4px 0 #ff0066, 4px -4px 0 #ff0066, -4px 4px 0 #ff0066,
-        0px 4px 0 #ff0066, 4px 0px 0 #ff0066, -4px 0px 0 #ff0066, 0px -4px 0 #ff0066,
-        0 0 20px rgba(255, 255, 255, 0.8);
-    z-index: 100;
-    font-weight: 900;
+.gallery-item:hover {
+    transform: scale(1.08) translateY(-10px) rotate(2deg);
+    border-color: var(--primary-color);
+    box-shadow: 0 20px 40px rgba(255, 51, 153, 0.3);
 }
 
-/* 画像検索コンテナ */
-.image-search-container {
-    width: 600px;
-    padding: 10px !important;
+.gallery-item img {
+    width: 100%;
+    height: auto;
+    border-radius: 20px;
+    margin-bottom: 15px;
+    border: 2px solid #f0f0f0;
 }
 
-.search-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-    font-weight: bold;
-    font-size: 0.9rem;
-    color: var(--primary-color);
+.gallery-item p {
+    margin: 8px 0;
+    font-weight: 800;
+    color: var(--text-color);
+    font-size: 1rem;
+    line-height: 1.4;
 }
 
-.search-result-list {
-    display: flex;
-    gap: 10px;
-    overflow-x: auto;
-    padding-bottom: 5px;
-}
-
-.search-result-list::-webkit-scrollbar {
-    height: 6px;
-}
-.search-result-list::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-.search-result-list::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
-    border-radius: 10px;
-}
-
-.search-result-img {
-    height: 100px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    cursor: pointer;
-    transition: 0.2s;
-    flex-shrink: 0;
-}
-
-.search-result-img:hover {
-    transform: scale(1.05);
-}
-
-/* ギャル力全開の盛りアニメーション！💅✨ */
-@keyframes rainbowGlow {
-    0% { text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff; }
-    33% { text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff; }
-    66% { text-shadow: 0 0 10px #ffff00, 0 0 20px #ffff00; }
-    100% { text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff; }
-}
-
-.yabai-glow {
-    animation: rainbowGlow 1.5s infinite linear;
-    color: #ff00ff !important;
-    font-weight: 900 !important;
-}
-
-@keyframes shake {
-    0% { transform: translate(1px, 1px) rotate(0deg); }
-    10% { transform: translate(-1px, -2px) rotate(-1deg); }
-    20% { transform: translate(-3px, 0px) rotate(1deg); }
-    30% { transform: translate(3px, 2px) rotate(0deg); }
-    40% { transform: translate(1px, -1px) rotate(1deg); }
-    50% { transform: translate(-1px, 2px) rotate(-1deg); }
-    60% { transform: translate(-3px, 1px) rotate(0deg); }
-    70% { transform: translate(3px, 1px) rotate(-1deg); }
-    80% { transform: translate(-1px, -1px) rotate(1deg); }
-    90% { transform: translate(1px, 2px) rotate(0deg); }
-    100% { transform: translate(1px, -2px) rotate(-1deg); }
-}
-
-.shake {
-    animation: shake 0.5s;
-    animation-iteration-count: infinite;
+@media (max-width: 1200px) {
+    .container {
+        flex-direction: column;
+        height: auto;
+        width: 100%;
+        padding: 10px;
+    }
+    .sidebar, .chat-area {
+        flex: none;
+        width: 100%;
+        max-width: 600px;
+        height: 450px;
+        margin: 0 auto;
+    }
+    .main-area {
+        width: 100%;
+    }
 }

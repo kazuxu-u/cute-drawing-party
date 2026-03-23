@@ -25,6 +25,7 @@ const wordPopupOverlay = document.getElementById('wordPopupOverlay');
 const wordPopupText = document.getElementById('wordPopupText');
 const wordPopupSubtext = document.getElementById('wordPopupSubtext');
 const danmakuContainer = document.getElementById('danmakuContainer');
+const sparkleContainer = document.getElementById('sparkleContainer'); // 追加✨
 
 // 画像検索関連の要素
 const searchImageBtn = document.getElementById('searchImageBtn');
@@ -61,6 +62,8 @@ const clearBtn = document.getElementById('clearBtn');
 const saveBtn = document.getElementById('saveBtn');
 const gallerySubmitBtn = document.getElementById('gallerySubmitBtn'); // 追加
 const nextWordBtn = document.getElementById('nextWordBtn'); // 追加✨💍
+const rainbowBtn = document.getElementById('rainbowBtn'); // 追加🌈
+const glowBtn = document.getElementById('glowBtn'); // 追加🌟
 const exitSoloBtn = document.getElementById('exitSoloBtn');
 const turnEndBtn = document.getElementById('turnEndBtn'); // 追加
 const sidebar = document.querySelector('.sidebar'); // サイドバー取得💅
@@ -242,11 +245,65 @@ function drawLine(x0, y0, x1, y1, color, size, isErase, isGlow, isRainbow) {
         // 重ねて描画することで、より眩しくするよ！💎
         ctx.stroke();
         ctx.shadowBlur = size * 2;
+        
+        // スパークル（火花）を散らすよ！✨💍
+        if (Math.random() > 0.7) {
+            createSparkle(x1, y1, finalColor);
+        }
+    } else if (isRainbow && !isErase) {
+        // 虹色ペンの時もたまにキラキラさせる！🌈✨
+        if (Math.random() > 0.85) {
+            createSparkle(x1, y1, finalColor);
+        }
     }
 
     ctx.stroke();
     ctx.closePath();
     ctx.restore(); // 状態を戻す✨
+}
+
+// ✨ キラキラ（スパークル）を生成する関数！💖
+function createSparkle(x, y, color) {
+    if (!sparkleContainer) return;
+    
+    const sparkle = document.createElement('div');
+    sparkle.className = 'sparkle';
+    
+    // キャンバス上の座標を画面上の座標に変換（雑だけどこれで大体合う！💅）
+    const rect = canvas.getBoundingClientRect();
+    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+    
+    const screenX = rect.left + x + scrollX;
+    const screenY = rect.top + y + scrollY;
+    
+    sparkle.style.left = `${screenX}px`;
+    sparkle.style.top = `${screenY}px`;
+    sparkle.style.backgroundColor = color;
+    
+    // ランダムな方向に飛ばす！🚀
+    const angle = Math.random() * Math.PI * 2;
+    const velocity = 2 + Math.random() * 4;
+    const vx = Math.cos(angle) * velocity;
+    const vy = Math.sin(angle) * velocity;
+    
+    sparkle.style.setProperty('--vx', `${vx}px`);
+    sparkle.style.setProperty('--vy', `${vy}px`);
+    
+    // 形をランダムに変える（ハートとか星とか！💎）
+    const shapes = ['✨', '💖', '⭐', '💎', '🌸'];
+    if (Math.random() > 0.5) {
+        sparkle.textContent = shapes[Math.floor(Math.random() * shapes.length)];
+        sparkle.style.backgroundColor = 'transparent';
+        sparkle.style.fontSize = `${10 + Math.random() * 15}px`;
+    }
+
+    sparkleContainer.appendChild(sparkle);
+    
+    // 1秒後に消す！💅
+    setTimeout(() => {
+        sparkle.remove();
+    }, 1000);
 }
 
 // 履歴保存機能（Undo用）
@@ -878,7 +935,10 @@ socket.on('chat_message', (data) => {
     if (data.sender !== 'System' || data.type === 'correct') {
         createDanmaku(data.text, data.color, data.type === 'correct');
     }
-    if (data.type === 'correct') playSE('correct');
+    if (data.type === 'correct') {
+        playSE('correct');
+        createSparkle(); // 正解したらキラキラさせるよ！✨
+    }
     else if (data.type === 'oshii') playSE('oshii');
 });
 
@@ -1028,6 +1088,36 @@ function createDanmaku(text, color, isBig = false) {
             div.remove();
         }
     }, 7500);
+}
+
+// キラキラエフェクトを降らせるよ！✨💍💖
+function createSparkle(x, y) {
+    const container = document.getElementById('sparkleContainer');
+    if (!container) return;
+    
+    for (let i = 0; i < 10; i++) {
+        const sparkle = document.createElement('div');
+        sparkle.innerHTML = ['✨', '💍', '💖', '💎', '🌟'][Math.floor(Math.random() * 5)];
+        sparkle.style.position = 'absolute';
+        sparkle.style.left = `${x || Math.random() * 100}%`;
+        sparkle.style.top = `${y || Math.random() * 100}%`;
+        sparkle.style.fontSize = `${Math.random() * 20 + 10}px`;
+        sparkle.style.pointerEvents = 'none';
+        sparkle.style.zIndex = '1000';
+        sparkle.style.transition = 'all 1s ease-out';
+        
+        container.appendChild(sparkle);
+        
+        // 飛び散るアニメーション！💅✨
+        setTimeout(() => {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * 100 + 50;
+            sparkle.style.transform = `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px) scale(0)`;
+            sparkle.style.opacity = '0';
+        }, 10);
+        
+        setTimeout(() => sparkle.remove(), 1000);
+    }
 }
 
 // ページ読み込み時に保存された名前を復元するよ！💅✨

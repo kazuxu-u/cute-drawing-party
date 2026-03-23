@@ -144,9 +144,9 @@ const cuteWords = {
         { display: '🐧ぺんぎん', answers: ['ぺんぎん', 'ペンギン', 'penguin'] },
         { display: '🐘ゾウ', answers: ['ぞう', 'ゾウ', '象', 'elephant'] },
         { display: '🦒きりん', answers: ['きりん', 'キリン', 'giraffe'] },
-        { display: '🦁らいおん', answers: ['らいおん', 'ライオン', 'lion'] },
-        { display: '🐒ごりら...じゃなくて猿', answers: ['さる', 'サル', '猿', 'さるやま', 'monkey', 'ごりら', 'ゴリラ', 'gorilla'] },
-        { display: '🦊きつね', answers: ['きつね', 'キツネ', '狐', 'fox'] },
+        { display: '🦁らいおん', answers: ['らいおん', 'ライオン', 'lion', 'がおー'] },
+        { display: '🐒ごりら...じゃなくて猿', answers: ['さる', 'サル', '猿', 'さるやま', 'monkey', 'ごりら', 'ゴリラ', 'gorilla', 'うほっ', 'ウホッ'] },
+        { display: '🦊きつね', answers: ['きつね', 'キツネ', '狐', 'fox', 'こんこん'] },
         { display: '🐻くま', answers: ['くま', 'クマ', '熊', 'bear'] },
         { display: '🐨こあら', answers: ['こあら', 'コアラ', 'koala'] },
         { display: '🐷ぶた', answers: ['ぶた', 'ブタ', '豚', 'pig'] },
@@ -203,9 +203,9 @@ const cuteWords = {
         { display: '🧴けしょうすい', answers: ['けしょうすい', '化粧水', 'コスメ', 'スキンケア'] }
     ],
     yabai: [
-        { display: '💩うんこ（笑）', answers: ['うんこ', 'ウンコ', 'うんち', 'ウンチ', 'poop'] },
-        { display: '🍌バナナ（意味深）', answers: ['ばなな', 'バナナ', 'banana', '🍌'] },
-        { display: '🍒さくらんぼ（意味深）', answers: ['さくらんぼ', 'サクランボ', 'ちぇりー', 'チェリー', 'cherry'] },
+        { display: '💩うんこ（笑）', answers: ['うんこ', 'ウンコ', 'うんち', 'ウンチ', 'poop', 'くさい', 'ぶりぶり'] },
+        { display: '🍌バナナ（意味深）', answers: ['ばなな', 'バナナ', 'banana', '🍌', 'ちんこ', 'おてぃんてぃん'] },
+        { display: '🍒さくらんぼ（意味深）', answers: ['さくらんぼ', 'サクランボ', 'ちぇりー', 'チェリー', 'cherry', 'たまたま'] },
         { display: '🍄きのこ（意味深）', answers: ['きのこ', 'キノコ', 'マッシュルーム'] },
         { display: '💋くちびる', answers: ['くちびる', '唇', 'キス', 'きす', 'ちゅー', 'lip', 'lips'] },
         { display: '👙びきに', answers: ['びきに', 'ビキニ', 'みずぎ', '水着', 'bikini'] },
@@ -249,6 +249,17 @@ const cuteWords = {
         { display: '🐕‍🦺散歩（SM）', answers: ['さんぽ', 'どえむ', 'SM'] },
         { display: '🥛ザーメン（直球）', answers: ['ざーめん', 'えきたい', 'みるく'] },
         { display: '💦潮吹き', answers: ['しおふき', 'みず'] },
+        { display: '🍑桃尻を揉む', answers: ['おしり', 'もむ', 'しり'] },
+        { display: '🍼バブみを感じる', answers: ['まざこん', 'ばぶみ'] },
+        { display: '👗ミニスカの中覗き', answers: ['のぞき', 'ぱんつ'] },
+        { display: '🥵絶頂寸前', answers: ['ぜっちょう', 'いく'] },
+        { display: '👄アゴクイ', answers: ['あごくい', 'いけめん'] },
+        { display: '👅耳舐め', answers: ['みになめ', 'みみ'] },
+        { display: '🚿シャワー室で二人きり', answers: ['しゃわー', 'みっちゃく'] },
+        { display: '🖐️胸を揉む', answers: ['おっぱい', 'もむ'] },
+        { display: '💏熱い抱擁', answers: ['はぐ', 'だきしめる'] },
+        { display: '🥵欲求不満', answers: ['もんもん', 'したい'] },
+        { display: '👙手ブラ', answers: ['てぶら', 'おっぱい'] }
     ],
     situation: [
         { display: '💑デート', answers: ['でーと', 'デート', 'date'] },
@@ -283,7 +294,14 @@ const cuteWords = {
         { display: '🌙夜の公園で二人きり', answers: ['こうえん', 'よる', 'ふたりきり'] },
         { display: '🏢会社の給湯室で…', answers: ['きゅうとうしつ', 'かいしゃ', 'ふりん', 'ないしょ'] },
         { display: '👗試着室に二人で入る', answers: ['しちゃくしつ', 'ふたり', 'ないしょ'] },
-        { display: '🏊プールサイドで休憩', answers: ['ぷーる', 'みずぎ', 'きゅうけい'] }
+        { display: '🏊プールサイドで休憩', answers: ['ぷーる', 'みずぎ', 'きゅうけい'] },
+        { display: '⛺テントの中で密着', answers: ['きゃんぷ', 'みっちゃく'] },
+        { display: '🎬映画館の後ろの席で', answers: ['えいがかん', 'ないしょ'] },
+        { display: '🎡誰もいない遊園地', answers: ['ゆうえんち', 'ふたりきり'] },
+        { display: '🚗車内での密会', answers: ['くるま', 'ふりん', 'でーと'] },
+        { display: '⛩️神社でお参り（という名のデート）', answers: ['じんじゃ', 'でーと'] },
+        { display: '🚿お風呂でマッサージ', answers: ['おふろ', 'まっさーじ'] },
+        { display: '🛌昼からベッド', answers: ['ひるま', 'えっち'] }
     ],
     pose: [
         { display: '✌️ぴーす', answers: ['ぴーす', 'ピース', 'peace'] },
@@ -316,7 +334,12 @@ const cuteWords = {
         { display: '🤱授乳ポーズ（！？）', answers: ['じゅにゅう', 'おっぱい'] },
         { display: '🛌誘ってる寝ポーズ', answers: ['ねそべり', 'うわめづかい', 'ねころび'] },
         { display: '🦵太ももを強調', answers: ['ふともも', 'あし', 'ぜったいりょういき'] },
-        { display: '🙆‍♀️手で胸を隠す', answers: ['てぶら', 'おっぱい', 'かくす'] }
+        { display: '🙆‍♀️手で胸を隠す', answers: ['てぶら', 'おっぱい', 'かくす'] },
+        { display: '🍑Ｔバック食い込み', answers: ['ぱんつ', 'くいこみ'] },
+        { display: '🥵欲情して腰を振る', answers: ['こしふり', 'こうふん'] },
+        { display: '💋指を舐める', answers: ['ゆびなめ', 'せくしー'] },
+        { display: '💦汗だくでハァハァ', answers: ['あせだく', 'いきぎれ'] },
+        { display: '🧜‍♀️脚を絡める', answers: ['あし', 'みっちゃく'] }
     ],
     job: [
         { display: '👮警察官', answers: ['けいさつかん', '警察官', 'おまわりさん', '警察'] },
