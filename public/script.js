@@ -27,6 +27,28 @@ const wordPopupSubtext = document.getElementById('wordPopupSubtext');
 const danmakuContainer = document.getElementById('danmakuContainer');
 const sparkleContainer = document.getElementById('sparkleContainer'); // 追加✨
 
+// --- 💎 タイトル画面の制御 💎 ---
+const titleScreen = document.getElementById('titleScreen');
+const gameStartBtn = document.getElementById('gameStartBtn');
+
+if (gameStartBtn) {
+    gameStartBtn.addEventListener('click', () => {
+        initAudio();
+        if (isBgmOn) startBGM();
+        
+        // フェードアウトさせて消す！💅
+        titleScreen.style.opacity = '0';
+        titleScreen.style.pointerEvents = 'none';
+        
+        // 演出用に少し遅らせてDOMから消す（or 非表示）
+        setTimeout(() => {
+            titleScreen.classList.add('hidden');
+        }, 800);
+        
+        addChatMessage('System', 'パーティーへようこそ！楽しんでねっ💖✨', '#ff66b2');
+    });
+}
+
 // 画像検索関連の要素
 const searchImageBtn = document.getElementById('searchImageBtn');
 const imageSearchContainer = document.getElementById('imageSearchContainer');
@@ -38,6 +60,10 @@ const openGalleryBtn = document.getElementById('openGalleryBtn');
 const galleryOverlay = document.getElementById('galleryOverlay');
 const fullGalleryContainer = document.getElementById('fullGalleryContainer');
 const closeGalleryBtn = document.getElementById('closeGalleryBtn');
+
+const banOverlay = document.getElementById('banOverlay');
+const banGrid = document.getElementById('banGrid');
+const closeBanBtn = document.getElementById('closeBanBtn');
 
 const chatBox = document.getElementById('chatBox');
 const chatInput = document.getElementById('chatInput');
@@ -109,6 +135,26 @@ if (bgmPlayer) {
 function initAudio() {
     if (!audioCtx) audioCtx = new AudioContext();
     if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+// --- 🍪 クッキー操作ヘルパー 🍪 ---
+function setCookie(name, value, days = 7) {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
+}
+
+function getCookie(name) {
+    return document.cookie.split('; ').reduce((r, v) => {
+        const parts = v.split('=');
+        return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+    }, '');
+}
+
+// プレイヤー識別用のトークン生成（または取得）🚀
+let playerToken = getCookie('galPlayerToken');
+if (!playerToken) {
+    playerToken = 'token_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    setCookie('galPlayerToken', playerToken);
 }
 
 function startBGM() {
@@ -266,44 +312,41 @@ function drawLine(x0, y0, x1, y1, color, size, isErase, isGlow, isRainbow) {
 function createSparkle(x, y, color) {
     if (!sparkleContainer) return;
     
-    const sparkle = document.createElement('div');
-    sparkle.className = 'sparkle';
+    // 💖 エフェクト大増量！盛り盛り仕様にするよ！💅✨
+    const count = 3; // 1回で3個出しちゃう欲張りセット！💍
     
-    // キャンバス上の座標を画面上の座標に変換（雑だけどこれで大体合う！💅）
-    const rect = canvas.getBoundingClientRect();
-    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
-    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
-    
-    const screenX = rect.left + x + scrollX;
-    const screenY = rect.top + y + scrollY;
-    
-    sparkle.style.left = `${screenX}px`;
-    sparkle.style.top = `${screenY}px`;
-    sparkle.style.backgroundColor = color;
-    
-    // ランダムな方向に飛ばす！🚀
-    const angle = Math.random() * Math.PI * 2;
-    const velocity = 2 + Math.random() * 4;
-    const vx = Math.cos(angle) * velocity;
-    const vy = Math.sin(angle) * velocity;
-    
-    sparkle.style.setProperty('--vx', `${vx}px`);
-    sparkle.style.setProperty('--vy', `${vy}px`);
-    
-    // 形をランダムに変える（ハートとか星とか！💎）
-    const shapes = ['✨', '💖', '⭐', '💎', '🌸'];
-    if (Math.random() > 0.5) {
+    for (let i = 0; i < count; i++) {
+        const sparkle = document.createElement('div');
+        sparkle.className = 'sparkle';
+        
+        // ✨ 修正：パーセント（%）で座標を指定するよ！💅
+        // これならキャンバスがどんなサイズにリサイズされても、ペン先にピタッと重なるね！💎💍
+        sparkle.style.left = `${(x / 600) * 100}%`;
+        sparkle.style.top = `${(y / 500) * 100}%`;
+        
+        // ランダムな方向に飛ばす！シュババッ！💨
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = 3 + Math.random() * 8; // ちょっと遠くまで飛ばすよ！💎
+        const vx = Math.cos(angle) * velocity;
+        const vy = Math.sin(angle) * velocity;
+        
+        sparkle.style.setProperty('--vx', `${vx}px`);
+        sparkle.style.setProperty('--vy', `${vy}px`);
+        
+        // 宝石やハートをランダムに！💎💍💖✨🌟💄🍭🌈
+        const shapes = ['✨', '💖', '⭐', '💎', '🌸', '💍', '🌟', '💄', '🍭', '🌈', '🔥'];
         sparkle.textContent = shapes[Math.floor(Math.random() * shapes.length)];
         sparkle.style.backgroundColor = 'transparent';
-        sparkle.style.fontSize = `${10 + Math.random() * 15}px`;
-    }
+        sparkle.style.fontSize = `${12 + Math.random() * 20}px`; // デカくするよ！💅
+        sparkle.style.textShadow = `0 0 10px ${color}`; // 色に合わせて光らせる！✨
 
-    sparkleContainer.appendChild(sparkle);
-    
-    // 1秒後に消す！💅
-    setTimeout(() => {
-        sparkle.remove();
-    }, 1000);
+        sparkleContainer.appendChild(sparkle);
+        
+        // 0.8秒くらいで消す！（回転率UP💅）
+        setTimeout(() => {
+            sparkle.remove();
+        }, 800);
+    }
 }
 
 // 履歴保存機能（Undo用）
@@ -937,7 +980,7 @@ socket.on('chat_message', (data) => {
     }
     if (data.type === 'correct') {
         playSE('correct');
-        createSparkle(); // 正解したらキラキラさせるよ！✨
+        createWinSparkle(); // ✨ 修正：名前が被ってたのを直したよ！💅
     }
     else if (data.type === 'oshii') playSE('oshii');
 });
@@ -988,8 +1031,12 @@ joinBtn.addEventListener('click', () => {
     if (isBgmOn) startBGM();
     const name = playerNameInput.value.trim();
     if(name === "") return alert("名前入れてよね！🥺");
-    localStorage.setItem('galDrawingName', name); // 名前を保存💍✨
-    socket.emit('join_game', name);
+    
+    // クッキーとローカルストレージ両方に保存しちゃう欲張りセット！💅✨💍
+    localStorage.setItem('galDrawingName', name); 
+    setCookie('galPlayerName', name);
+    
+    socket.emit('join_game', name, playerToken); // トークンも一緒に送るよ！🚀
 });
 
 startBtn.addEventListener('click', () => {
@@ -1069,18 +1116,21 @@ function createDanmaku(text, color, isBig = false) {
     const padding = isBig ? 150 : 50;
     const maxHeight = danmakuContainer.clientHeight - padding; 
     const topPos = Math.random() * (maxHeight > 0 ? maxHeight : (isBig ? 300 : 450)); 
+    // 弾幕を右端からスタートさせる設定だよ！🚀
+    div.style.left = '100%'; 
     div.style.top = `${topPos}px`;
     
     danmakuContainer.appendChild(div);
     
     requestAnimationFrame(() => {
-        const textWidth = div.clientWidth;
+        const textWidth = div.scrollWidth || div.clientWidth;
         const containerWidth = danmakuContainer.clientWidth || 600;
         
         // デカい弾幕はちょっとゆっくり見せたいから 7秒、通常は 5秒にするよ✨
         const duration = isBig ? 7 : 5;
         div.style.transition = `transform ${duration}s linear`;
-        div.style.transform = `translateX(-${containerWidth + textWidth + 150}px)`;
+        // 右端(100%)からコンテナの幅＋自分の幅の分だけ左にスライド！シュババッ！！💨
+        div.style.transform = `translateX(-${containerWidth + textWidth + 200}px)`;
     });
     
     setTimeout(() => {
@@ -1090,8 +1140,8 @@ function createDanmaku(text, color, isBig = false) {
     }, 7500);
 }
 
-// キラキラエフェクトを降らせるよ！✨💍💖
-function createSparkle(x, y) {
+// ✨ 正解した時にキラキラエフェクトを降らせるよ！✨💍💖
+function createWinSparkle(x, y) {
     const container = document.getElementById('sparkleContainer');
     if (!container) return;
     
@@ -1120,9 +1170,71 @@ function createSparkle(x, y) {
     }
 }
 
+// サーバーからページ移動の指示があった時用💅✨
+socket.on('redirect', (url) => {
+    if (url === '/ban.html') {
+        openBanOverlay();
+    } else {
+        window.location.href = url;
+    }
+});
+
+// BANオーバーレイを開くよ！💅✨
+async function openBanOverlay() {
+    banOverlay.classList.remove('hidden');
+    banOverlay.style.display = 'flex';
+    
+    const resp = await fetch('/api/gallery');
+    const data = await resp.json();
+    
+    banGrid.innerHTML = '';
+    data.results.forEach(d => {
+        const card = document.createElement('div');
+        card.className = 'drawing-card'; // ban.htmlのスタイルを一部流用
+        card.style.background = 'white';
+        card.style.borderRadius = '20px';
+        card.style.padding = '15px';
+        card.style.boxShadow = '0 10px 20px rgba(0,0,0,0.1)';
+        
+        card.innerHTML = `
+            <img src="${d.url}" alt="${d.prompt}" style="width:100%; border-radius:10px; margin-bottom:10px;">
+            <div style="font-size:0.9rem; color:#666; margin-bottom:15px;">
+                <strong>${d.prompt}</strong><br>
+                by ${d.artist}<br>
+                ${new Date(d.timestamp).toLocaleString()}
+            </div>
+            <button class="cute-btn" style="background:#ff3344; color:white; width:100%;" onclick="banDrawing('${d.id}')">🚫 BAN！</button>
+        `;
+        banGrid.appendChild(card);
+    });
+}
+
+// 絵をBANするよ！😱💅
+window.banDrawing = async function(filename) {
+    if (!confirm('マジでこの絵消しちゃう？😱💅')) return;
+    
+    const resp = await fetch('/api/delete_drawing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename })
+    });
+    
+    if (resp.ok) {
+        alert('お掃除完了ッ！✨✨');
+        openBanOverlay(); // 再読み込み！
+    } else {
+        alert('なんかエラー出ちゃった🥺');
+    }
+};
+
+closeBanBtn.addEventListener('click', () => {
+    banOverlay.classList.add('hidden');
+    banOverlay.style.display = 'none';
+});
+
 // ページ読み込み時に保存された名前を復元するよ！💅✨
 window.addEventListener('DOMContentLoaded', () => {
-    const savedName = localStorage.getItem('galDrawingName');
+    const savedName = getCookie('galPlayerName') || localStorage.getItem('galDrawingName');
     if (savedName && playerNameInput) {
         playerNameInput.value = savedName;
     }

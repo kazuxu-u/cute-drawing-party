@@ -21,7 +21,7 @@ if (!fs.existsSync(METADATA_FILE)) {
     fs.writeFileSync(METADATA_FILE, JSON.stringify([]));
 }
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // ギャラリーの画像がちゃんと読み込まれてるかチェックするためのログ！💍✨
 app.use('/drawings', (req, res, next) => {
@@ -38,9 +38,10 @@ app.use('/drawings', express.static(DRAWINGS_DIR));
 // ...と思ったけど、安全のためにapp.listenの直前に書くのが一番確実かも！💍✨
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json({limit: '10mb'})); // 🎉 グローバルに設定！
 
-// 画像保存 API
-app.post('/api/save_drawing', express.json({limit: '10mb'}), (req, res) => {
+// 画像保存 API (ミドルウェアはグローバルに移したよ✨)
+app.post('/api/save_drawing', (req, res) => {
     const { image, artist, prompt } = req.body;
     if (!image || !artist || !prompt) return res.status(400).json({ error: 'Missing data' });
 
@@ -118,6 +119,48 @@ app.get('/api/gallery', (req, res) => {
     }
 });
 
+// 画像削除 API (BAN用) 💅✨ (ミドルウェアはグローバルに移したよ💍)
+app.post('/api/delete_drawing', (req, res) => {
+    const { filename } = req.body;
+    console.log(`[BAN-REQ] Deleting drawing: ${filename}`); // ログ追加！✨
+    
+    if (!filename) {
+        console.error('[BAN-ERROR] Missing filename in request body');
+        return res.status(400).json({ error: 'Missing filename' });
+    }
+
+    const filePath = path.join(DRAWINGS_DIR, filename);
+    console.log(`[BAN-PATH] Target file: ${filePath}`);
+    
+    try {
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log(`[BAN-FILE] Successfully deleted from disk: ${filename}`);
+        } else {
+            console.warn(`[BAN-WARN] File not found on disk: ${filename}`);
+        }
+        
+        // メタデータからも消すよ！💍
+        if (fs.existsSync(METADATA_FILE)) {
+            let metadata = JSON.parse(fs.readFileSync(METADATA_FILE));
+            const initialCount = metadata.length;
+            metadata = metadata.filter(m => m.filename !== filename);
+            
+            if (metadata.length < initialCount) {
+                fs.writeFileSync(METADATA_FILE, JSON.stringify(metadata, null, 2));
+                console.log(`[BAN-META] Removed from metadata: ${filename}`);
+            } else {
+                console.warn(`[BAN-META] Not found in metadata: ${filename}`);
+            }
+        }
+
+        res.json({ success: true });
+    } catch (e) {
+        console.error(`[BAN-FAIL] Error during deletion: ${e.message}`);
+        res.status(500).json({ error: 'Delete failed' });
+    }
+});
+
 let players = [];
 let maxPlayers = 4;
 let currentPlayerIndex = -1;
@@ -128,6 +171,13 @@ let timeLeft = 120;
 let timeLimit = 120;
 let pointsAwardedThisTurn = false;
 
+// トークンごとの得点記録メモ📝💅
+let persistentScores = {}; 
+
+// NPC関連の管理用
+let npcTimers = {}; // { playerId: [timeoutId, ...] }
+const npcNames = ['AIギャル💖れいな', 'AIギャル💅ゆき', 'AIギャル👗みく', 'AIギャル💍なな'];
+
 // ターン（周）の管理
 let currentRound = 1;
 let maxRounds = 3;
@@ -136,6 +186,7 @@ let currentWordList = []; // 選ばれたカテゴリー用リスト
 
 const cuteWords = {
     mix: [], // 後でぜんぶまとめる用
+    mix_safe: [], // ヤバい以外をぜんぶまとめる用☀️✨💍
     animal: [
         { display: '🐼パンダ', answers: ['ぱんだ', 'パンダ', 'panda'] },
         { display: '🐈ねこ', answers: ['ねこ', 'ネコ', '猫', 'にゃんこ', 'cat'] },
@@ -268,7 +319,7 @@ const cuteWords = {
         { display: '🛏️添い寝', answers: ['そいね', '添い寝', 'soine'] },
         { display: '💋キス待ち', answers: ['きすまち', 'キス待ち', 'きす'] },
         { display: '💏密着', answers: ['みっちゃく', '密着', 'ぎゅー', 'ハグ'] },
-        { display: '💰パパ活', answers: ['ぱぱかつ', 'パパ活', 'ぢぢい', 'おぢ'] },
+        { display: '💰パパ活', answers: ['ぱぱかつ', 'パパ活', 'ぢぢい', 'おぢ'], isEcchi: true },
         { display: '💔浮気発覚', answers: ['うわき', '浮気', 'うわきはっかく', '修羅場'] },
         { display: '🍻合コン', answers: ['ごうこん', '合コン', '飲み会', 'のみかい'] },
         { display: '👀ナンパ待ち', answers: ['なんぱ', 'ナンパ', 'ナンパ待ち', '声かけられ待ち'] },
@@ -282,34 +333,34 @@ const cuteWords = {
         { display: '🥺ぴえん', answers: ['ぴえん', 'ぴえん🥺', '泣く', 'なき'] },
         { display: '💖推し活', answers: ['おしかつ', '推し活', 'おし', '推し', 'オタク'] },
         { display: '📸自撮り', answers: ['じどり', '自撮り', 'せるふぃー', '盛り'] },
-        { display: '🚿一緒にお風呂', answers: ['おふろ', '一緒にお風呂', '混浴'] },
+        { display: '🚿一緒にお風呂', answers: ['おふろ', '一緒にお風呂', '混浴'], isEcchi: true },
         { display: '🍱あーんして', answers: ['あーん', 'あーんして', '食事'] },
         { display: '👔ネクタイを緩める', answers: ['ねくたい', 'ネクタイ', 'セクシー'] },
         { display: '🧼背中を流す', answers: ['せなか', '背中を流す', 'お風呂'] },
         { display: '🌅朝のひととき', answers: ['あさ', '朝', '添い寝', '朝帰り'] },
-        { display: '🧥シャツ一枚', answers: ['しゃつ', 'シャツ', '裸シャツ'] },
-        { display: '🚃満員電車で密着', answers: ['でんしゃ', 'みっちゃく', 'ちかん', '満員電車'] },
-        { display: '🏫放課後の教室で…', answers: ['ほうかご', 'きょうしつ', 'ないしょ'] },
-        { display: '🎡観覧車の頂上でキス', answers: ['かんらんしゃ', 'きす', 'でーと'] },
+        { display: '🧥シャツ一枚', answers: ['しゃつ', 'シャツ', '裸シャツ'], isEcchi: true },
+        { display: '🚃満員電車で密着', answers: ['でんしゃ', 'みっちゃく', 'ちかん', '満員電車'], isEcchi: true },
+        { display: '🏫放課後の教室で…', answers: ['ほうかご', 'きょうしつ', 'ないしょ'], isEcchi: true },
+        { display: '🎡観覧車の頂上でキス', answers: ['かんらんしゃ', 'きす', 'でーと'], isEcchi: true },
         { display: '🌙夜の公園で二人きり', answers: ['こうえん', 'よる', 'ふたりきり'] },
-        { display: '🏢会社の給湯室で…', answers: ['きゅうとうしつ', 'かいしゃ', 'ふりん', 'ないしょ'] },
-        { display: '👗試着室に二人で入る', answers: ['しちゃくしつ', 'ふたり', 'ないしょ'] },
+        { display: '🏢会社の給湯室で…', answers: ['きゅうとうしつ', 'かいしゃ', 'ふりん', 'ないしょ'], isEcchi: true },
+        { display: '👗試着室に二人で入る', answers: ['しちゃくしつ', 'ふたり', 'ないしょ'], isEcchi: true },
         { display: '🏊プールサイドで休憩', answers: ['ぷーる', 'みずぎ', 'きゅうけい'] },
-        { display: '⛺テントの中で密着', answers: ['きゃんぷ', 'みっちゃく'] },
-        { display: '🎬映画館の後ろの席で', answers: ['えいがかん', 'ないしょ'] },
+        { display: '⛺テントの中で密着', answers: ['きゃんぷ', 'みっちゃく'], isEcchi: true },
+        { display: '🎬映画館の後ろの席で', answers: ['えいがかん', 'ないしょ'], isEcchi: true },
         { display: '🎡誰もいない遊園地', answers: ['ゆうえんち', 'ふたりきり'] },
-        { display: '🚗車内での密会', answers: ['くるま', 'ふりん', 'でーと'] },
+        { display: '🚗車内での密会', answers: ['くるま', 'ふりん', 'でーと'], isEcchi: true },
         { display: '⛩️神社でお参り（という名のデート）', answers: ['じんじゃ', 'でーと'] },
-        { display: '🚿お風呂でマッサージ', answers: ['おふろ', 'まっさーじ'] },
-        { display: '🛌昼からベッド', answers: ['ひるま', 'えっち'] }
+        { display: '🚿お風呂でマッサージ', answers: ['おふろ', 'まっさーじ'], isEcchi: true },
+        { display: '🛌昼からベッド', answers: ['ひるま', 'えっち'], isEcchi: true }
     ],
     pose: [
         { display: '✌️ぴーす', answers: ['ぴーす', 'ピース', 'peace'] },
         { display: '😉ウインク', answers: ['ういんく', 'ウインク', 'wink'] },
         { display: '🫶ハート作る', answers: ['はーと', 'ハート', 'heart'] },
-        { display: '🫦セクシーポーズ', answers: ['せくしー', 'セクシーポーズ', 'グラビア'] },
-        { display: '💦アヘ顔（笑）', answers: ['あへがお', 'アヘ顔', 'ahegao'] },
-        { display: '🦵M字開脚（ヤバ', answers: ['えむじかいきゃく', 'M字開脚', 'm字'] },
+        { display: '🫦セクシーポーズ', answers: ['せくしー', 'セクシーポーズ', 'グラビア'], isEcchi: true },
+        { display: '💦アヘ顔（笑）', answers: ['あへがお', 'アヘ顔', 'ahegao'], isEcchi: true },
+        { display: '🦵M字開脚（ヤバ', answers: ['えむじかいきゃく', 'M字開脚', 'm字'], isEcchi: true },
         { display: '👀振り向き', answers: ['ふりむき', '振り向き', 'みかえり'] },
         { display: '💅ギャルピース', answers: ['ぎゃるぴーす', 'ギャルピ', 'ギャル'] },
         { display: '🤸コマネチ', answers: ['こまねち', 'コマネチ'] },
@@ -323,23 +374,23 @@ const cuteWords = {
         { display: '🥺ぶりっ子', answers: ['ぶりっこ', 'ぶりっ子', 'あざとい'] },
         { display: '🙌万歳', answers: ['ばんざい', '万歳', 'バンザイ'] },
         { display: '💪ガッツポーズ', answers: ['がっつぽーず', 'ガッツポーズ', 'よっしゃ'] },
-        { display: '🐶四つん這い', answers: ['よつんばい', '四つん這い', '犬のポーズ'] },
-        { display: '👅ペロペロ', answers: ['ぺろぺろ', '舌出し', 'ベロ出し'] },
+        { display: '🐶四つん這い', answers: ['よつんばい', '四つん這い', '犬のポーズ'], isEcchi: true },
+        { display: '👅ペロペロ', answers: ['ぺろぺろ', '舌出し', 'ベロ出し'], isEcchi: true },
         { display: '🤟内緒ポーズ', answers: ['ないしょ', 'しーっ', '秘密'] },
-        { display: '👙胸を寄せる', answers: ['おっぱい', '胸', '寄せる', '谷間'] },
-        { display: '🦵網タイツ', answers: ['あみたいつ', '網タイツ', '足', '脚'] },
+        { display: '👙胸を寄せる', answers: ['おっぱい', '胸', '寄せる', '谷間'], isEcchi: true },
+        { display: '🦵網タイツ', answers: ['あみたいつ', '網タイツ', '足', '脚'], isEcchi: true },
         { display: '💃自撮りポーズ', answers: ['じどり', 'せるふぃー', 'もり'] },
-        { display: '💋舌ぺろポーズ', answers: ['したぺろ', 'てへぺろ', 'べろ'] },
-        { display: '👗スカートをめくる', answers: ['すかーと', 'ぱんつ', 'めくる'] },
-        { display: '🤱授乳ポーズ（！？）', answers: ['じゅにゅう', 'おっぱい'] },
-        { display: '🛌誘ってる寝ポーズ', answers: ['ねそべり', 'うわめづかい', 'ねころび'] },
-        { display: '🦵太ももを強調', answers: ['ふともも', 'あし', 'ぜったいりょういき'] },
-        { display: '🙆‍♀️手で胸を隠す', answers: ['てぶら', 'おっぱい', 'かくす'] },
-        { display: '🍑Ｔバック食い込み', answers: ['ぱんつ', 'くいこみ'] },
-        { display: '🥵欲情して腰を振る', answers: ['こしふり', 'こうふん'] },
-        { display: '💋指を舐める', answers: ['ゆびなめ', 'せくしー'] },
-        { display: '💦汗だくでハァハァ', answers: ['あせだく', 'いきぎれ'] },
-        { display: '🧜‍♀️脚を絡める', answers: ['あし', 'みっちゃく'] }
+        { display: '💋舌ぺろポーズ', answers: ['したぺろ', 'てへぺろ', 'べろ'], isEcchi: true },
+        { display: '👗スカートをめくる', answers: ['すかーと', 'ぱんつ', 'めくる'], isEcchi: true },
+        { display: '🤱授乳ポーズ（！？）', answers: ['じゅにゅう', 'おっぱい'], isEcchi: true },
+        { display: '🛌誘ってる寝ポーズ', answers: ['ねそべり', 'うわめづかい', 'ねころび'], isEcchi: true },
+        { display: '🦵太ももを強調', answers: ['ふともも', 'あし', 'ぜったいりょういき'], isEcchi: true },
+        { display: '🙆‍♀️手で胸を隠す', answers: ['てぶら', 'おっぱい', 'かくす'], isEcchi: true },
+        { display: '🍑Ｔバック食い込み', answers: ['ぱんつ', 'くいこみ'], isEcchi: true },
+        { display: '🥵欲情して腰を振る', answers: ['こしふり', 'こうふん'], isEcchi: true },
+        { display: '💋指を舐める', answers: ['ゆびなめ', 'せくしー'], isEcchi: true },
+        { display: '💦汗だくでハァハァ', answers: ['あせだく', 'いきぎれ'], isEcchi: true },
+        { display: '🧜‍♀️脚を絡める', answers: ['あし', 'みっちゃく'], isEcchi: true }
     ],
     job: [
         { display: '👮警察官', answers: ['けいさつかん', '警察官', 'おまわりさん', '警察'] },
@@ -448,6 +499,8 @@ const cuteWords = {
     ]
 };
 cuteWords.mix = [...cuteWords.animal, ...cuteWords.food, ...cuteWords.daily, ...cuteWords.yabai, ...cuteWords.situation, ...cuteWords.pose, ...cuteWords.job, ...cuteWords.vehicle, ...cuteWords.landmark, ...cuteWords.item, ...cuteWords.bug];
+cuteWords.mix_safe = [...cuteWords.animal, ...cuteWords.food, ...cuteWords.daily, ...cuteWords.situation, ...cuteWords.pose, ...cuteWords.job, ...cuteWords.vehicle, ...cuteWords.landmark, ...cuteWords.item, ...cuteWords.bug]
+    .filter(word => !word.isEcchi);
 
 // ソロモード用にお題リストを全部返すよ！💎✨💍
 app.get('/api/words', (req, res) => {
@@ -474,18 +527,26 @@ function kanaToHira(str) {
 }
 
 io.on('connection', (socket) => {
-    socket.on('join_game', (playerName) => {
+    socket.on('join_game', (playerName, playerToken) => {
         if (players.length >= maxPlayers) {
             socket.emit('error', '満室だよ〜！ごめんね🥺');
             return;
         }
 
+        // トークンがあったら以前の得点を思い出してあげるよ！✨💍💅
+        const savedScore = (playerToken && persistentScores[playerToken]) ? persistentScores[playerToken] : 0;
+        const name = playerName || `Player ${players.length + 1}`;
+
         players.push({
             id: socket.id,
-            name: playerName || `Player ${players.length + 1}`,
-            score: 0,
-            hasGuessed: false
+            token: playerToken,
+            name: name,
+            score: savedScore,
+            hasGuessed: false,
+            isNpc: false
         });
+
+        console.log(`[JOIN] ${name} joined with token ${playerToken} (Score: ${savedScore})`);
 
         io.emit('update_players', players);
         socket.emit('game_state', {
@@ -503,7 +564,7 @@ io.on('connection', (socket) => {
         if (players.length < 1) return;
 
         timeLimit = settings.timeLimit ?? 120;
-        maxRounds = settings.rounds || 3;
+        maxRounds = (settings.rounds !== undefined) ? settings.rounds : 3;
         const category = settings.category || 'mix';
         currentWordList = cuteWords[category] || cuteWords.mix;
 
@@ -546,69 +607,86 @@ io.on('connection', (socket) => {
     });
 
     socket.on('send_message', (msg) => {
+        // --- 🧹 BANページへの誘導 (/ban) ---
+        if (msg.trim() === '/ban') {
+            socket.emit('redirect', '/ban.html');
+            socket.emit('chat_message', { sender: 'System', text: '💅 BANページにジャンプするよ！お掃除よろしくねッ！💖', color: '#ff66b2' });
+            return;
+        }
+
+        // --- 📜 コマンド一覧 (/list) ---
+        if (msg.trim() === '/list') {
+            const listMsg = "💋 秘密のメニューだよ 💋<br>" +
+                           "--------------------------<br>" +
+                           "🔹 /pt0 : 自分のポイントを0にするよ🤫<br>" +
+                           "🔹 /npc : AIギャル友を召喚するよ💖💅<br>" +
+                           "🔹 /list : この一覧を表示するよ✨💍";
+            socket.emit('chat_message', { sender: 'System', text: listMsg, color: '#ff66b2' });
+            return;
+        }
+
+        // --- 👱‍♀️ NPC召喚 (/npc) ---
+        if (msg.trim() === '/npc') {
+            if (players.length >= maxPlayers) {
+                socket.emit('chat_message', { sender: 'System', text: '満室でギャル友呼べないよ🥺ごめんね！', color: '#ff66b2' });
+                return;
+            }
+            const npcName = npcNames[Math.floor(Math.random() * npcNames.length)];
+            const npcId = 'npc_' + Math.random().toString(36).substr(2, 9);
+            const npcToken = 'token_npc_' + npcId;
+
+            players.push({
+                id: npcId,
+                token: npcToken,
+                name: npcName,
+                score: 0,
+                hasGuessed: false,
+                isNpc: true
+            });
+            io.emit('update_players', players);
+            io.emit('chat_message', { sender: 'System', text: `${npcName}が遊びに来たよ！💖✨`, color: '#ff66b2' });
+            return;
+        }
+
         const player = players.find(p => p.id === socket.id);
         if (!player) return;
 
-        if (gamePhase === 'playing') {
-            const isDrawer = players[currentPlayerIndex]?.id === socket.id;
-
-            let isCorrect = false;
-            let isAlmost = false;
-
-            const cleanInput = msg.trim().toLowerCase().replace(/[\s　]/g, '');
-            const normalizedInput = kanaToHira(cleanInput);
-
-            if (!isDrawer && !player.hasGuessed) {
-                for (let ans of currentWordObj.answers) {
-                    const normalizedAns = kanaToHira(ans.toLowerCase().replace(/[\s　]/g, ''));
-                    if (normalizedInput === normalizedAns) {
-                        isCorrect = true; break;
-                    }
-                    if (normalizedAns.length >= 2) {
-                        const dist = levenshtein(normalizedInput, normalizedAns);
-                        if (dist === 1 || (dist === 2 && normalizedAns.length >= 5)) isAlmost = true;
-                        else if (normalizedInput.length >= 2 && normalizedAns.includes(normalizedInput) && normalizedInput.length >= normalizedAns.length - 1) isAlmost = true;
-                        else if (normalizedAns.length >= 2 && normalizedInput.includes(normalizedAns)) isAlmost = true;
-                    }
-                }
-            }
-
-            if (isCorrect) {
-                player.hasGuessed = true;
-                
-                if (!pointsAwardedThisTurn) {
-                    pointsAwardedThisTurn = true;
-                    // スコア更新 (回答者+1pt、描いた人+1pt)
-                    player.score += 1;
-                    if (players[currentPlayerIndex]) {
-                        players[currentPlayerIndex].score += 1;
-                    }
-                    io.emit('chat_message', { sender: 'System', text: `やば！${player.name}さんが1番乗りで大正解！🎉✨（回答者+1pt / 出題者+1pt）`, color: '#ff66b2', type: 'correct' });
-                } else {
-                    io.emit('chat_message', { sender: 'System', text: `${player.name}さんも正解！👏（ポイントは最初の人だけだよ！）`, color: '#ff66b2', type: 'correct' });
-                }
-                
-                io.emit('update_players', players);
-                // 以前はここで allGuessed チェックをしていたけど、時間まで継続するので削除！💅✨
-            } else if (isAlmost && !isCorrect && !isDrawer && !player.hasGuessed) {
-                io.to(socket.id).emit('chat_message', { sender: 'System', text: `「${msg}」…惜しい！あとちょっと！🥺`, color: '#ff9900', type: 'oshii' });
-                io.emit('chat_message', { sender: player.name, text: msg, color: '#333' });
-            } else {
-                io.emit('chat_message', { sender: player.name, text: msg, color: '#333' });
-            }
-        } else {
-            io.emit('chat_message', { sender: player.name, text: msg, color: '#333' });
+        // --- 🤫 隠しコマンド！ (/pt0) ---
+        if (msg.trim() === '/pt0') {
+            player.score = 0;
+            if (player.token) persistentScores[player.token] = 0;
+            io.emit('update_players', players);
+            socket.emit('chat_message', { sender: 'System', text: '🤫 ポイントをリセットしたよ✨', color: '#ff66b2' });
+            return;
         }
+
+        handleChatMessage(player, msg);
     });
 
     socket.on('disconnect', () => {
         players = players.filter(p => p.id !== socket.id);
-        io.emit('update_players', players);
-
-        if (players.length === 0) {
+        
+        // 人間が一人もいなくなったらNPCも全員消去するよ！💎💅✨
+        const humanPlayers = players.filter(p => !p.isNpc);
+        if (humanPlayers.length === 0) {
+            // NPCのタイマーを全部掃除💍
+            players.forEach(p => {
+                if (p.isNpc && npcTimers[p.id]) {
+                    npcTimers[p.id].forEach(t => {
+                        if (t.type === 'interval') clearInterval(t.timer);
+                        else clearTimeout(t.timer);
+                    });
+                }
+            });
+            players = [];
+            npcTimers = {};
             gamePhase = 'waiting';
             if (roundTimer) clearInterval(roundTimer);
-        } else if (gamePhase === 'playing' && currentPlayerIndex >= players.length) {
+        }
+
+        io.emit('update_players', players);
+
+        if (gamePhase === 'playing' && (currentPlayerIndex >= players.length || (players[currentPlayerIndex] && players[currentPlayerIndex].id === socket.id))) {
             endTurn();
         }
     });
@@ -622,7 +700,7 @@ io.on('connection', (socket) => {
             turnsPlayedInRound = 1;
         }
 
-        if (currentRound > maxRounds) {
+        if (maxRounds > 0 && currentRound > maxRounds) {
             endGame();
             return;
         }
@@ -639,7 +717,9 @@ io.on('connection', (socket) => {
         io.emit('clear_canvas');
         io.emit('update_players', players);
 
-        const roundInfoTxt = `${currentRound}周目 (${turnsPlayedInRound}/${players.length})`;
+        const roundInfoTxt = (maxRounds === 0) 
+            ? `${currentRound}周目 (∞)` 
+            : `${currentRound}周目 (${turnsPlayedInRound}/${players.length})`;
         const drawer = players[currentPlayerIndex];
 
         io.to(drawer.id).emit('round_start', {
@@ -659,6 +739,11 @@ io.on('connection', (socket) => {
                     roundInfo: roundInfoTxt
                 });
             }
+        });
+
+        // --- 👱‍♀️ NPCの行動を開始！ ---
+        players.forEach(p => {
+            if (p.isNpc) handleNpcAction(p);
         });
 
         if (roundTimer) clearInterval(roundTimer);
@@ -684,8 +769,16 @@ io.on('connection', (socket) => {
         if (roundTimer) clearInterval(roundTimer);
         gamePhase = 'between_turns';
 
+        // NPCのタイマーも一回全部止めるよ！💅
+        players.forEach(p => {
+            if (p.isNpc && npcTimers[p.id]) {
+                npcTimers[p.id].forEach(t => clearTimeout(t));
+                npcTimers[p.id] = [];
+            }
+        });
+
         let isLastTurn = false;
-        if (currentRound >= maxRounds && turnsPlayedInRound >= players.length) {
+        if (maxRounds > 0 && currentRound >= maxRounds && turnsPlayedInRound >= players.length) {
             isLastTurn = true;
         }
 
@@ -706,6 +799,284 @@ io.on('connection', (socket) => {
         gamePhase = 'results';
         const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
         io.emit('game_over', sortedPlayers);
+    }
+
+
+    // --- 👱‍♀️ NPCの自律行動 AI(Advanced Intelligence)ギャル・ロジック ---
+    function getWordHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash |= 0;
+        }
+        return Math.abs(hash);
+    }
+
+    function getNpcDrawingStrategy(word) {
+        const w = word.toLowerCase();
+        const hash = getWordHash(word);
+        let color = '#ff66b2';
+        let pattern = 'cloud';
+        let category = 'other';
+
+        const patterns = ['spiral', 'cloud', 'horizontal', 'vertical', 'zigzag', 'star', 'square', 'heart'];
+        pattern = patterns[hash % patterns.length];
+
+        // --- 🎨 万能カラー推測 & カテゴリー判定 ---
+        if (w.match(/赤|🍎|🍓|🍣|🍓|🍒|🍅|🔥|💋|🚨/)) color = '#ff0000';
+        else if (w.match(/青|水|海|空|🌊|☁️|💎|🐬|💧|🧊|✈️|🚅/)) color = '#00aaff';
+        else if (w.match(/緑|森|木|草|🌿|🌲|🥗|🍏|🧤|🥦|🐛/)) color = '#22aa22';
+        else if (w.match(/黄|星|雷|バナナ|月|🍌|⭐|🌙|☀️|🍋|🧀|🍳/)) color = '#ffff00';
+        else if (w.match(/橙|オレンジ|🍊|🥕|🎃|🍔|🦊/)) color = '#ff8800';
+        else if (w.match(/茶|うちぬ|ねこ|いぬ|動物|犬|猫|土|💩|🐕|🐈|🐻|🟫|🪵|🍞|🍩/)) color = '#8b4513';
+        else if (w.match(/紫|ぶどう|🍇| eggplant|👿|💅/)) color = '#8800ff';
+        else if (w.match(/桃|ピンク|🍑|🌸|💍|👙|💄/)) color = '#ff66b2';
+        else if (w.match(/白|雪|歯|🥛|雲|🦷|🍚/)) color = '#ffffff';
+        else if (w.match(/黒|髪|影|💣|🕶️|🕷️|🎱/)) color = '#333333';
+        else if (w.match(/銀|金|塔|機械|🏢|🗼|⌚|🥄|🩶|💛|🏠|🎁/)) color = '#aaaaaa';
+
+        // カテゴリー決定
+        if (w.match(/いぬ|ねこ|パンダ|クマ|ウサギ|ペンギン|動物|🐕|🐈|🐻|🦄|🦒/)) category = 'animal';
+        else if (w.match(/ハンバーガー|ピザ|ラーメン|プリン|寿司|食べ物|🍎|🍔|🍣/)) category = 'food';
+        else if (w.match(/車|くるま|飛行機|電車|のりもの|🚗|✈️|🚄/)) category = 'vehicle';
+        else if (w.match(/塔|ビル|家|建物|ピラミッド|🗼|🏠|🏢/)) category = 'landmark';
+        else if (w.match(/唇|エッチ|セクシー|ヤバい|💋|🔞|👙/)) category = 'yabai';
+
+        // 特定キーワード優先
+        if (w.match(/りんご|ボール|太陽|顔|まる|円|地球|メロン|天/)) pattern = 'spiral';
+        else if (w.match(/塔|木|人|縦|ビル|エッフェル/)) pattern = 'vertical';
+        else if (w.match(/海|道|波|横|ベッド/)) pattern = 'horizontal';
+        
+        const offsetX = (hash % 150) - 75;
+        const offsetY = (hash % 100) - 50;
+
+        return { color, pattern, offsetX, offsetY, hash, category };
+    }
+
+    function handleNpcAction(npc) {
+        if (!npcTimers[npc.id]) npcTimers[npc.id] = [];
+        npcTimers[npc.id].forEach(t => {
+            if (t.type === 'interval') clearInterval(t.timer);
+            else clearTimeout(t.timer);
+        });
+        npcTimers[npc.id] = [];
+
+        const isDrawer = (players[currentPlayerIndex]?.id === npc.id);
+
+        if (isDrawer) {
+            const strategy = getNpcDrawingStrategy(currentWordObj.display);
+            console.log(`[NPC] ${npc.name} is drawing ${currentWordObj.display} with pattern ${strategy.pattern} and color ${strategy.color}`);
+
+            // --- 🎤 カテゴリー別の「ギャルの一言」機能！ ---
+            const getNpcComment = (word) => {
+                const w = word.toLowerCase();
+                if (w.match(/🍎|🍓|🍔|🍣|たべもの/)) return [`${word}、おいしそうに描くね！😋💖`, `お腹空いてきちゃった～ｗ🍴✨`];
+                if (w.match(/🐶|🐱|くま|どうぶつ/)) return [`${word}、かわいく描けるかな～？🐾💍`, `モフモフ感出すのがポイントだよ！✨`];
+                if (w.match(/🚗|飛行機|のりもの/)) return [`${word}、かっこよく描いちゃうよ！💨🚀`, `スピード感出してきた～！✨`];
+                if (w.match(/唇|セクシー|ヤバい/)) return [`ちょっとエッチすぎ？ｗ🔞💖`, `これ描くの恥ずかしいんだけど～！🫣✨`];
+                return [
+                    `${word}、描くのムズすぎない？ｗ✨`,
+                    `この辺のラインがポイントだよ💖💍`,
+                    `筆が乗ってきた～！🎨💎🚀`,
+                    `見て、可愛くなってきてない？💅💎`,
+                    `ギャルの本気見せちゃうよ💍✨💅`
+                ];
+            };
+
+            const comments = getNpcComment(currentWordObj.display);
+            const commentInterval = setInterval(() => {
+                if (gamePhase !== 'playing') { clearInterval(commentInterval); return; }
+                io.emit('chat_message', { sender: npc.name, text: comments[Math.floor(Math.random() * comments.length)], color: '#333' });
+            }, 5000 + Math.random() * 4000);
+            npcTimers[npc.id].push({ timer: commentInterval, type: 'interval' });
+
+            let step = 0;
+            let lastX = 0, lastY = 0;
+            const drawInterval = setInterval(() => {
+                if (gamePhase !== 'playing') { clearInterval(drawInterval); return; }
+                
+                let x0, y0, x1, y1;
+                const centerX = 300 + strategy.offsetX, centerY = 250 + strategy.offsetY;
+
+                // --- 🎨 複合パーツお絵描きレシピ (Composite Logic) ---
+                let nextX, nextY;
+                const c = strategy.category;
+                
+                if (c === 'animal') {
+                    if (step < 60) { // 体（大きめスパイラル）
+                        const a = step * 0.15; const r = step * 0.8;
+                        nextX = centerX + Math.cos(a) * r; nextY = centerY + Math.sin(a) * r;
+                    } else if (step < 80) { // 耳1
+                        const a = step * 0.3; const r = 15;
+                        nextX = centerX - 40 + Math.cos(a) * r; nextY = centerY - 50 + Math.sin(a) * r;
+                    } else { // 耳2
+                        const a = step * 0.3; const r = 15;
+                        nextX = centerX + 40 + Math.cos(a) * r; nextY = centerY - 50 + Math.sin(a) * r;
+                    }
+                } else if (c === 'vehicle') {
+                    if (step < 60) { // 車体（四角）
+                        const s = step % 60;
+                        if (s < 15) { nextX = centerX - 60 + s * 8; nextY = centerY - 30; }
+                        else if (s < 30) { nextX = centerX + 60; nextY = centerY - 30 + (s-15) * 4; }
+                        else if (s < 45) { nextX = centerX + 60 - (s-30) * 8; nextY = centerY + 30; }
+                        else { nextX = centerX - 60; nextY = centerY + 30 - (s-45) * 4; }
+                    } else if (step < 80) { // タイヤ1
+                        const a = step * 0.4; const r = 12;
+                        nextX = centerX - 40 + Math.cos(a) * r; nextY = centerY + 35 + Math.sin(a) * r;
+                    } else { // タイヤ2
+                        const a = step * 0.4; const r = 12;
+                        nextX = centerX + 40 + Math.cos(a) * r; nextY = centerY + 35 + Math.sin(a) * r;
+                    }
+                } else if (c === 'food') {
+                    if (step < 50) { // お皿 or 器（横長）
+                        nextX = centerX - 80 + (step * 3.2); nextY = centerY + 40 + Math.sin(step * 0.5) * 5;
+                    } else { // 中身（もこもこ）
+                        const t = step * 0.2; const r = 50 + Math.sin(t * 3) * 10;
+                        nextX = centerX + Math.cos(t) * r; nextY = centerY + Math.sin(t) * r - 10;
+                    }
+                } else if (c === 'landmark') {
+                    if (step < 70) { // 土台 or メイン（縦長）
+                        nextX = centerX + (Math.random() - 0.5) * 40; nextY = centerY + 80 - step * 2.2;
+                    } else { // 屋根 or 上部（横長 or 点）
+                        nextX = centerX + (step - 85) * 10; nextY = centerY - 80 + Math.random() * 10;
+                    }
+                } else if (c === 'yabai') {
+                    if (step < 60) { // メイン（ハート）
+                        const t = step * 0.15;
+                        nextX = centerX + 16 * Math.pow(Math.sin(t), 3) * 8;
+                        nextY = centerY - (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) * 8;
+                    } else { // 怪しいキラキラ✨
+                        nextX = centerX + (Math.random() - 0.5) * 150; nextY = centerY + (Math.random() - 0.5) * 150;
+                    }
+                } else {
+                    // デフォルト：お題に合わせたパターンを描くよ✨
+                    switch (strategy.pattern) {
+                        case 'spiral':
+                            const a = step * 0.15; const r = (step % 400) * 0.4;
+                            nextX = centerX + Math.cos(a) * r; nextY = centerY + Math.sin(a) * r;
+                            break;
+                        case 'cloud':
+                            const t_cloud = step * 0.2; const r_cloud = 80 + Math.sin(t_cloud * 2) * 20;
+                            nextX = centerX + Math.cos(t_cloud) * r_cloud + Math.sin(step * 0.5) * 30;
+                            nextY = centerY + Math.sin(t_cloud) * r_cloud + Math.cos(step * 0.5) * 30;
+                            break;
+                        case 'star':
+                            const a_star = (step * 0.7); const r_star = (step % 2 === 0) ? 100 : 40;
+                            nextX = centerX + Math.cos(a_star) * r_star; nextY = centerY + Math.sin(a_star) * r_star;
+                            break;
+                        default:
+                            nextX = centerX + (Math.random() - 0.5) * 200;
+                            nextY = centerY + (Math.random() - 0.5) * 200;
+                    }
+                }
+
+                // --- 🚩 キャンバス（600x500）からはみ出ないようにマージン付きでクランプ！ ---
+                const margin = 25;
+                const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
+                x1 = clamp(nextX, margin, 600 - margin);
+                y1 = clamp(nextY, margin, 500 - margin);
+
+                // 2回目以降は前の点と繋げる、1回目は点として描画するよ💅
+                x0 = (step === 0) ? x1 : lastX;
+                y0 = (step === 0) ? y1 : lastY;
+
+                io.emit('draw', { 
+                    x0, y0, x1, y1, 
+                    color: strategy.color, size: 8 + Math.random() * 8, 
+                    isEraser: false, isGlow: true, isRainbow: (strategy.category === 'yabai' && Math.random() > 0.8)
+                });
+
+                // --- 🎤 描画状況に応じたヒントチャット！ ---
+                if (step === 10) io.emit('chat_message', { sender: npc.name, text: 'まずは大体の形から描くね！✨', color: '#333' });
+                else if (step === 60 && (c === 'animal' || c === 'vehicle')) io.emit('chat_message', { sender: npc.name, text: (c === 'animal' ? '次はこれ、耳だよ！🐾' : 'タイヤも付けちゃうよ！🚗'), color: '#333' });
+                else if (step === 90) io.emit('chat_message', { sender: npc.name, text: '仕上げに細かく描いていくよ💖💍', color: '#333' });
+
+                lastX = x1; lastY = y1;
+                step++;
+            }, 80); // さらにちょっとだけスピードアップ！🚀
+            npcTimers[npc.id].push({ timer: drawInterval, type: 'interval' });
+
+            const finishTimeout = setTimeout(() => {
+                clearInterval(drawInterval);
+                clearInterval(commentInterval);
+                if (gamePhase === 'playing' && players[currentPlayerIndex]?.id === npc.id) {
+                    io.emit('chat_message', { sender: npc.name, text: 'できた！可愛くない？💖✨💍', color: '#ff66b2' });
+                    endTurn();
+                }
+            }, 12000 + Math.random() * 8000);
+            npcTimers[npc.id].push({ timer: finishTimeout, type: 'timeout' });
+        } else {
+            // NPCが回答者の時：一定時間後に正解をブチ込むよ！🚀💍
+            const delay = (20 + Math.random() * 40) * 1000;
+            const guessTimeout = setTimeout(() => {
+                if (gamePhase !== 'playing' || npc.hasGuessed) return;
+                
+                const answer = currentWordObj.answers[0];
+                const prefix = ['', 'え、これ', 'もしかして', 'わかった！', 'んー、', 'これ', '絶対'];
+                const suffix = ['', 'じゃない？ｗ', 'かも！💖', 'だと思う！✨', 'だよ💅', 'だよね💍'];
+                const text = prefix[Math.floor(Math.random() * prefix.length)] + 
+                             answer + 
+                             suffix[Math.floor(Math.random() * suffix.length)];
+                
+                // チャットイベント経由で正解判定を走らせる
+                handleChatMessage(npc, text);
+            }, delay);
+            
+            npcTimers[npc.id].push({ timer: guessTimeout, type: 'timeout' });
+        }
+    }
+
+    // チャットメッセージ処理を関数化してNPCも使えるようにする💅
+    function handleChatMessage(player, msg) {
+        if (gamePhase === 'playing') {
+            const isDrawer = players[currentPlayerIndex]?.id === player.id;
+            let isCorrect = false;
+            let isAlmost = false;
+
+            const cleanInput = msg.trim().toLowerCase().replace(/[\s　]/g, '');
+            const normalizedInput = kanaToHira(cleanInput);
+
+            if (!isDrawer && !player.hasGuessed) {
+                for (let ans of currentWordObj.answers) {
+                    const normalizedAns = kanaToHira(ans.toLowerCase().replace(/[\s　]/g, ''));
+                    if (normalizedInput === normalizedAns) {
+                        isCorrect = true; break;
+                    }
+                    if (normalizedAns.length >= 2) {
+                        const dist = levenshtein(normalizedInput, normalizedAns);
+                        if (dist === 1 || (dist === 2 && normalizedAns.length >= 5)) isAlmost = true;
+                        else if (normalizedInput.length >= 2 && normalizedAns.includes(normalizedInput) && normalizedInput.length >= normalizedAns.length - 1) isAlmost = true;
+                        else if (normalizedAns.length >= 2 && normalizedInput.includes(normalizedAns)) isAlmost = true;
+                    }
+                }
+            }
+
+            if (isCorrect) {
+                player.hasGuessed = true;
+                if (!pointsAwardedThisTurn) {
+                    pointsAwardedThisTurn = true;
+                    player.score += 1;
+                    if (player.token) persistentScores[player.token] = player.score;
+                    if (players[currentPlayerIndex]) {
+                        players[currentPlayerIndex].score += 1;
+                        const drawerToken = players[currentPlayerIndex].token;
+                        if (drawerToken) persistentScores[drawerToken] = players[currentPlayerIndex].score;
+                    }
+                    io.emit('chat_message', { sender: 'System', text: `やば！${player.name}さんが1番乗りで大正解！🎉✨（回答者+1pt / 出題者+1pt）`, color: '#ff66b2', type: 'correct' });
+                } else {
+                    io.emit('chat_message', { sender: 'System', text: `${player.name}さんも正解！👏（ポイントは最初の人だけだよ！）`, color: '#ff66b2', type: 'correct' });
+                }
+                io.emit('update_players', players);
+                if (player.isNpc) io.emit('chat_message', { sender: player.name, text: msg, color: '#333' });
+            } else if (isAlmost && !isCorrect && !isDrawer && !player.hasGuessed) {
+                if (!player.isNpc) io.to(player.id).emit('chat_message', { sender: 'System', text: `「${msg}」…惜しい！あとちょっと！🥺`, color: '#ff9900', type: 'oshii' });
+                io.emit('chat_message', { sender: player.name, text: msg, color: '#333' });
+            } else {
+                io.emit('chat_message', { sender: player.name, text: msg, color: '#333' });
+            }
+        } else {
+            io.emit('chat_message', { sender: player.name, text: msg, color: '#333' });
+        }
     }
 });
 

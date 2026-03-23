@@ -377,6 +377,12 @@ input[type="text"]:focus {
     transition: opacity 0.3s ease;
 }
 
+.has-tooltip {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
 /* Tooltips 💎 */
 [data-tooltip]::after {
     content: attr(data-tooltip);
@@ -539,4 +545,105 @@ input[type="text"]:focus {
     .main-area {
         width: 100%;
     }
+}
+
+/* --- Title Screen 💎 --- */
+.full-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, hsla(340, 100%, 95%, 0.95), hsla(280, 100%, 92%, 0.95));
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    z-index: 20000; /* 全てを超越する！💎 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 1s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.title-content {
+    text-align: center;
+    padding: 60px !important;
+    max-width: 900px;
+    width: 90%;
+    animation: popIn 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.main-title {
+    font-size: 5.5rem;
+    margin-bottom: 20px;
+    background: linear-gradient(to right, #ff3399, #cc99ff, #00d2ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+
+    -webkit-text-fill-color: transparent;
+    text-shadow: 15px 15px 30px hsla(330, 100%, 65%, 0.3);
+    animation: titleFloat 3s ease-in-out infinite alternate;
+}
+
+.subtitle {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #cc6699;
+    margin-bottom: 50px;
+}
+
+.tip {
+    margin-top: 40px;
+    font-size: 1rem;
+    color: #ff99cc;
+    font-weight: 900;
+}
+
+@keyframes popIn {
+    0% { transform: scale(0.7) translateY(100px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes titleFloat {
+    0% { transform: translateY(0) rotate(-3deg); }
+    100% { transform: translateY(-25px) rotate(3deg); }
+}
+
+.animate-pulse {
+    animation: pulseGlow 2s infinite;
+}
+
+@media (max-width: 768px) {
+    .main-title { font-size: 3.2rem; }
+    .subtitle { font-size: 1.4rem; }
+}
+
+/* --- 弾幕スタイル 🚀✨ --- */
+.danmaku-item {
+    position: absolute;
+    right: -100px; /* 最初は画面の右端（場外）に隠しておくよ！💅 */
+    white-space: nowrap;
+    font-weight: 900;
+    color: #4a4a4a;
+    pointer-events: none;
+    z-index: 100;
+    font-size: 1.8rem;
+    text-shadow: 
+        2px 2px 0 #fff,
+        -2px -2px 0 #fff,
+        2px -2px 0 #fff,
+        -2px 2px 0 #fff,
+        0 4px 10px rgba(0,0,0,0.1);
+    will-change: transform; /* アニメーションを滑らかにする魔法！🪄 */
+}
+
+.danmaku-item.big {
+    font-size: 3.5rem;
+    color: var(--primary-color);
+    text-shadow: 
+        3px 3px 0 #fff,
+        -3px -3px 0 #fff,
+        3px -3px 0 #fff,
+        -3px 3px 0 #fff,
+        0 10px 30px rgba(255, 51, 153, 0.4);
+    z-index: 110;
 }
