@@ -366,14 +366,18 @@ input[type="text"]:focus {
     transform: translateX(-50%) translateY(0);
 }
 
-/* チャット入力だけは上に出さないと足元で見えない！💎 */
-.chat-input-area [data-tooltip]::after {
+/* チャット入力やオーバーレイのボタンは上に出さないと足元で見えない！💎 */
+.chat-input-area [data-tooltip]::after,
+.overlay [data-tooltip]::after,
+#setupArea [data-tooltip]::after {
     top: auto;
     bottom: 130%;
     transform: translateX(-50%) translateY(15px);
 }
 
-.chat-input-area [data-tooltip]:hover::after {
+.chat-input-area [data-tooltip]:hover::after,
+.overlay [data-tooltip]:hover::after,
+#setupArea [data-tooltip]:hover::after {
     transform: translateX(-50%) translateY(0);
 }
 
