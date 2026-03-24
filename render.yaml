@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: cute-drawing-party
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: NODE_VERSION
+        value: 18.16.0

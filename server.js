@@ -543,6 +543,7 @@ io.on('connection', (socket) => {
             name: name,
             score: savedScore,
             hasGuessed: false,
+            isReady: false, // 🆕 準備中モード追加！
             isNpc: false
         });
 
@@ -578,7 +579,10 @@ io.on('connection', (socket) => {
 
     socket.on('return_to_lobby', () => {
         gamePhase = 'waiting';
-        players.forEach(p => p.score = 0);
+        players.forEach(p => {
+            p.score = 0;
+            p.isReady = false; // ロビーに戻ったらリセット！✨
+        });
         io.emit('update_players', players);
         io.emit('game_state', { phase: 'waiting', timeLeft: 0 });
     });
@@ -641,6 +645,7 @@ io.on('connection', (socket) => {
                 name: npcName,
                 score: 0,
                 hasGuessed: false,
+                isReady: true, // NPCはいつでもオッケーっしょ！💅✨💍
                 isNpc: true
             });
             io.emit('update_players', players);
@@ -662,6 +667,63 @@ io.on('connection', (socket) => {
 
         handleChatMessage(player, msg);
     });
+
+    // 🆕 「準備オッケー！」のトグル処理 ✨💍💖
+    socket.on('toggle_ready', (settings) => {
+        const player = players.find(p => p.id === socket.id);
+        if (!player || (gamePhase !== 'waiting' && gamePhase !== 'between_turns')) return;
+
+        player.isReady = !player.isReady;
+        console.log(`[READY] ${player.name} is now ${player.isReady ? 'READY! 💖' : 'not ready... 🥺'}`);
+        
+        io.emit('update_players', players);
+
+        // 全員準備オッケーならスタート！🚀✨（待機中 or ターン間）
+        checkReadiness(settings);
+    });
+
+    function checkReadiness(settings) {
+        if (gamePhase !== 'waiting' && gamePhase !== 'between_turns') return;
+
+        // NPC以外のプレイヤーを取得
+        const humans = players.filter(p => !p.isNpc);
+        if (humans.length === 0) return;
+
+        const allReady = humans.every(p => p.isReady);
+        if (allReady) {
+            if (gamePhase === 'waiting') {
+                console.log(`[START] Everyone is ready! Starting game... 🚀✨`);
+                
+                // 設定を反映させてスタート
+                timeLimit = settings?.timeLimit ?? 120;
+                maxRounds = (settings?.rounds !== undefined) ? settings.rounds : 3;
+                const category = settings?.category || 'mix';
+                currentWordList = cuteWords[category] || cuteWords.mix;
+
+                currentRound = 1;
+                turnsPlayedInRound = 0;
+                currentPlayerIndex = -1;
+
+                players.forEach(p => {
+                    p.score = 0;
+                    p.isReady = false; // スタートしたらリセット！💅
+                });
+                
+                io.emit('game_start_imminent'); // カウントダウンとか演出用！✨
+                setTimeout(() => {
+                    startNextTurn();
+                }, 1000); // 1秒だけ溜めを作るよ💎
+            } else if (gamePhase === 'between_turns') {
+                console.log(`[NEXT-TURN] Everyone is ready! Starting next turn... 🚀✨`);
+                
+                players.forEach(p => {
+                    p.isReady = false; // 次のターンのためにリセット！💅
+                });
+                
+                startNextTurn();
+            }
+        }
+    }
 
     socket.on('disconnect', () => {
         players = players.filter(p => p.id !== socket.id);
@@ -782,7 +844,7 @@ io.on('connection', (socket) => {
             isLastTurn = true;
         }
 
-        const nextMsg = isLastTurn ? "結果発表にいくよ〜！🏆" : "5秒後に次行くよ！";
+        const nextMsg = isLastTurn ? "結果発表にいくよ〜！🏆" : "全員が「準備オッケー！」したら次に行くよっ！💖💅✨";
         io.emit('chat_message', { sender: 'System', text: `時間終了〜！正解は「${currentWordObj.display}」でした！✨ ${nextMsg}`, color: '#ff66b2', type: 'finish' });
 
         const drawerName = players[currentPlayerIndex] ? players[currentPlayerIndex].name : 'Unknown';
@@ -790,9 +852,11 @@ io.on('connection', (socket) => {
         io.emit('round_end', { players, word: currentWordObj.display, drawer: drawerName });
         io.emit('game_state', { phase: 'between_turns', timeLeft: 0, isLastTurn: isLastTurn });
 
-        setTimeout(() => {
-            if (gamePhase === 'between_turns') startNextTurn();
-        }, 5000);
+        if (isLastTurn) {
+            setTimeout(() => {
+                if (gamePhase === 'between_turns') endGame();
+            }, 5000);
+        }
     }
 
     function endGame() {

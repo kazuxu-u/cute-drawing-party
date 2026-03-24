@@ -11,7 +11,7 @@ const gameSettings = document.getElementById('gameSettings');
 const timeLimitSelect = document.getElementById('timeLimitSelect');
 const roundsSelect = document.getElementById('roundsSelect');
 const categorySelect = document.getElementById('categorySelect'); // 追加
-const startBtn = document.getElementById('startBtn');
+const readyBtn = document.getElementById('readyBtn');
 const timerDisplay = document.getElementById('timerDisplay');
 const wordDisplay = document.getElementById('wordDisplay');
 const roundDisplay = document.getElementById('roundDisplay');
@@ -454,38 +454,52 @@ function floodFill(startX, startY, fillColorHex) {
     ctx.putImageData(imgData, 0, 0);
 }
 
+// 座標をキャンバスの解像度に合わせる魔法✨💍🤟
+function getMousePos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+    };
+}
+
 canvas.addEventListener('mousedown', (e) => {
     if (!canIDraw) return;
     
     // 描画・塗りつぶしが始まる前に現在の状態を保存
     saveState();
     
+    const pos = getMousePos(e);
+    
     if (currentSettings.isFill) {
         // 塗りつぶしモード
         const color = currentSettings.color;
-        floodFill(e.offsetX, e.offsetY, color);
+        floodFill(pos.x, pos.y, color);
         if (!inSoloMode) {
-            socket.emit('fill', { x: e.offsetX, y: e.offsetY, color: color });
+            socket.emit('fill', { x: pos.x, y: pos.y, color: color });
         }
         return; // 線を引かないようにここでreturn
     }
 
     isDrawing = true;
-    lastX = e.offsetX; lastY = e.offsetY;
+    lastX = pos.x; lastY = pos.y;
 });
 canvas.addEventListener('mousemove', (e) => {
     if (!isDrawing || !canIDraw) return;
-    drawLine(lastX, lastY, e.offsetX, e.offsetY, currentSettings.color, currentSettings.size, currentSettings.isEraser, currentSettings.isGlow, currentSettings.isRainbow);
+    const pos = getMousePos(e);
+    drawLine(lastX, lastY, pos.x, pos.y, currentSettings.color, currentSettings.size, currentSettings.isEraser, currentSettings.isGlow, currentSettings.isRainbow);
     if (!inSoloMode) {
         socket.emit('draw', { 
-            x0: lastX, y0: lastY, x1: e.offsetX, y1: e.offsetY, 
+            x0: lastX, y0: lastY, x1: pos.x, y1: pos.y, 
             color: currentSettings.color, size: currentSettings.size, 
             isEraser: currentSettings.isEraser,
             isGlow: currentSettings.isGlow,
             isRainbow: currentSettings.isRainbow
         });
     }
-    lastX = e.offsetX; lastY = e.offsetY;
+    lastX = pos.x; lastY = pos.y;
 });
 canvas.addEventListener('mouseup', () => isDrawing = false);
 canvas.addEventListener('mouseout', () => isDrawing = false);
@@ -841,9 +855,30 @@ socket.on('update_players', (players) => {
     let amIin = false;
     players.forEach(p => {
         const li = document.createElement('li');
-        li.textContent = `${p.name} : ${p.score}pt`;
-        if (p.hasGuessed) li.textContent += ' 🎉';
-        if (p.id === myId) { li.style.borderLeft = '5px solid var(--primary-color)'; amIin = true; }
+        li.innerHTML = `<span>${p.name} : ${p.score}pt</span>`;
+        if (p.isReady) {
+            const badge = document.createElement('span');
+            badge.className = 'ready-badge';
+            badge.textContent = 'OK! ✨';
+            li.appendChild(badge);
+            li.classList.add('is-ready');
+        }
+        if (p.hasGuessed) li.innerHTML += ' 🎉';
+        if (p.id === myId) { 
+            li.style.borderLeft = '5px solid var(--primary-color)'; 
+            amIin = true;
+            
+            // 自分の準備状態に合わせてボタンの表示を変えるし！💅✨
+            if (readyBtn) {
+                if (p.isReady) {
+                    readyBtn.textContent = '💖 準備完了！ 💖';
+                    readyBtn.classList.add('ready-active');
+                } else {
+                    readyBtn.textContent = '✨ 準備オッケー！ ✨';
+                    readyBtn.classList.remove('ready-active');
+                }
+            }
+        }
         playerList.appendChild(li);
     });
     if (amIin) {
@@ -872,7 +907,7 @@ socket.on('game_state', (state) => {
         if (state.isLastTurn) {
             overlayText.innerHTML = '全ターン終了〜お疲れさま！✨<br>いよいよ結果発表だよ！🏆';
         } else {
-            overlayText.innerHTML = '次のターンにいくよ〜！✨<br>心の準備してね！';
+            overlayText.innerHTML = '次のターンにいくよ〜！✨<br>みんなが「準備オッケー！」したらスタート！💅💖';
         }
         canIDraw = false;
         if (turnEndBtn) turnEndBtn.classList.add('hidden'); // ターン終了時に隠す
@@ -1039,13 +1074,15 @@ joinBtn.addEventListener('click', () => {
     socket.emit('join_game', name, playerToken); // トークンも一緒に送るよ！🚀
 });
 
-startBtn.addEventListener('click', () => {
-    socket.emit('start_game', { 
-        timeLimit: parseInt(timeLimitSelect.value),
-        rounds: parseInt(roundsSelect.value),
-        category: categorySelect ? categorySelect.value : 'mix'
+if (readyBtn) {
+    readyBtn.addEventListener('click', () => {
+        socket.emit('toggle_ready', { 
+            timeLimit: parseInt(timeLimitSelect.value),
+            rounds: parseInt(roundsSelect.value),
+            category: categorySelect ? categorySelect.value : 'mix'
+        });
     });
-});
+}
 
 function sendMessage() {
     const msg = chatInput.value.trim();
@@ -1238,4 +1275,38 @@ window.addEventListener('DOMContentLoaded', () => {
     if (savedName && playerNameInput) {
         playerNameInput.value = savedName;
     }
+    updateScale(); // 初回実行！💎
 });
+
+// --- 💎 デスクトップUI維持スケーリングの魔法 💎 ---
+function updateScale() {
+    const appRoot = document.getElementById('app-root');
+    if (!appRoot) return;
+    
+    // 💎 新時代の「ハイブリッド・フルワイド・スケーリング」開幕っ！💅✨💍
+    // 横幅は 100% ギリギリまで使い切るのがギャルの鉄則！🤟💖
+    
+    const baseHeight = 920; // ちょっと余裕を持たせたベース高さ
+    const currentHeight = window.innerHeight;
+    const scale = Math.min(currentHeight / baseHeight, 1.0);
+    
+    const container = document.querySelector('.container');
+    if (container) {
+        if (scale < 1.0) {
+            // 画面が低い時は、中身をキュッと縮めて見切れを防止！💎
+            container.style.transform = `scale(${scale})`;
+            container.style.transformOrigin = 'top center';
+            container.style.width = `${100 / scale}%`; // スケール分を打ち消して横幅を100%に維持！💅
+            container.style.height = `${100 / scale}%`;
+        } else {
+            container.style.transform = 'none';
+            container.style.width = '100%';
+            container.style.height = '100%';
+        }
+    }
+    
+    console.log(`[APP-WIDE-SCALE] Width: 100%, Height-Scale: ${scale.toFixed(3)} (ViewHeight: ${currentHeight})`);
+}
+
+window.addEventListener('resize', updateScale);
+window.addEventListener('load', updateScale);
