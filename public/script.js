@@ -12,6 +12,7 @@ const timeLimitSelect = document.getElementById('timeLimitSelect');
 const roundsSelect = document.getElementById('roundsSelect');
 const categorySelect = document.getElementById('categorySelect'); // 追加
 const readyBtn = document.getElementById('readyBtn');
+const readyBubble = document.getElementById('readyBubble'); // 🆕 追加ッ！💅
 const timerDisplay = document.getElementById('timerDisplay');
 const wordDisplay = document.getElementById('wordDisplay');
 const roundDisplay = document.getElementById('roundDisplay');
@@ -92,6 +93,7 @@ const rainbowBtn = document.getElementById('rainbowBtn'); // 追加🌈
 const glowBtn = document.getElementById('glowBtn'); // 追加🌟
 const exitSoloBtn = document.getElementById('exitSoloBtn');
 const turnEndBtn = document.getElementById('turnEndBtn'); // 追加
+const turnEndBubble = document.getElementById('turnEndBubble'); // 🆕 追加ッ！💅
 const sidebar = document.querySelector('.sidebar'); // サイドバー取得💅
 const toolbar = document.getElementById('toolbar');
 
@@ -584,6 +586,7 @@ if (turnEndBtn) {
         if (canIDraw && !inSoloMode) {
             socket.emit('manual_turn_end');
             turnEndBtn.classList.add('hidden'); // 連打防止
+            if (turnEndBubble) turnEndBubble.classList.add('hidden'); // 吹き出しも消す！✨
         }
     });
 }
@@ -804,25 +807,18 @@ if (soloModeBtn) {
 if (nextWordBtn) {
     nextWordBtn.addEventListener('click', async () => {
         if (!inSoloMode) return;
-        
-        // サーバーからお題リストをもらってくるよ！💎
         try {
             const response = await fetch('/api/words');
             const data = await response.json();
-            
-            // 全カテゴリーからランダムに選ぶよ！✨
             const allWords = Object.values(data).flat();
             const randomWord = allWords[Math.floor(Math.random() * allWords.length)];
-            
             currentWordText = randomWord.display;
             wordDisplay.textContent = `お題：${getDisplayText(currentWordText)}`;
-            
             if (currentWordText.includes('yabai') || (categorySelect && categorySelect.value === 'yabai')) {
                 wordDisplay.classList.add('yabai-glow');
             } else {
                 wordDisplay.classList.remove('yabai-glow');
             }
-
             addChatMessage('System', `次のお題は「${getDisplayText(currentWordText)}」だよ！描いてみて！🖌️✨`, '#ff66b2');
         } catch (e) {
             console.error('Failed to fetch words for solo mode:', e);
@@ -836,13 +832,10 @@ if (exitSoloBtn) {
         inSoloMode = false;
         canIDraw = false;
         saveBtn.classList.add('hidden');
-        gallerySubmitBtn.classList.add('hidden'); // 追加
-        nextWordBtn.classList.add('hidden'); // 追加✨🎲
+        gallerySubmitBtn.classList.add('hidden');
+        nextWordBtn.classList.add('hidden');
         exitSoloBtn.classList.add('hidden');
-        
-        // サイドバーを復活させるよ！💅✨
         if (sidebar) sidebar.style.display = 'flex';
-        
         socket.emit('return_to_lobby'); 
     });
 }
@@ -867,8 +860,6 @@ socket.on('update_players', (players) => {
         if (p.id === myId) { 
             li.style.borderLeft = '5px solid var(--primary-color)'; 
             amIin = true;
-            
-            // 自分の準備状態に合わせてボタンの表示を変えるし！💅✨
             if (readyBtn) {
                 if (p.isReady) {
                     readyBtn.textContent = '💖 準備完了！ 💖';
@@ -881,11 +872,63 @@ socket.on('update_players', (players) => {
         }
         playerList.appendChild(li);
     });
+
+    const humans = players.filter(p => !p.isNpc);
+    const readyHumans = humans.filter(p => p.isReady);
+    const me = players.find(p => p.id === myId);
+
+    if (readyBubble) {
+        if (me && !me.isReady && readyHumans.length > 0 && readyHumans.length < humans.length) {
+            readyBubble.classList.remove('hidden');
+            if (humans.length - readyHumans.length === 1) {
+                readyBubble.textContent = 'あと一人っ！早く押して〜！💅✨';
+            } else {
+                readyBubble.textContent = 'みんな！準備オッケー押して！💖';
+            }
+        } else {
+            readyBubble.classList.add('hidden');
+        }
+    }
+
     if (amIin) {
         playerNameInput.style.display = 'none';
         joinBtn.style.display = 'none';
         if (soloModeBtn) soloModeBtn.style.display = 'none';
         gameSettings.classList.remove('hidden');
+
+        // 👑 設定権限の制御（ボスの証ッ！一番上の人だけができるように！）💅✨
+        const isHost = humans[0] && (humans[0].id === myId);
+        const hostOnlyArea = document.getElementById('hostOnlySettings');
+        
+        if (hostOnlyArea) {
+            if (isHost) {
+                hostOnlyArea.style.opacity = '1';
+                hostOnlyArea.style.pointerEvents = 'auto';
+                timeLimitSelect.disabled = false;
+                roundsSelect.disabled = false;
+                
+                if (!document.getElementById('hostOnlyLabel')) {
+                    const label = document.createElement('div');
+                    label.id = 'hostOnlyLabel';
+                    label.innerHTML = '👑 <span style="font-size:0.8rem;">あなたはホスト（設定可能！）</span>';
+                    label.style.color = '#ff9900';
+                    label.style.fontWeight = 'bold';
+                    label.style.marginBottom = '5px';
+                    hostOnlyArea.insertBefore(label, hostOnlyArea.firstChild);
+                }
+            } else {
+                hostOnlyArea.style.opacity = '0.6';
+                hostOnlyArea.style.pointerEvents = 'none';
+                timeLimitSelect.disabled = true;
+                roundsSelect.disabled = true;
+                
+                const label = document.getElementById('hostOnlyLabel');
+                if (label) label.remove();
+            }
+        }
+        
+        // カテゴリー選択は常に有効！💅✨
+        if (categorySelect) categorySelect.disabled = false;
     }
 });
 
@@ -911,6 +954,7 @@ socket.on('game_state', (state) => {
         }
         canIDraw = false;
         if (turnEndBtn) turnEndBtn.classList.add('hidden'); // ターン終了時に隠す
+        if (turnEndBubble) turnEndBubble.classList.add('hidden'); // 吹き出しも隠す！💅
         toolbar.style.pointerEvents = 'none';
         toolbar.style.opacity = '0.5';
         timerDisplay.textContent = '⏱️ --'; // ターン間は -- にするよ！💖
@@ -953,7 +997,11 @@ socket.on('round_start', (data) => {
                 if (canIDraw) {
                     toolbar.style.pointerEvents = 'auto';
                     toolbar.style.opacity = '1';
-                    if (turnEndBtn) turnEndBtn.classList.remove('hidden'); // 描き手の時だけ表示✨
+                    if (turnEndBtn) {
+                        turnEndBtn.classList.remove('hidden'); // 描き手の時だけ表示✨
+                        // 🆕 最初は隠しておくよ！誰かが正解してから出すし！💅✨
+                        if (turnEndBubble) turnEndBubble.classList.add('hidden');
+                    }
                     addChatMessage('System', 'あなたの番だよ！絵を描いてね！🖌️✨', '#ff66b2');
                 } else {
                     toolbar.style.pointerEvents = 'none';
@@ -994,6 +1042,7 @@ socket.on('round_end', (data) => {
     const imgData = canvas.toDataURL('image/png');
     gallery.push({ imgData, word: data.word, drawer: data.drawer });
     if (turnEndBtn) turnEndBtn.classList.add('hidden'); // ターン終わったら確実に隠す
+    if (turnEndBubble) turnEndBubble.classList.add('hidden'); // 吹き出しも確実に隠す！💅
     playSE('finish');
     
     // 自分が描いた番だったらサーバーに保存する！✨
@@ -1016,48 +1065,127 @@ socket.on('chat_message', (data) => {
     if (data.type === 'correct') {
         playSE('correct');
         createWinSparkle(); // ✨ 修正：名前が被ってたのを直したよ！💅
+        
+        // 🆕 誰かが正解した！描き手さんに「もう終わっていいよ」って教えるよ！💖💍
+        if (canIDraw && turnEndBubble) {
+            turnEndBubble.classList.remove('hidden');
+            turnEndBubble.textContent = '誰かが正解したよッ！👏✨ はよ「終了」押して次行こ！💖🤙';
+        }
     }
     else if (data.type === 'oshii') playSE('oshii');
 });
 
 socket.on('error', (msg) => { alert(msg); });
 
-socket.on('game_over', (sortedPlayers) => {
+// 🆕 ゲーム終了：ランキング発表（エモさ爆上げver.） ✨🏆💍
+// 🆕 ゲーム終了：ランキング発表（エモさ爆上げ順次公開ver.） ✨🏆💍 ❤️‍🔥
+socket.on('game_over', async (sortedPlayers) => {
     if (inSoloMode) return;
-    playSE('finish');
-    podiumOverlay.classList.remove('hidden');
+    
+    // UIリセット
     overlay.classList.add('hidden');
+    podiumOverlay.classList.remove('hidden');
+    podiumOverlay.style.display = 'flex';
     podiumContainer.innerHTML = '';
     
-    const displayOrder = [];
-    if (sortedPlayers.length > 1) displayOrder.push({ ...sortedPlayers[1], rank: 2 });
-    if (sortedPlayers.length > 0) displayOrder.push({ ...sortedPlayers[0], rank: 1 });
-    if (sortedPlayers.length > 2) displayOrder.push({ ...sortedPlayers[2], rank: 3 });
+    // 戻るボタンとかは最初隠しておくよ💅
+    backToWaitingBtn.style.display = 'none';
+    const scrollTip = document.getElementById('galleryScrollTip');
+    if (scrollTip) scrollTip.style.display = 'none';
 
-    displayOrder.forEach(p => {
-        const div = document.createElement('div'); div.className = `podium-item rank-${p.rank}`;
-        let medal = p.rank === 1 ? '🥇' : p.rank === 2 ? '🥈' : '🥉';
-        div.innerHTML = `
-            <div class="podium-score">${p.score}pt</div>
-            <div class="podium-name">${medal} ${p.name}</div>
-            <div class="podium-rank">${p.rank}位</div>
-        `;
-        podiumContainer.appendChild(div);
-    });
+    // ランキング順位を正確に割り当てるよ💎
+    const rankedPlayers = sortedPlayers.map((p, i) => ({ ...p, rank: i + 1 }));
+    
+    // 3位以上とそれ以外に分ける✨
+    const podiumPlayers = rankedPlayers.slice(0, 3);
+    const otherPlayers = rankedPlayers.slice(3);
 
+    // --- 🎭 順次公開ロジック開始！ ---
+    // 下から順番に：4位以下 -> 3位 -> 2位 -> 1位 🚀
+    
+    // 1. 4位以下をサクッと表示（いれば）💅
+    if (otherPlayers.length > 0) {
+        otherPlayers.forEach(p => {
+            const card = createRankCard(p, 'rank-other');
+            podiumContainer.appendChild(card);
+            setTimeout(() => card.classList.add('reveal'), 100);
+        });
+        await new Promise(r => setTimeout(r, 1000));
+    }
+
+    // 2. 3位 -> 2位 -> 1位 の順でタメながら発表！✨💍
+    const reveals = [...podiumPlayers].reverse(); // [3位, 2位, 1位] にする
+    
+    for (const p of reveals) {
+        const delay = p.rank === 1 ? 2500 : 1500; // 1位の前はめっちゃタメる！💎
+        await new Promise(r => setTimeout(r, delay));
+        
+        const card = createRankCard(p, `rank-${p.rank}`);
+        // 1位は真ん中に置きたいから、ちょっと工夫するよ💍
+        if (p.rank === 1 && podiumContainer.children.length >= 2) {
+            // 2位と3位の間に挿入！✨
+            podiumContainer.insertBefore(card, podiumContainer.children[1]);
+        } else {
+            podiumContainer.appendChild(card);
+        }
+
+        // 表示！シュバッ！✨
+        setTimeout(() => {
+            card.classList.add('reveal');
+            
+            // 演出：音とキラキラ💎
+            if (p.rank === 1) {
+                playSE('correct'); // ファンファーレ的な！🎉
+                // 大漁キラキラッ！！🐟✨
+                for (let i = 0; i < 30; i++) {
+                    setTimeout(() => createWinSparkle(Math.random() * 100, Math.random() * 50), i * 50);
+                }
+            } else {
+                playSE('oshii'); // ちょっといい音♪
+                createWinSparkle(50, 50);
+            }
+        }, 50);
+    }
+
+    // 3. 最後にボタンとギャラリーへの案内を出すよッ！💖
+    await new Promise(r => setTimeout(r, 2000));
+    backToWaitingBtn.style.display = 'block';
+    if (scrollTip) scrollTip.style.display = 'block';
+
+    // ギャラリーの作成
     if (galleryContainer) {
         galleryContainer.innerHTML = '';
         gallery.forEach((item, index) => {
-            const itemDiv = document.createElement('div'); itemDiv.className = 'gallery-item';
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'gallery-item';
             itemDiv.innerHTML = `
                 <p style="margin:5px 0; font-weight:bold;">${item.drawer} が描いた 「${item.word}」</p>
-                <img src="${item.imgData}" alt="絵" style="width:100%; border:2px solid #ccc; border-radius:10px;">
-                <a href="${item.imgData}" download="drawing_${index}.png" class="cute-btn" style="text-decoration:none; display:inline-block; margin-top:10px; font-size:0.9rem;">📥 保存する</a>
+                <img src="${item.imgData}" alt="絵">
+                <a href="${item.imgData}" download="drawing_${index}.png" class="cute-btn" style="text-decoration:none; display:inline-block; margin-top:10px; font-size:0.9rem; padding: 10px 20px;">📥 保存する</a>
             `;
             galleryContainer.appendChild(itemDiv);
         });
     }
 });
+
+// ランクカードを作るヘルパー関数💅✨
+function createRankCard(player, className) {
+    const card = document.createElement('div');
+    card.className = `rank-card ${className}`;
+    
+    let medal = '💎';
+    if (player.rank === 1) medal = '🥇';
+    else if (player.rank === 2) medal = '🥈';
+    else if (player.rank === 3) medal = '🥉';
+    else medal = `${player.rank}位`;
+
+    card.innerHTML = `
+        <div class="medal">${medal}</div>
+        <div class="name">${player.name}</div>
+        <div class="score">${player.score} pt</div>
+    `;
+    return card;
+}
 
 backToWaitingBtn.addEventListener('click', () => { socket.emit('return_to_lobby'); });
 
@@ -1177,33 +1305,34 @@ function createDanmaku(text, color, isBig = false) {
     }, 7500);
 }
 
-// ✨ 正解した時にキラキラエフェクトを降らせるよ！✨💍💖
+// ✨ 正解時やランキング発表時にキラキラエフェクトを降らせるよ！✨💍💖 (Advanced Emo Edition)
 function createWinSparkle(x, y) {
-    const container = document.getElementById('sparkleContainer');
-    if (!container) return;
+    const container = document.body; // 画面全体に降らせる！✨
     
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 8; i++) {
         const sparkle = document.createElement('div');
-        sparkle.innerHTML = ['✨', '💍', '💖', '💎', '🌟'][Math.floor(Math.random() * 5)];
-        sparkle.style.position = 'absolute';
-        sparkle.style.left = `${x || Math.random() * 100}%`;
-        sparkle.style.top = `${y || Math.random() * 100}%`;
-        sparkle.style.fontSize = `${Math.random() * 20 + 10}px`;
-        sparkle.style.pointerEvents = 'none';
-        sparkle.style.zIndex = '1000';
-        sparkle.style.transition = 'all 1s ease-out';
+        sparkle.className = 'win-sparkle';
+        sparkle.innerHTML = ['✨', '💎', '💖', '💍', '🪄', '🍭', '🎀', '🔥'][Math.floor(Math.random() * 8)];
+        
+        // 開始位置
+        // x, y が 0~100 のパーセントならそれに合わせる、なければランダム
+        const startX = (x !== undefined) ? (x + (Math.random() * 20 - 10)) : (Math.random() * 100);
+        const startY = (y !== undefined) ? (y + (Math.random() * 20 - 10)) : (Math.random() * 100);
+        
+        sparkle.style.left = `${startX}vw`; // 画面幅基準
+        sparkle.style.top = `${startY}vh`;
+        sparkle.style.fontSize = `${Math.random() * 30 + 20}px`;
+        
+        // 飛び散る距離（CSSの変数に渡すよ！）💅
+        const dx = (Math.random() - 0.5) * 400;
+        const dy = (Math.random() - 0.5) * 400;
+        sparkle.style.setProperty('--dx', `${dx}px`);
+        sparkle.style.setProperty('--dy', `${dy}px`);
         
         container.appendChild(sparkle);
         
-        // 飛び散るアニメーション！💅✨
-        setTimeout(() => {
-            const angle = Math.random() * Math.PI * 2;
-            const dist = Math.random() * 100 + 50;
-            sparkle.style.transform = `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px) scale(0)`;
-            sparkle.style.opacity = '0';
-        }, 10);
-        
-        setTimeout(() => sparkle.remove(), 1000);
+        // 終わったら消去！💎
+        setTimeout(() => sparkle.remove(), 1500);
     }
 }
 
@@ -1278,7 +1407,7 @@ window.addEventListener('DOMContentLoaded', () => {
     updateScale(); // 初回実行！💎
 });
 
-// --- 💎 デスクトップUI維持スケーリングの魔法 💎 ---
+// --- 💎 デスクトップUI維持スケーリングの魔法 (Overlays Included!) 💎 ---
 function updateScale() {
     const appRoot = document.getElementById('app-root');
     if (!appRoot) return;
@@ -1290,22 +1419,27 @@ function updateScale() {
     const currentHeight = window.innerHeight;
     const scale = Math.min(currentHeight / baseHeight, 1.0);
     
-    const container = document.querySelector('.container');
-    if (container) {
-        if (scale < 1.0) {
-            // 画面が低い時は、中身をキュッと縮めて見切れを防止！💎
-            container.style.transform = `scale(${scale})`;
-            container.style.transformOrigin = 'top center';
-            container.style.width = `${100 / scale}%`; // スケール分を打ち消して横幅を100%に維持！💅
-            container.style.height = `${100 / scale}%`;
-        } else {
-            container.style.transform = 'none';
-            container.style.width = '100%';
-            container.style.height = '100%';
-        }
-    }
+    // スケールさせる対象リスト（メインコンテナ ＋ 各種オーバーレイ）
+    const targets = ['.container', '#podiumOverlay', '#galleryOverlay', '#banOverlay', '#wordPopupOverlay'];
     
-    console.log(`[APP-WIDE-SCALE] Width: 100%, Height-Scale: ${scale.toFixed(3)} (ViewHeight: ${currentHeight})`);
+    targets.forEach(selector => {
+        const el = document.querySelector(selector) || document.getElementById(selector.replace('#',''));
+        if (el) {
+            if (scale < 1.0) {
+                // 画面が低い時は、中身をキュッと縮めて見切れを防止！💎
+                el.style.transform = `scale(${scale})`;
+                el.style.transformOrigin = 'top center';
+                el.style.width = `${100 / scale}%`; // スケール分を打ち消して横幅を100%に維持！💅
+                el.style.height = `${100 / scale}%`;
+            } else {
+                el.style.transform = 'none';
+                el.style.width = '100%';
+                el.style.height = '100%';
+            }
+        }
+    });
+    
+    console.log(`[APP-WIDE-SCALE] Scale: ${scale.toFixed(3)} (ViewHeight: ${currentHeight})`);
 }
 
 window.addEventListener('resize', updateScale);
