@@ -746,7 +746,8 @@ function startNextTurn() {
         }
     } catch (e) {
         console.error(`[END-TURN-ERR] ${e}`);
-        isStartingNextTurn = false; // エラーでもロック解除
+    } finally {
+        isStartingNextTurn = false; // 確実にロック解除するよッ！💅✨💍
     }
 }
 
