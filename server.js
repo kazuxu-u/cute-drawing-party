@@ -214,6 +214,7 @@ let pointsAwardedThisTurn = false;
 let nextTurnTimer = null; // 🆕 ターン遷移タイマーを管理ッ！💅
 let isStartingNextTurn = false;
 let isSyncingCanvas = false; // 🆕 キャンバス同期中フラグ
+let recentWords = []; // 🆕 お題の履歴管理（同じのが続かないように！💍）
 
 // トークンごとの得点記録メモ📝💅
 let persistentScores = {}; 
@@ -684,15 +685,31 @@ function startNextTurn() {
             isStartingNextTurn = false;
             return;
         }
-        
+
         // お題リストの選定：描き手の設定したカテゴリーを優先するよ！🛡️💍
         const category = drawer.category || 'mix';
         const wordList = cuteWords[category] || cuteWords.mix;
         
-        currentWordObj = wordList[Math.floor(Math.random() * wordList.length)];
+        let attempts = 0;
+        let pickedWord = null;
+        
+        // 直近10回に出たお題は避けるようにするねッ！✨🤟💎
+        while (attempts < 15) {
+            pickedWord = wordList[Math.floor(Math.random() * wordList.length)];
+            if (!recentWords.includes(pickedWord.display) || wordList.length <= recentWords.length) {
+                break;
+            }
+            attempts++;
+        }
+        
+        currentWordObj = pickedWord || wordList[0];
         if (!currentWordObj) {
             currentWordObj = cuteWords.mix[Math.floor(Math.random() * cuteWords.mix.length)];
         }
+        
+        // 履歴に追加（最大10個まで覚えるお💅）
+        recentWords.unshift(currentWordObj.display);
+        if (recentWords.length > 10) recentWords.pop();
         
         console.log(`[TURN-START] Round: ${currentRound}/${maxRounds}, Turn: ${turnsPlayedInRound}/${players.length}, Drawer: ${drawer.name}`);
 
