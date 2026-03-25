@@ -577,26 +577,31 @@ function checkReadiness(settings, socketId) {
     const humans = players.filter(p => p && !p.isNpc);
     if (humans.length === 0) return;
 
-    // --- 👑 設定権限チェック！ホスト(最初の人間)の設定を常に反映させるよ💅 ---
-    const host = humans[0];
-    if (settings && socketId === host.id) {
-        let changed = false;
-        if (settings.timeLimit !== undefined && timeLimit !== settings.timeLimit) {
-            timeLimit = settings.timeLimit;
-            changed = true;
-        }
-        if (settings.rounds !== undefined && maxRounds !== settings.rounds) {
-            maxRounds = settings.rounds;
-            changed = true;
-        }
-        if (settings.category && currentWordList !== (cuteWords[settings.category] || cuteWords.mix)) {
-            currentWordList = cuteWords[settings.category] || cuteWords.mix;
-            changed = true;
-        }
-        
-        if (changed) {
-            console.log(`[SETTINGS-SYNC] Host ${host.name} updated settings: Rounds=${maxRounds}, Time=${timeLimit}s ✨`);
-            // ホストの設定が変わったことをみんなにこっそり教える？（うるさいからログだけでいいかも💅）
+    // --- 👑 設定とカテゴリーの保存 💅 ---
+    if (socketId) {
+        const p = players.find(ptr => ptr.id === socketId);
+        if (p && settings) {
+            // 個人のカテゴリー設定を保存 💖
+            if (settings.category) {
+                p.category = settings.category;
+            }
+            
+            // ホスト（最初の人間）なら全体のルール（周回数・制限時間）を更新 👑
+            const host = humans[0];
+            if (socketId === host.id) {
+                let changed = false;
+                if (settings.timeLimit !== undefined && timeLimit !== settings.timeLimit) {
+                    timeLimit = settings.timeLimit;
+                    changed = true;
+                }
+                if (settings.rounds !== undefined && maxRounds !== settings.rounds) {
+                    maxRounds = settings.rounds;
+                    changed = true;
+                }
+                if (changed) {
+                    console.log(`[SETTINGS-SYNC] Host ${host.name} updated rules: Rounds=${maxRounds}, Time=${timeLimit}s ✨`);
+                }
+            }
         }
     }
 
@@ -680,13 +685,13 @@ function startNextTurn() {
             return;
         }
         
-        // お題リストの最終防衛ライン 🛡️
-        if (!currentWordList || currentWordList.length === 0) {
-            currentWordList = cuteWords.mix;
-        }
-        currentWordObj = currentWordList[Math.floor(Math.random() * currentWordList.length)];
+        // お題リストの選定：描き手の設定したカテゴリーを優先するよ！🛡️💍
+        const category = drawer.category || 'mix';
+        const wordList = cuteWords[category] || cuteWords.mix;
+        
+        currentWordObj = wordList[Math.floor(Math.random() * wordList.length)];
         if (!currentWordObj) {
-            currentWordObj = { display: '失敗', answers: ['しっぱい'] };
+            currentWordObj = cuteWords.mix[Math.floor(Math.random() * cuteWords.mix.length)];
         }
         
         console.log(`[TURN-START] Round: ${currentRound}/${maxRounds}, Turn: ${turnsPlayedInRound}/${players.length}, Drawer: ${drawer.name}`);
@@ -1147,14 +1152,18 @@ io.on('connection', (socket) => {
             const npcId = 'npc_' + Math.random().toString(36).substr(2, 9);
             const npcToken = 'token_npc_' + npcId;
 
+            const categories = Object.keys(cuteWords);
+            const npcCategory = categories[Math.floor(Math.random() * categories.length)];
+
             players.push({
                 id: npcId,
                 token: npcToken,
                 name: npcName,
                 score: 0,
                 hasGuessed: false,
-                isReady: true, // NPCはいつでもオッケーっしょ！💅✨💍
-                isNpc: true
+                isReady: true,
+                isNpc: true,
+                category: npcCategory // NPCにも個性を！💅✨💍
             });
             safeIoEmit('update_players', players);
             safeIoEmit('chat_message', { sender: 'System', text: `${npcName}が遊びに来たよ！💖✨`, color: '#ff66b2' });
