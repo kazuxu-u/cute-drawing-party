@@ -621,7 +621,7 @@ function checkReadiness(settings, socketId) {
             safeIoEmit('game_start_imminent');
             setTimeout(() => {
                 // 1秒後のチェック：フェーズが変わってたり人数が減ってたら中止💅
-                if (gamePhase === 'playing' || players.length === 0) return;
+                if (gamePhase !== 'playing' || players.length === 0) return;
                 startNextTurn();
             }, 1000);
         } else if (gamePhase === 'between_turns') {
@@ -740,12 +740,10 @@ function startNextTurn() {
             }
         }, 1000);
 
-        // 5秒後に次のターンへ（タイマーをちゃんと管理して二重起動を防ぐおッ！💅✨）
-        if (nextTurnTimer) clearTimeout(nextTurnTimer);
-        nextTurnTimer = setTimeout(() => {
+        if (nextTurnTimer) {
+            clearTimeout(nextTurnTimer);
             nextTurnTimer = null;
-            startNextTurn();
-        }, 5000);
+        }
     } catch (e) {
         console.error(`[END-TURN-ERR] ${e}`);
         isStartingNextTurn = false; // エラーでもロック解除
