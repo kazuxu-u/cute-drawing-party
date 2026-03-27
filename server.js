@@ -85,26 +85,32 @@ async function loadPlayerData() {
         if (MONGO_URI && mongoose.connection.readyState === 1) {
             // MongoDBからロード
             const players = await Player.find({});
-            if (players.length > 0) {
-                players.forEach(p => {
-                    persistentData[p.token] = { 
-                        name: p.name, 
-                        password: p.password, // 🆕 パスワードもしっかり復元！💎
-                        lv: p.lv, 
-                        xp: p.xp, 
-                        score: p.score 
-                    };
-                });
-                console.log(`[DB-LOAD] ${players.length} players loaded from MongoDB.`);
-                return;
-            }
+            players.forEach(p => {
+                persistentData[p.token] = { 
+                    name: p.name, 
+                    password: p.password, // 🆕 パスワードもしっかり復元！💎
+                    lv: p.lv, 
+                    xp: p.xp, 
+                    score: p.score 
+                };
+            });
+            console.log(`[DB-LOAD] ${players.length} players loaded from MongoDB.`);
         }
         
-        // 移行期：ローカルファイルがあればそっちから読み込む
+        // 移行期：ローカルファイルがあればマージッ！💍✨ (保険だおッ！)
         if (fs.existsSync(PLAYER_DATA_FILE)) {
             const content = fs.readFileSync(PLAYER_DATA_FILE, 'utf8');
-            persistentData = JSON.parse(content || '{}');
-            console.log(`[JSON-LOAD] ${Object.keys(persistentData).length} players loaded from persistence file.`);
+            const localData = JSON.parse(content || '{}');
+            let mergedCount = 0;
+            for (const token in localData) {
+                if (!persistentData[token]) {
+                    persistentData[token] = localData[token];
+                    mergedCount++;
+                }
+            }
+            if (mergedCount > 0) {
+                console.log(`[JSON-MERGE] Merged ${mergedCount} new players from local JSON. ✨💍`);
+            }
             
             // MongoDBが空なら移行するよッ！💎✨💍
             if (MONGO_URI && mongoose.connection.readyState === 1) {
