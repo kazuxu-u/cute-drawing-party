@@ -40,6 +40,34 @@ process.on('unhandledRejection', (reason, promise) => {
 
 const DRAWINGS_DIR = path.join(__dirname, 'public', 'drawings');
 const METADATA_FILE = path.join(__dirname, 'drawings_metadata.json');
+const PLAYER_DATA_FILE = path.join(__dirname, 'players_persistence.json');
+
+// --- 💾 永続化データ管理システム ✨💍 ---
+let persistentData = {};
+
+function loadPlayerData() {
+    try {
+        if (fs.existsSync(PLAYER_DATA_FILE)) {
+            const content = fs.readFileSync(PLAYER_DATA_FILE, 'utf8');
+            persistentData = JSON.parse(content || '{}');
+            console.log(`[LOAD-OK] ${Object.keys(persistentData).length} players loaded from persistence.`);
+        }
+    } catch (e) {
+        console.error(`[LOAD-ERR] Failed to load player data: ${e.message}`);
+        persistentData = {};
+    }
+}
+
+function savePlayerData() {
+    try {
+        fs.writeFileSync(PLAYER_DATA_FILE, JSON.stringify(persistentData, null, 2));
+    } catch (e) {
+        console.error(`[SAVE-ERR] Failed to save player data: ${e.message}`);
+    }
+}
+
+// 起動時にロード！✨
+loadPlayerData();
 
 // 保存用ディレクトリがなければ作成
 if (!fs.existsSync(DRAWINGS_DIR)) {
@@ -216,8 +244,7 @@ let isStartingNextTurn = false;
 let isSyncingCanvas = false; // 🆕 キャンバス同期中フラグ
 let recentWords = []; // 🆕 お題の履歴管理（同じのが続かないように！💍）
 
-// トークンごとの得点記録メモ📝💅
-let persistentScores = {}; 
+// トークンごとのユーザーデータ記録メモ（XP/Lv/Score）📝💅
 
 // NPC関連の管理用
 let npcTimers = {}; // { playerId: [timeoutId, ...] }
@@ -354,7 +381,20 @@ const cuteWords = {
         { display: '🖐️胸を揉む', answers: ['おっぱい', 'もむ'] },
         { display: '💏熱い抱擁', answers: ['はぐ', 'だきしめる'] },
         { display: '🥵欲求不満', answers: ['もんもん', 'したい'] },
-        { display: '👙手ブラ', answers: ['てぶら', 'おっぱい'] }
+        { display: '👙手ブラ', answers: ['てぶら', 'おっぱい'] },
+        { display: '🔞バック（意味深）', answers: ['ばっく', 'うしろから', 'いぬ'] },
+        { display: '🍑生尻', answers: ['なまじり', 'おしり', 'はだか'] },
+        { display: '🧴ヌルヌル液体', answers: ['ぬるぬる', 'ろーしょん', 'えきたい'] },
+        { display: '🎀亀甲縛り', answers: ['きっこうしばり', 'しばり', 'りぼん'] },
+        { display: '🥛オトナのミルク', answers: ['おとなのみるく', 'みるく', 'せいえき'] },
+        { display: '🩲勝負下着', answers: ['しょうぶしたぎ', 'ぱんつ', 'らんじぇりー'] },
+        { display: '💋キスマーク', answers: ['きすまーく', 'きす'] },
+        { display: '🤤アヘ顔Wピース', answers: ['あへがお', 'だぶるぴーす', 'ぜっちょう'] },
+        { display: '👢ニーハイ', answers: ['にーはい', 'ぜったいりょういき'] },
+        { display: '💦潮吹き（海水…？ｗ）', answers: ['しおふき', 'みず', 'えきたい'] },
+        { display: '🛌ピロートーク', answers: ['ぴろーとーく', 'おはなし', 'ねごと'] },
+        { display: '🥵絶頂！アッー！', answers: ['ぜっちょう', 'いく', 'フィニッシュ'] },
+        { display: '👄ディープな交流', answers: ['きす', 'ちゅー', 'みっちゃく'] }
     ],
     situation: [
         { display: '💑デート', answers: ['でーと', 'デート', 'date'] },
@@ -856,7 +896,7 @@ function getNpcDrawingStrategy(word) {
     else if (w.match(/橙|オレンジ|🍊|🥕|🎃|🍔|🦊/)) color = '#ff8800';
     else if (w.match(/茶|うちぬ|ねこ|いぬ|動物|犬|猫|土|💩|🐕|🐈|🐻|🟫|🪵|🍞|🍩/)) color = '#8b4513';
     else if (w.match(/紫|ぶどう|🍇| eggplant|👿|💅/)) color = '#8800ff';
-    else if (w.match(/桃|ピンク|🍑|🌸|💍|👙|💄/)) color = '#ff66b2';
+    else if (w.match(/桃|ピンク|🍑|🌸|💍|👙|💄|🔞|💋|🤤|🥵|🍼|🩲/)) color = '#ff66b2';
     else if (w.match(/白|雪|歯|🥛|雲|🦷|🍚/)) color = '#ffffff';
     else if (w.match(/黒|髪|影|💣|🕶️|🕷️|🎱/)) color = '#333333';
     else if (w.match(/銀|金|塔|機械|🏢|🗼|⌚|🥄|🩶|💛|🏠|🎁/)) color = '#aaaaaa';
@@ -865,7 +905,7 @@ function getNpcDrawingStrategy(word) {
     else if (w.match(/ハンバーガー|ピザ|ラーメン|プリン|寿司|食べ物|🍎|🍔|🍣/)) category = 'food';
     else if (w.match(/車|くるま|飛行機|電車|のりもの|🚗|✈️|🚄/)) category = 'vehicle';
     else if (w.match(/塔|ビル|家|建物|ピラミッド|🗼|🏠|🏢/)) category = 'landmark';
-    else if (w.match(/唇|エッチ|セクシー|ヤバい|💋|🔞|👙/)) category = 'yabai';
+    else if (w.match(/唇|エッチ|セクシー|ヤバい|💋|🔞|👙|🤤|🥵|🍼|🩲|🍑|🎀|🛌|💦/)) category = 'yabai';
 
     if (w.match(/りんご|ボール|太陽|顔|まる|円|地球|メロン|天/)) pattern = 'spiral';
     else if (w.match(/塔|木|人|縦|ビル|エッフェル/)) pattern = 'vertical';
@@ -895,10 +935,16 @@ function handleNpcAction(npc) {
         const strategy = getNpcDrawingStrategy(currentWordObj.display);
         const getNpcComment = (word) => {
             const w = word.toLowerCase();
-            if (w.match(/🍎|🍓|🍔|🍣|たべもの/)) return [`${word}、おいしそうに描くね！😋💖`, `お腹空いてきちゃった～ｗ🍴✨`];
-            if (w.match(/🐶|🐱|くま|どうぶつ/)) return [`${word}、かわいく描けるかな～？🐾💍`, `モフモフ感出すのがポイントだよ！✨`];
-            if (w.match(/🚗|飛行機|のりもの/)) return [`${word}、かっこよく描いちゃうよ！💨🚀`, `スピード感出してきた～！✨`];
-            if (w.match(/唇|セクシー|ヤバい/)) return [`ちょっとエッチすぎ？ｗ🔞💖`, `これ描くの恥ずかしいんだけど～！🫣✨`];
+            if (w.match(/🍎|🍓|🍔|🍣|たべもの/)) return [`${word}、おいしそうに描くね！😋💖`, `お腹空いてきちゃった～ｗ🍴✨`, `かずぅさんも一口食べる？（意味深）`];
+            if (w.match(/🐶|🐱|くま|どうぶつ/)) return [`${word}、かわいく描けるかな～？🐾💍`, `モフモフ感出すのがポイントだよ！✨`, `アタシ、こういうの飼いた～い！💖`];
+            if (w.match(/車|飛行機|のりもの/)) return [`${word}、かっこよく描いちゃうよ！💨🚀`, `スピード感出してきた～！✨`, `これに乗ってデート行きたいな～！💎💍`];
+            if (w.match(/唇|セクシー|ヤバい|エッチ|エロ|🔞|🥵|💋|🍑/)) return [
+                `ちょっとエッチすぎ？ｗ🔞💖`, 
+                `これ描くの恥ずかしいんだけど～！🫣✨`, 
+                `かずぅさん、こういうの好きなんでしょ？（笑）`, 
+                `顔赤くなってない？大丈夫～？🔥💅`,
+                `ギャルの本気（セクシーver）見せちゃうよ！💍✨`
+            ];
             return [
                 `${word}、描くのムズすぎない？ｗ✨`,
                 `この辺のラインがポイントだよ💖💍`,
@@ -990,7 +1036,47 @@ function handleNpcAction(npc) {
     }
 }
 
-function handleChatMessage(player, msg) {
+function getLevelThreshold(lv) {
+    return (lv * 30) + 100;
+}
+
+function addXp(player, amount) {
+    if (!player) return;
+    if (player.xp === undefined) player.xp = 0;
+    if (player.lv === undefined) player.lv = 0;
+    
+    player.xp += amount;
+    let leveledUp = false;
+    
+    // かずぅさん指定の設計：(Lv * 30) + 100
+    while (player.xp >= getLevelThreshold(player.lv)) {
+        player.xp -= getLevelThreshold(player.lv);
+        player.lv++;
+        leveledUp = true;
+    }
+    
+    if (player.token) {
+        if (!persistentData[player.token]) {
+            persistentData[player.token] = { name: player.name || 'Unknown', score: 0, xp: 0, lv: 0 };
+        }
+        persistentData[player.token].xp = player.xp;
+        persistentData[player.token].lv = player.lv;
+        persistentData[player.token].name = player.name; // 最新の名前をキープ！💅
+        savePlayerData();
+    }
+    
+    if (leveledUp) {
+        safeIoEmit('chat_message', { 
+            sender: 'System', 
+            text: `✨🆙 LEVEL UP!! ${player.name}さんは Lv.${player.lv} になったよ！おめ！💖💍✨`, 
+            color: '#ffcc00' 
+        });
+        // クライアント側で演出を出せるように通知
+        io.to(player.id).emit('level_up_effect', { lv: player.lv });
+    }
+}
+
+function handleChatMessage(player, msg, socket) {
     if (gamePhase === 'playing') {
         const isDrawer = players[currentPlayerIndex]?.id === player.id;
         let isCorrect = false;
@@ -1017,13 +1103,35 @@ function handleChatMessage(player, msg) {
             if (!pointsAwardedThisTurn) {
                 pointsAwardedThisTurn = true;
                 player.score += 1;
-                if (player.token) persistentScores[player.token] = player.score;
+                if (player.token) {
+            if (!persistentData[player.token]) {
+                persistentData[player.token] = { name: player.name || 'Unknown', score: 0, xp: 0, lv: 0 };
+            }
+            persistentData[player.token].score = player.score;
+            persistentData[player.token].xp = player.xp || 0;
+            persistentData[player.token].lv = player.lv || 0;
+            persistentData[player.token].name = player.name;
+            savePlayerData();
+        }
                 if (players[currentPlayerIndex]) {
                     players[currentPlayerIndex].score += 1;
-                    const drawerToken = players[currentPlayerIndex].token;
-                    if (drawerToken) persistentScores[drawerToken] = players[currentPlayerIndex].score;
+                    const drawer = players[currentPlayerIndex];
+                    if (drawer.token) {
+                        if (!persistentData[drawer.token]) {
+                            persistentData[drawer.token] = { name: drawer.name || 'Unknown', score: 0, xp: 0, lv: 0 };
+                        }
+                        persistentData[drawer.token].score = drawer.score;
+                        persistentData[drawer.token].name = drawer.name;
+                        savePlayerData();
+                    }
+                    // 描き手にも20XP！🎨
+                    addXp(drawer, 20);
                 }
-                safeIoEmit('chat_message', { sender: 'System', text: `やば！${player.name}さんが1番乗りで大正解！🎉✨（回答者+1pt / 出題者+1pt）`, color: '#ff66b2', type: 'correct' });
+                
+                // 回答者にも20XP！🎯
+                addXp(player, 20);
+
+                safeIoEmit('chat_message', { sender: 'System', text: `やば！${player.name}さんが1番乗りで大正解！🎉✨（回答者+1pt,20XP / 出題者+1pt,20XP）`, color: '#ff66b2', type: 'correct' });
             } else {
                 safeIoEmit('chat_message', { sender: 'System', text: `${player.name}さんも正解！👏（ポイントは最初の人だけだよ！）`, color: '#ff66b2', type: 'correct' });
             }
@@ -1041,27 +1149,104 @@ function handleChatMessage(player, msg) {
 }
 
 io.on('connection', (socket) => {
+    socket.on('reset_player_data', (targetToken) => {
+        if (!targetToken) return;
+        
+        // メモリ上のデータリセット
+        players.forEach(p => {
+            if (p.token === targetToken) {
+                p.xp = 0;
+                p.lv = 0;
+                p.score = 0;
+            }
+        });
+        
+        // 永続化データのリセット
+        if (persistentData[targetToken]) {
+            persistentData[targetToken].xp = 0;
+            persistentData[targetToken].lv = 0;
+            persistentData[targetToken].score = 0;
+            savePlayerData();
+        }
+        
+        safeIoEmit('update_players', players);
+        safeIoEmit('chat_message', { 
+            sender: 'System', 
+            text: `⚠️ プレイヤーデータの初期化（浄化）が実行されたよッ！✨💍`, 
+            color: '#ff3300' 
+        });
+    });
+
+    socket.on('modify_player_data', (data) => {
+        const { targetToken, xp, lv, score } = data;
+        if (!targetToken) return;
+
+        // メモリ上のデータ更新
+        players.forEach(p => {
+            if (p.token === targetToken) {
+                if (xp !== undefined) p.xp = Number(xp);
+                if (lv !== undefined) p.lv = Number(lv);
+                if (score !== undefined) p.score = Number(score);
+            }
+        });
+
+        // 永続化データの更新
+        if (!persistentData[targetToken]) {
+            persistentData[targetToken] = { name: 'Unknown', score: 0, xp: 0, lv: 0 };
+        }
+        if (xp !== undefined) persistentData[targetToken].xp = Number(xp);
+        if (lv !== undefined) persistentData[targetToken].lv = Number(lv);
+        if (score !== undefined) persistentData[targetToken].score = Number(score);
+        savePlayerData();
+
+        safeIoEmit('update_players', players);
+        safeIoEmit('chat_message', { 
+            sender: 'System', 
+            text: `🛠️ プレイヤーデータが「神（管理者）」によって書き換えられたよッ！✨💍`, 
+            color: '#ffcc00' 
+        });
+    });
+
     socket.on('join_game', (playerName, playerToken) => {
         if (players.length >= maxPlayers) {
             safeEmit(socket, 'error', '満室だよ〜！ごめんね🥺');
             return;
         }
 
-        // トークンがあったら以前の得点を思い出してあげるよ！✨💍💅
-        const savedScore = (playerToken && persistentScores[playerToken]) ? persistentScores[playerToken] : 0;
+        // トークンがあったら以前のデータを思い出してあげるよ！✨💍💅
+        if (playerToken) {
+            if (!persistentData[playerToken]) {
+                persistentData[playerToken] = { name: playerName, score: 0, xp: 0, lv: 0 };
+            } else {
+                persistentData[playerToken].name = playerName; // 名前変更にも対応！✨
+            }
+            savePlayerData();
+        }
+        const saved = (playerToken && persistentData[playerToken]) ? persistentData[playerToken] : { score: 0, xp: 0, lv: 0 };
+        // 既に同じトークンで入ってる子がいたら、古い方を追い出しちゃうおッ！🚫✨💍
+        if (playerToken) {
+            const existingIndex = players.findIndex(p => p.token === playerToken);
+            if (existingIndex !== -1) {
+                console.log(`[JOIN-DUP] Removing existing player with same token: ${players[existingIndex].name}`);
+                players.splice(existingIndex, 1);
+            }
+        }
+
         const name = playerName || `Player ${players.length + 1}`;
 
         players.push({
             id: socket.id,
             token: playerToken,
             name: name,
-            score: savedScore,
+            score: saved.score || 0,
+            xp: saved.xp || 0,
+            lv: saved.lv || 0,
             hasGuessed: false,
             isReady: false, // 🆕 準備中モード追加！
             isNpc: false
         });
 
-        console.log(`[JOIN] ${name} joined with token ${playerToken} (Score: ${savedScore})`);
+        console.log(`[JOIN] ${name} joined with token ${playerToken} (Score: ${saved.score || 0})`);
 
         safeIoEmit('update_players', players);
         safeEmit(socket, 'game_state', {
@@ -1118,9 +1303,18 @@ io.on('connection', (socket) => {
     });
 
     socket.on('manual_turn_end', () => {
-        if (gamePhase === 'playing' && players[currentPlayerIndex]?.id === socket.id) {
-            safeIoEmit('chat_message', { sender: 'System', text: `描き手の${players[currentPlayerIndex].name}さんがターンを終了させたよ！✨`, color: '#ff66b2' });
+        console.log(`[MANUAL-END] Request from ${socket.id}. Phase: ${gamePhase}, DrawerIdx: ${currentPlayerIndex}`);
+        
+        // 描き手本人か、一人プレイの場合は無条件で終了を許可するおッ！💅✨
+        const isDrawer = (players[currentPlayerIndex] && players[currentPlayerIndex].id === socket.id);
+        const isSolo = (players.length === 1 && players[0].id === socket.id);
+        
+        if (gamePhase === 'playing' && (isDrawer || isSolo)) {
+            const name = players[currentPlayerIndex] ? players[currentPlayerIndex].name : 'Unknown';
+            safeIoEmit('chat_message', { sender: 'System', text: `描き手の${name}さんがターンを終了させたよ！✨`, color: '#ff66b2' });
             endTurn();
+        } else {
+            console.warn(`[MANUAL-END-REJECTED] Phase: ${gamePhase}, isDrawer: ${isDrawer}, isSolo: ${isSolo}`);
         }
     });
 
@@ -1141,6 +1335,25 @@ io.on('connection', (socket) => {
     });
 
     socket.on('send_message', (msg) => {
+        const trimmedMsg = msg.trim();
+        if (trimmedMsg === '/kill') {
+            const player = players.find(p => p.id === socket.id);
+            console.log(`[ADMIN-CMD] /kill received from: ${player?.name || 'Unknown'} (Socket: ${socket.id})`);
+            if (player) {
+                // 永続化されている全プレイヤーデータをリスト化しておくるよ！✨💍💅
+                const allPlayers = Object.keys(persistentData).map(token => ({
+                    token,
+                    ...persistentData[token],
+                    isOnline: players.some(p => p.token === token)
+                }));
+                console.log(`[ADMIN-CMD] Sending full admin list with ${allPlayers.length} records to ${player.name}`);
+                safeEmit(socket, 'open_admin_panel', allPlayers);
+            } else {
+                console.warn(`[ADMIN-CMD] Player not found for socket ${socket.id}`);
+            }
+            return;
+        }
+
         // --- 🧹 BANページへの誘導 (/ban) ---
         if (msg.trim() === '/ban') {
             socket.emit('redirect', '/ban.html');
@@ -1154,6 +1367,7 @@ io.on('connection', (socket) => {
                            "--------------------------<br>" +
                            "🔹 /pt0 : 自分のポイントを0にするよ🤫<br>" +
                            "🔹 /npc : AIギャル友を召喚するよ💖💅<br>" +
+                           "🔹 /kill : 裏・管理パネルを開くよ🔞💎<br>" +
                            "🔹 /list : この一覧を表示するよ✨💍";
             socket.emit('chat_message', { sender: 'System', text: listMsg, color: '#ff66b2' });
             return;
@@ -1193,13 +1407,17 @@ io.on('connection', (socket) => {
         // --- 🤫 隠しコマンド！ (/pt0) ---
         if (msg.trim() === '/pt0') {
             player.score = 0;
-            if (player.token) persistentScores[player.token] = 0;
+            if (player.token) {
+                if (!persistentData[player.token]) persistentData[player.token] = { name: player.name, score: 0, xp: 0, lv: 0 };
+                persistentData[player.token].score = 0;
+                savePlayerData();
+            }
             safeIoEmit('update_players', players);
             safeEmit(socket, 'chat_message', { sender: 'System', text: '🤫 ポイントをリセットしたよ✨', color: '#ff66b2' });
             return;
         }
 
-        handleChatMessage(player, msg);
+        handleChatMessage(player, msg, socket);
     });
 
     // 🆕 「準備オッケー！」のトグル処理 ✨💍💖
@@ -1221,15 +1439,19 @@ io.on('connection', (socket) => {
 
 
     socket.on('disconnect', () => {
-        players = players.filter(p => p.id !== socket.id);
-        
-        // 人間が一人もいなくなったらNPCも全員消去するよ！💎💅✨
+        const index = players.findIndex(p => p.id === socket.id);
+        if (index === -1) return;
+
+        const p = players[index];
+        console.log(`[LEAVE] ${p.name} left. (Idx: ${index}, CurrentDrawerIdx: ${currentPlayerIndex})`);
+        players.splice(index, 1);
+
+        // 人間が一人もいなくなったらNPCも全員消去💍
         const humanPlayers = players.filter(p => !p.isNpc);
         if (humanPlayers.length === 0) {
-            // NPCのタイマーを全部掃除💍
-            players.forEach(p => {
-                if (p.isNpc && npcTimers[p.id]) {
-                    npcTimers[p.id].forEach(t => {
+            players.forEach(p_npc => {
+                if (p_npc.isNpc && npcTimers[p_npc.id]) {
+                    npcTimers[p_npc.id].forEach(t => {
                         if (t.type === 'interval') clearInterval(t.timer);
                         else clearTimeout(t.timer);
                     });
@@ -1239,13 +1461,20 @@ io.on('connection', (socket) => {
             npcTimers = {};
             gamePhase = 'waiting';
             if (roundTimer) clearInterval(roundTimer);
+        } else {
+            // 描き手のインデックスを調整💅
+            if (index < currentPlayerIndex) {
+                currentPlayerIndex--;
+            } else if (index === currentPlayerIndex) {
+                currentPlayerIndex--; // 次の startNextTurn で正しくインクリメントされるように
+                if (gamePhase === 'playing') {
+                    safeIoEmit('chat_message', { sender: 'System', text: '描き手がいなくなっちゃったから、次のターンに行くねッ！🥺', color: '#ff66b2' });
+                    endTurn();
+                }
+            }
         }
 
         safeIoEmit('update_players', players);
-
-        if (gamePhase === 'playing' && (currentPlayerIndex >= players.length || (players[currentPlayerIndex] && players[currentPlayerIndex].id === socket.id))) {
-            endTurn();
-        }
     });
 
 

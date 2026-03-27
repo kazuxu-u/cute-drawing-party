@@ -123,16 +123,17 @@
                     <button id="undoBtn" class="tool-btn" style="background:#ffdb58;" data-tooltip="元に戻す↩️">↩️</button>
                     <button id="searchImageBtn" class="tool-btn" style="background:#b3e5fc;" data-tooltip="画像検索🔍">🔍</button>
                     <div style="position: relative;">
-                        <button id="turnEndBtn" class="tool-btn hidden" style="background:#ff66b2; color:white; font-weight:bold;" data-tooltip="ターン終了✨">✨</button>
+                        <button id="turnEndBtn" class="tool-btn hidden" style="background:#ff66b2; color:white; font-weight:bold;" data-tooltip="ターン終了🏁">🏁</button>
                         <!-- 描き手に終了を促す吹き出しッ！💅✨ -->
                         <div id="turnEndBubble" class="speech-bubble bubble-bottom hidden">描き終わったらココ押してネ！💖</div>
                     </div>
                     <button id="clearBtn" class="tool-btn danger" data-tooltip="ぜんぶ消す💣">💣</button>
                     <button id="saveBtn" class="tool-btn hidden" style="background:#66ccff; color:white;" data-tooltip="保存💾">💾</button>
-                    <button id="gallerySubmitBtn" class="tool-btn hidden" style="background:#cc99ff; color:white;" data-tooltip="ギャラリーに投稿✨">✨</button>
+                    <button id="gallerySubmitBtn" class="tool-btn hidden" style="background:#cc99ff; color:white;" data-tooltip="ギャラリーに投稿🎀">🎀</button>
                     <button id="exitSoloBtn" class="tool-btn hidden" style="background:#ff9933; color:white;" data-tooltip="やめる🚪">🚪</button>
                     <button id="rainbowBtn" class="tool-btn effect-btn" data-tooltip="虹色ペン🌈✨">🌈</button>
-                    <button id="glowBtn" class="tool-btn effect-btn" data-tooltip="オーラペン🌟✨">✨</button>
+                    <button id="glowBtn" class="tool-btn effect-btn" data-tooltip="オーラペン🌟✨">🌟</button>
+                    <button id="heartBtn" class="tool-btn effect-btn" data-tooltip="💖ペン（エロかわ）💖">💖</button>
                     <button id="nextWordBtn" class="tool-btn hidden" style="background:#ffcc00;" data-tooltip="次のお題！🎲">🎲</button>
                 </div>
                 
@@ -245,6 +246,18 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
+    <!-- 🔞 裏・管理パネル（/kill）✨💍 -->
+    <div id="adminOverlay" class="overlay hidden">
+        <div class="admin-modal">
+            <h2 class="admin-title">💋 裏・管理パネル 💋</h2>
+            <p class="admin-subtitle">選ばれし者のみが扱える、運命のリセットボタンッ！🤪💍</p>
+            <div id="adminPlayerList" class="admin-player-list">
+                <!-- ここにプレイヤーが並ぶよ💅 -->
+            </div>
+            <button id="closeAdminBtn" class="cute-btn" style="margin-top:20px; background:#666;">❌ 閉じる</button>
+        </div>
+    </div>
+
     <script src="script.js?v=13"></script>
 </body>
 </html>

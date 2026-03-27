@@ -94,14 +94,18 @@ const glowBtn = document.getElementById('glowBtn'); // 追加🌟
 const exitSoloBtn = document.getElementById('exitSoloBtn');
 const turnEndBtn = document.getElementById('turnEndBtn'); // 追加
 const turnEndBubble = document.getElementById('turnEndBubble'); // 🆕 追加ッ！💅
+const heartBtn = document.getElementById('heartBtn'); // 🆕 究極のハートペン！💖
 const sidebar = document.querySelector('.sidebar'); // サイドバー取得💅
 const toolbar = document.getElementById('toolbar');
+const adminOverlay = document.getElementById('adminOverlay');
+const adminPlayerList = document.getElementById('adminPlayerList');
+const closeAdminBtn = document.getElementById('closeAdminBtn');
 
 let myId = null;
 let isDrawing = false;
 let canIDraw = false;
 let inSoloMode = false;
-let currentSettings = { color: '#000000', size: 5, isEraser: false, isFill: false, isGlow: false, isRainbow: false };
+let currentSettings = { color: '#000000', size: 5, isEraser: false, isFill: false, isGlow: false, isRainbow: false, isHeart: false };
 let gallery = []; 
 let drawHistory = []; // UNDO用の履歴配列 
 let currentWordText = '';
@@ -257,6 +261,20 @@ function playSE(type) {
             osc.start(startT);
             osc.stop(startT + dur);
         });
+    } else if (type === 'heart') {
+        // ピキュインッ💖
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, t);
+        osc.frequency.exponentialRampToValueAtTime(1760, t + 0.1);
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(0.1, t + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+        osc.start(t);
+        osc.stop(t + 0.1);
     }
 }
 
@@ -268,7 +286,7 @@ ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 let lastX = 0, lastY = 0;
 
-function drawLine(x0, y0, x1, y1, color, size, isErase, isGlow, isRainbow) {
+function drawLine(x0, y0, x1, y1, color, size, isErase, isGlow, isRainbow, isHeart) {
     let finalColor = color;
     if (isRainbow && !isErase) {
         // 描画タイミングごとに色を絶妙に変えてエモい虹にするよ！🌈✨
@@ -308,18 +326,26 @@ function drawLine(x0, y0, x1, y1, color, size, isErase, isGlow, isRainbow) {
     ctx.stroke();
     ctx.closePath();
     ctx.restore(); // 状態を戻す✨
+
+    // 🆕 💖ペンの時はハートをドバドバ出すよ！💅✨
+    if (isHeart && !isErase) {
+        if (Math.random() > 0.4) { // 通常より多めに出すお！💎
+            createSparkle(x1, y1, '#ff3399', true); 
+            if (Math.random() > 0.8) playSE('heart');
+        }
+    }
 }
 
 // ✨ キラキラ（スパークル）を生成する関数！💖
-function createSparkle(x, y, color) {
+function createSparkle(x, y, color, isHeartMode = false) {
     if (!sparkleContainer) return;
     
     // 💖 エフェクト大増量！盛り盛り仕様にするよ！💅✨
-    const count = 3; // 1回で3個出しちゃう欲張りセット！💍
+    const count = isHeartMode ? 2 : 3; // ハートペンなら少し多めに！💍
     
     for (let i = 0; i < count; i++) {
         const sparkle = document.createElement('div');
-        sparkle.className = 'sparkle';
+        sparkle.className = isHeartMode ? 'sparkle heart' : 'sparkle';
         
         // ✨ 修正：パーセント（%）で座標を指定するよ！💅
         // これならキャンバスがどんなサイズにリサイズされても、ペン先にピタッと重なるね！💎💍
@@ -328,7 +354,7 @@ function createSparkle(x, y, color) {
         
         // ランダムな方向に飛ばす！シュババッ！💨
         const angle = Math.random() * Math.PI * 2;
-        const velocity = 3 + Math.random() * 8; // ちょっと遠くまで飛ばすよ！💎
+        const velocity = isHeartMode ? (5 + Math.random() * 10) : (3 + Math.random() * 8); 
         const vx = Math.cos(angle) * velocity;
         const vy = Math.sin(angle) * velocity;
         
@@ -336,18 +362,19 @@ function createSparkle(x, y, color) {
         sparkle.style.setProperty('--vy', `${vy}px`);
         
         // 宝石やハートをランダムに！💎💍💖✨🌟💄🍭🌈
-        const shapes = ['✨', '💖', '⭐', '💎', '🌸', '💍', '🌟', '💄', '🍭', '🌈', '🔥'];
+        const shapes = isHeartMode ? ['💖', '💕', '🏩', '🔞', '💋', '🔥'] : ['✨', '💖', '⭐', '💎', '🌸', '💍', '🌟', '💄', '🍭', '🌈', '🔥'];
         sparkle.textContent = shapes[Math.floor(Math.random() * shapes.length)];
         sparkle.style.backgroundColor = 'transparent';
-        sparkle.style.fontSize = `${12 + Math.random() * 20}px`; // デカくするよ！💅
-        sparkle.style.textShadow = `0 0 10px ${color}`; // 色に合わせて光らせる！✨
+        sparkle.style.fontSize = isHeartMode ? `${20 + Math.random() * 25}px` : `${12 + Math.random() * 20}px`; 
+        sparkle.style.textShadow = `0 0 15px ${isHeartMode ? '#ff3399' : color}`; 
 
         sparkleContainer.appendChild(sparkle);
         
-        // 0.8秒くらいで消す！（回転率UP💅）
+        // 消す時間もモードで調整💅
+        const duration = isHeartMode ? 1000 : 800;
         setTimeout(() => {
             sparkle.remove();
-        }, 800);
+        }, duration);
     }
 }
 
@@ -491,14 +518,15 @@ canvas.addEventListener('mousedown', (e) => {
 canvas.addEventListener('mousemove', (e) => {
     if (!isDrawing || !canIDraw) return;
     const pos = getMousePos(e);
-    drawLine(lastX, lastY, pos.x, pos.y, currentSettings.color, currentSettings.size, currentSettings.isEraser, currentSettings.isGlow, currentSettings.isRainbow);
+    drawLine(lastX, lastY, pos.x, pos.y, currentSettings.color, currentSettings.size, currentSettings.isEraser, currentSettings.isGlow, currentSettings.isRainbow, currentSettings.isHeart);
     if (!inSoloMode) {
         socket.emit('draw', { 
             x0: lastX, y0: lastY, x1: pos.x, y1: pos.y, 
             color: currentSettings.color, size: currentSettings.size, 
             isEraser: currentSettings.isEraser,
             isGlow: currentSettings.isGlow,
-            isRainbow: currentSettings.isRainbow
+            isRainbow: currentSettings.isRainbow,
+            isHeart: currentSettings.isHeart
         });
     }
     lastX = pos.x; lastY = pos.y;
@@ -564,6 +592,17 @@ if (glowBtn) {
     glowBtn.addEventListener('click', () => {
         currentSettings.isGlow = !currentSettings.isGlow;
         glowBtn.classList.toggle('active');
+    });
+}
+if (heartBtn) {
+    heartBtn.addEventListener('click', () => {
+        currentSettings.isHeart = !currentSettings.isHeart;
+        heartBtn.classList.toggle('active');
+        if (currentSettings.isHeart) {
+            currentSettings.isEraser = false;
+            setActiveTool(penBtn);
+            addChatMessage('System', '💖ペン発動！描くたびにハートが溢れちゃうお…🔞💖', '#ff3399');
+        }
     });
 }
 if (undoBtn) {
@@ -848,7 +887,7 @@ socket.on('update_players', (players) => {
     let amIin = false;
     players.forEach(p => {
         const li = document.createElement('li');
-        li.innerHTML = `<span>${p.name} : ${p.score}pt</span>`;
+        li.innerHTML = `<span class="player-lv-badge">Lv.${p.lv || 0}</span> <span>${p.name} : ${p.score}pt</span>`;
         if (p.isReady) {
             const badge = document.createElement('span');
             badge.className = 'ready-badge';
@@ -1026,7 +1065,7 @@ socket.on('round_start', (data) => {
 });
 
 socket.on('timer', (time) => { if(!inSoloMode) timerDisplay.textContent = `⏱️ ${time}`; });
-socket.on('draw', (data) => { if(!inSoloMode) drawLine(data.x0, data.y0, data.x1, data.y1, data.color, data.size, data.isEraser, data.isGlow, data.isRainbow); });
+socket.on('draw', (data) => { if(!inSoloMode) drawLine(data.x0, data.y0, data.x1, data.y1, data.color, data.size, data.isEraser, data.isGlow, data.isRainbow, data.isHeart); });
 socket.on('fill', (data) => { if(!inSoloMode) floodFill(data.x, data.y, data.color); });
 socket.on('sync_canvas', (dataURL) => { 
     if(!inSoloMode) { 
@@ -1444,3 +1483,109 @@ function updateScale() {
 
 window.addEventListener('resize', updateScale);
 window.addEventListener('load', updateScale);
+socket.on('level_up_effect', (data) => {
+    // レベルアップ演出！🆙✨💍
+    const msg = `🆙✨ LEVEL UP! Lv.${data.lv} ✨🆙`;
+    addChatMessage('System', msg, '#ffcc00');
+    
+    // 画面中央にデカデカと表示
+    const popup = document.createElement('div');
+    popup.className = 'level-up-popup';
+    popup.textContent = msg;
+    document.body.appendChild(popup);
+    
+    playSE('celebration');
+    
+    // クラッカーエフェクト🎉
+    for(let i=0; i<30; i++) {
+        setTimeout(() => {
+            const x = Math.random() * window.innerWidth;
+            const y = Math.random() * window.innerHeight;
+            createSparkle(x, y, '#ffcc00', true);
+        }, i * 50);
+    }
+    
+    setTimeout(() => {
+        popup.classList.add('fade-out');
+        setTimeout(() => popup.remove(), 1000);
+    }, 3000);
+});
+socket.on('open_admin_panel', (players) => {
+    if (!adminOverlay) return;
+    
+    adminOverlay.classList.remove('hidden');
+    adminOverlay.style.display = 'flex';
+    updateAdminPlayerList(players);
+});
+
+function updateAdminPlayerList(allPlayers) {
+    if (!adminPlayerList) return;
+    adminPlayerList.innerHTML = '';
+    
+    // トークン（ID）付きで全プレイヤーを表示するお！💖✨💍
+    allPlayers.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'admin-player-card';
+        if (!p.isOnline) card.style.opacity = '0.7'; // オフラインはちょっと薄く
+
+        const shortToken = p.token ? p.token.substring(0, 8) + '...' : 'Guest';
+        const statusBadge = p.isOnline 
+            ? '<span class="status-badge online">ONLINE 💖</span>' 
+            : '<span class="status-badge offline">OFFLINE 🥺</span>';
+
+        card.innerHTML = `
+            <div class="admin-player-info">
+                <div class="admin-player-name-row">
+                    <span class="admin-player-name">${p.name || 'Unknown'}</span>
+                    ${statusBadge}
+                </div>
+                <div class="admin-player-id">ID: <code>${shortToken}</code></div>
+                <div class="admin-edit-fields">
+                    <label>LV: <input type="number" class="edit-lv" value="${p.lv || 0}" style="width:50px;"></label>
+                    <label>XP: <input type="number" class="edit-xp" value="${p.xp || 0}" style="width:60px;"></label>
+                    <label>Pts: <input type="number" class="edit-score" value="${p.score || 0}" style="width:50px;"></label>
+                </div>
+            </div>
+            <div class="admin-actions">
+                <button class="apply-btn" data-token="${p.token}">✅ 適用</button>
+                <button class="reset-btn" data-token="${p.token}" style="margin-top:5px;">💀 浄化</button>
+            </div>
+        `;
+        adminPlayerList.appendChild(card);
+    });
+}
+
+if (closeAdminBtn) {
+    closeAdminBtn.addEventListener('click', () => {
+        adminOverlay.classList.add('hidden');
+        adminOverlay.style.display = 'none';
+    });
+}
+
+// ボタンのイベント委譲
+if (adminPlayerList) {
+    adminPlayerList.addEventListener('click', (e) => {
+        const token = e.target.getAttribute('data-token');
+        if (!token) return;
+
+        if (e.target.classList.contains('reset-btn')) {
+            if (confirm('本当にこのプレイヤーを浄化（リセット）しちゃう？🥺💍')) {
+                socket.emit('reset_player_data', token);
+            }
+        } 
+        else if (e.target.classList.contains('apply-btn')) {
+            const card = e.target.closest('.admin-player-card');
+            const lv = card.querySelector('.edit-lv').value;
+            const xp = card.querySelector('.edit-xp').value;
+            const score = card.querySelector('.edit-score').value;
+            
+            socket.emit('modify_player_data', {
+                targetToken: token,
+                lv: parseInt(lv),
+                xp: parseInt(xp),
+                score: parseInt(score)
+            });
+            alert('神（管理者）の力でデータを書き換えたお！💖✨💍');
+        }
+    });
+}
