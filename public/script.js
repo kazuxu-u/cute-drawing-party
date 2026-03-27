@@ -1005,7 +1005,28 @@ socket.on('update_players', (players) => {
     let amIin = false;
     players.forEach(p => {
         const li = document.createElement('li');
-        li.innerHTML = `<span class="player-lv-badge">Lv.${p.lv || 0}</span> <span>${p.name} : ${p.score}pt</span>`;
+        li.className = 'player-item'; // 🆕 クラス追加ッ！💅✨
+        
+        // 🆕 XP進捗の計算ッ！💎✨💍
+        const nextLvXp = (p.lv || 0) * 30 + 100;
+        const xpPercent = Math.min(100, Math.floor(((p.xp || 0) / nextLvXp) * 100));
+        
+        // 🆕 自分の時だけバルーンを出すおッ！🤟💖
+        const xpBalloonHtml = (p.id === myId) ? `
+            <div class="player-xp-bubble">
+                <div>NEXT LEVEL: ${p.xp || 0} / ${nextLvXp} XP</div>
+                <div class="xp-progress-bar">
+                    <div class="xp-progress-fill" style="width: ${xpPercent}%"></div>
+                </div>
+            </div>
+        ` : '';
+        
+        li.innerHTML = `
+            <span class="player-lv-badge">Lv.${p.lv || 0}</span> 
+            <span>${p.name} : ${p.score}pt</span>
+            ${xpBalloonHtml}
+        `;
+        
         if (p.isReady) {
             const badge = document.createElement('span');
             badge.className = 'ready-badge';
