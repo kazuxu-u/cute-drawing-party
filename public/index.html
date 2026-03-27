@@ -170,23 +170,27 @@
                     <div class="has-tooltip" data-tooltip="太さ！📏">
                         <input type="range" id="sizePicker" min="1" max="50" value="5">
                     </div>
-                    <button id="penBtn" class="tool-btn" style="background:#ccffcc;" data-tooltip="ペン🖋️">🖋️</button>
-                    <button id="eraserBtn" class="tool-btn" data-tooltip="消しゴム🧽">🧽</button>
-                    <button id="fillBtn" class="tool-btn" style="background:#ffccdd;" data-tooltip="塗りつぶし🪣">🪣</button>
-                    <button id="undoBtn" class="tool-btn" style="background:#ffdb58;" data-tooltip="元に戻す↩️">↩️</button>
-                    <button id="searchImageBtn" class="tool-btn" style="background:#b3e5fc;" data-tooltip="画像検索🔍">🔍</button>
-                    <div style="position: relative;">
-                        <button id="turnEndBtn" class="tool-btn hidden" style="background:#ff66b2; color:white; font-weight:bold;" data-tooltip="ターン終了🏁">🏁</button>
-                        <!-- 描き手に終了を促す吹き出しッ！💅✨ -->
-                        <div id="turnEndBubble" class="speech-bubble bubble-bottom hidden">描き終わったらココ押してネ！💖</div>
-                    </div>
-                    <button id="clearBtn" class="tool-btn danger" data-tooltip="ぜんぶ消す💣">💣</button>
-                    <button id="saveBtn" class="tool-btn hidden" style="background:#66ccff; color:white;" data-tooltip="保存💾">💾</button>
-                    <button id="gallerySubmitBtn" class="tool-btn hidden" style="background:#cc99ff; color:white;" data-tooltip="ギャラリーに投稿🎀">🎀</button>
-                    <button id="exitSoloBtn" class="tool-btn hidden" style="background:#ff9933; color:white;" data-tooltip="やめる🚪">🚪</button>
+
+                    <button id="penBtn" class="tool-btn" style="background:#ccffcc;" data-tooltip="ペン🖌️">🖋️</button>
                     <button id="rainbowBtn" class="tool-btn effect-btn" data-tooltip="虹色ペン🌈✨">🌈</button>
                     <button id="glowBtn" class="tool-btn effect-btn" data-tooltip="オーラペン🌟✨">🌟</button>
                     <button id="heartBtn" class="tool-btn effect-btn" data-tooltip="💖ペン（エロかわ）💖">💖</button>
+                    <button id="fillBtn" class="tool-btn" style="background:#ffccdd;" data-tooltip="塗りつぶし🪣">🪣</button>
+                    <button id="eraserBtn" class="tool-btn" data-tooltip="消しゴム🧽">🧽</button>
+                    <button id="clearBtn" class="tool-btn danger" data-tooltip="ぜんぶ消す💣">💣</button>
+                    <button id="undoBtn" class="tool-btn" style="background:#ffdb58;" data-tooltip="元に戻す↩️">↩️</button>
+                    <button id="searchImageBtn" class="tool-btn" style="background:#b3e5fc;" data-tooltip="画像検索🔍">🔍</button>
+
+                    <div style="position: relative;">
+                        <button id="turnEndBtn" class="tool-btn hidden" style="background:#ff66b2; color:white; font-weight:bold;" data-tooltip="ターン終了🚩">🚩</button>
+                        <!-- 描き手に終了を促す吹き出しッ！💅✨ -->
+                        <div id="turnEndBubble" class="speech-bubble bubble-bottom hidden">描き終わったらココ押してネ！💖</div>
+                    </div>
+
+                    <!-- 🛠️ 隠しツール系 🛠️ -->
+                    <button id="saveBtn" class="tool-btn hidden" style="background:#66ccff; color:white;" data-tooltip="保存💾">💾</button>
+                    <button id="gallerySubmitBtn" class="tool-btn hidden" style="background:#cc99ff; color:white;" data-tooltip="ギャラリーに投稿🎀">🎀</button>
+                    <button id="exitSoloBtn" class="tool-btn hidden" style="background:#ff9933; color:white;" data-tooltip="やめる🚪">🚪</button>
                     <button id="nextWordBtn" class="tool-btn hidden" style="background:#ffcc00;" data-tooltip="次のお題！🎲">🎲</button>
                 </div>
                 
