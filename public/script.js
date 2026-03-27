@@ -1700,7 +1700,6 @@ if (exitRoomBtn) {
             roomSelectScreen.style.pointerEvents = 'auto'; // 👈 操作できるように戻すおッ！🤟💖
             
             // ステータスをリセット
-            if (bgmPlayer) bgmPlayer.pause();
             inSoloMode = false;
             canIDraw = false;
             isDrawing = false;
