@@ -66,16 +66,20 @@ const Drawing = mongoose.model('Drawing', drawingSchema);
 // --- 💾 永続化データ管理システム (Hybrid MongoDB/JSON) ✨💍 ---
 let persistentData = {};
 const MONGO_URI = process.env.MONGO_URI;
+let lastDBError = null; // 🆕 エラーを記録するおッ！💎
 
 async function connectDB() {
     if (!MONGO_URI) {
         console.warn('[DB-WARN] MONGO_URI is missing. Falling back to local JSON persistence. 🥺');
+        lastDBError = 'MONGO_URI is missing';
         return;
     }
     try {
         await mongoose.connect(MONGO_URI);
         console.log('[DB-OK] Connected to MongoDB Atlas! 💎✨💍');
+        lastDBError = null;
     } catch (e) {
+        lastDBError = e.message;
         console.error(`[DB-ERR] Connection failed: ${e.message}`);
     }
 }
@@ -1357,7 +1361,7 @@ io.on('connection', (socket) => {
                 debug: {
                     name,
                     memoryCount: count,
-                    dbState: dbState === 1 ? 'CONNECTED' : 'DISCONNECTED',
+                    dbState: dbState === 1 ? 'CONNECTED' : `DISCONNECTED (${lastDBError || 'Unknown Error'})`,
                     samples: samples || 'NONE'
                 }
             });
