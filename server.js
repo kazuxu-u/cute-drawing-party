@@ -1310,6 +1310,13 @@ io.on('connection', (socket) => {
             return;
         }
 
+        // 🆕 切断されてたら再接続を試みるおッ！！💖🚀
+        if (MONGO_URI && mongoose.connection.readyState !== 1) {
+            console.log('[DB-RETRY-REG] Connection lost. Retrying before register... 🔄');
+            await connectDB();
+            await loadPlayerData();
+        }
+
         // 🆕 正規化とトリム！💎✨
         name = name.trim().normalize('NFC');
         password = password.trim();
@@ -1335,7 +1342,7 @@ io.on('connection', (socket) => {
     });
 
     // 🆕 ログイン処理！💎✨
-    socket.on('login', (data) => {
+    socket.on('login', async (data) => {
         let { name, password } = data;
         if (!name || !password) {
             safeEmit(socket, 'login_failed', '名前とパスワードを入れてねッ！💍');
@@ -1345,6 +1352,13 @@ io.on('connection', (socket) => {
         // 🆕 正規化とトリム！💎✨
         name = name.trim().normalize('NFC');
         password = password.trim();
+
+        // 🆕 切断されてたら再接続を試みるおッ！！💖🚀
+        if (MONGO_URI && mongoose.connection.readyState !== 1) {
+            console.log('[DB-RETRY] Connection lost. Retrying... 🔄');
+            await connectDB();
+            await loadPlayerData(); // 再接続できたらデータも最新にするおッ！💎
+        }
 
         console.log(`[LOGIN-TRY] Name: [${name}]`);
 
