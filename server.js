@@ -1346,11 +1346,21 @@ io.on('connection', (socket) => {
 
         const playerEntry = Object.entries(persistentData).find(([t, p]) => (p.name || '').trim().normalize('NFC').toLowerCase() === name.toLowerCase());
         if (!playerEntry) {
-            console.warn(`[LOGIN-FAIL] Player not found: [${name}]. Available players: ${Object.values(persistentData).length}`);
-            // デバッグ用に登録済みプレイヤー名の先頭数文字を出力（個人情報に配慮しつつ）
+            const dbState = mongoose.connection.readyState;
+            const count = Object.keys(persistentData).length;
             const samples = Object.values(persistentData).slice(0, 5).map(p => p.name).join(', ');
-            console.log(`[DEBUG-PLAYERS] Samples in memory: ${samples}...`);
-            safeEmit(socket, 'login_failed', 'そんな子知らないおッ！はじめて？💅');
+            
+            console.warn(`[LOGIN-FAIL] Player not found: [${name}]. Memory count: ${count}, DB state: ${dbState}`);
+            
+            safeEmit(socket, 'login_failed', {
+                msg: 'そんな子知らないおッ！はじめて？💅',
+                debug: {
+                    name,
+                    memoryCount: count,
+                    dbState: dbState === 1 ? 'CONNECTED' : 'DISCONNECTED',
+                    samples: samples || 'NONE'
+                }
+            });
             return;
         }
 

@@ -168,9 +168,15 @@ socket.on('login_success', (data) => {
     transitionToRoomSelection();
 });
 
-socket.on('login_failed', (msg) => { 
-    const currentName = localStorage.getItem('galAuthName');
-    alert(`${msg}\n\n[DEBUG] 送信した名前: [${currentName}]`); 
+socket.on('login_failed', (data) => { 
+    if (typeof data === 'string') {
+        const currentName = localStorage.getItem('galAuthName');
+        alert(`${data}\n\n[DEBUG] 送信した名前: [${currentName}]`); 
+    } else {
+        const { msg, debug } = data;
+        let debugStr = `[DEBUG]\n送信名: [${debug.name}]\nメモリ数: ${debug.memoryCount}\nDB状態: ${debug.dbState}\nサンプル: ${debug.samples}`;
+        alert(`${msg}\n\n${debugStr}`);
+    }
 });
 
 function transitionToRoomSelection() {
