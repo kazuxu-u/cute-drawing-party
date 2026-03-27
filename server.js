@@ -47,6 +47,7 @@ const PLAYER_DATA_FILE = path.join(__dirname, 'players_persistence.json');
 const playerSchema = new mongoose.Schema({
     token: { type: String, unique: true, required: true },
     name: String,
+    password: String, // 🆕 パスワードもDBに保存するおッ！✨💍
     lv: { type: Number, default: 0 },
     xp: { type: Number, default: 0 },
     score: { type: Number, default: 0 },
@@ -86,7 +87,13 @@ async function loadPlayerData() {
             const players = await Player.find({});
             if (players.length > 0) {
                 players.forEach(p => {
-                    persistentData[p.token] = { name: p.name, lv: p.lv, xp: p.xp, score: p.score };
+                    persistentData[p.token] = { 
+                        name: p.name, 
+                        password: p.password, // 🆕 パスワードもしっかり復元！💎
+                        lv: p.lv, 
+                        xp: p.xp, 
+                        score: p.score 
+                    };
                 });
                 console.log(`[DB-LOAD] ${players.length} players loaded from MongoDB.`);
                 return;
@@ -125,6 +132,7 @@ async function savePlayerData(targetToken = null) {
                 // 特定のプレイヤーだけ更新して高速化！⚡
                 const p = persistentData[targetToken];
                 await Player.findOneAndUpdate({ token: targetToken }, { ...p, token: targetToken }, { upsert: true });
+                console.log(`[DB-SAVE] Saved to MongoDB: ${p.name} (${targetToken}) ✨💍`);
             } else {
                 // 全員分保存
                 const ops = Object.keys(persistentData).map(token => ({
@@ -134,7 +142,10 @@ async function savePlayerData(targetToken = null) {
                         upsert: true
                     }
                 }));
-                if (ops.length > 0) await Player.bulkWrite(ops);
+                if (ops.length > 0) {
+                    await Player.bulkWrite(ops);
+                    console.log(`[DB-SAVE] Bulk saved ${ops.length} players to MongoDB. ✨💍`);
+                }
             }
         }
     } catch (e) {
