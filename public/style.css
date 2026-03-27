@@ -119,11 +119,11 @@ body {
 
 /* Sidebar & Chat Area Positioning */
 .sidebar {
-    flex: 0 0 350px; /* ちょっとスリムにしてキャンバスの場所を確保！💅✨ */
+    flex: 0 0 350px; 
     height: 100%;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* 枠自体は固定！💎 */
+    overflow: visible; /* 🆕 ツールチップを表示するために visible に！💎✨💍 */
 }
 
 .chat-area {
@@ -158,12 +158,17 @@ h2, h3 {
 .player-scroll-area {
     flex-grow: 1;
     overflow-y: auto;
-    overflow-x: visible; /* 横はみ出し（バルーン）を許可！💅 */
+    overflow-x: visible; 
     position: relative;
-    margin: 10px -10px; /* 遊びを持たせるおッ！💍 */
-    padding: 0 10px;
+    margin: 10px -10px; 
+    padding: 60px 10px 0 10px; /* 🆕 上にデカめの余白を作って、バルーンが隠れないようにするおッ！💎✨💍 */
     display: flex;
     flex-direction: column;
+}
+
+/* 🆕 吹き出しが絶対隠れないように z-index を最強にするおッ！💎✨💍 */
+.player-xp-bubble {
+    z-index: 99999 !important;
 }
 
 .sidebar-title-sticky {
@@ -235,7 +240,7 @@ h2, h3 {
 
 .player-xp-bubble {
     position: absolute;
-    bottom: 120%; /* 上に出すおッ！💅 */
+    bottom: 125%; /* 🆕 上に戻すおッ！💖 */
     left: 50%;
     transform: translateX(-50%) translateY(10px);
     background: linear-gradient(135deg, #ffcc33, #ff9900);
@@ -250,7 +255,7 @@ h2, h3 {
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: 5000;
+    z-index: 99999 !important;
     border: 2px solid white;
 }
 
@@ -546,7 +551,7 @@ input[type="text"]:focus {
     pointer-events: none;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    z-index: 10000;
+    z-index: 100000 !important; /* 絶対絶対最前線ッ！！💎✨💍🤟 */
 }
 
 [data-tooltip]:hover::after {
