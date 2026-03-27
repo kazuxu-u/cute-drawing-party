@@ -153,8 +153,8 @@ async function savePlayerData(targetToken = null) {
     }
 }
 
-// 起動時に接続と読み込み！💎✨
-(async () => {
+// 🆕 起動時に接続と読み込み！💎✨ (後で一番下で呼ぶおッ！💅)
+const initApp = async () => {
     await connectDB();
     await loadPlayerData();
     
@@ -162,7 +162,12 @@ async function savePlayerData(targetToken = null) {
     if (!fs.existsSync(DRAWINGS_DIR)) {
         fs.mkdirSync(DRAWINGS_DIR, { recursive: true });
     }
-})();
+
+    server.listen(PORT, () => {
+        console.log(`[READY] Server listening on port ${PORT} 🚀`);
+        console.log(`[READY] Total managed players in memory: ${Object.keys(persistentData).length} 💎✨💍`);
+    });
+};
 
 const PORT = process.env.PORT || 3000;
 
@@ -1743,6 +1748,5 @@ io.on('connection', (socket) => {
     // チャットメッセージ処理を関数化してNPCも使えるようにする💅
 });
 
-server.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
-});
+// 🚀 すべての準備が整ってから起動ッ！！💎✨💍🤟
+initApp();
