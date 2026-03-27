@@ -7,6 +7,7 @@ const io = new Server(server);
 const path = require('path');
 const https = require('https');
 const fs = require('fs');
+const mongoose = require('mongoose'); // 🆕 データベースの味方！💎✨💍
 
 // --- 🛡️ サーバー最強伝説！落ちないためのガード ✨ ---
 function safeEmit(target, event, data) {
@@ -42,15 +43,71 @@ const DRAWINGS_DIR = path.join(__dirname, 'public', 'drawings');
 const METADATA_FILE = path.join(__dirname, 'drawings_metadata.json');
 const PLAYER_DATA_FILE = path.join(__dirname, 'players_persistence.json');
 
-// --- 💾 永続化データ管理システム ✨💍 ---
-let persistentData = {};
+// --- 💾 MongoDB Schema (Data Warehouse) ✨💍 ---
+const playerSchema = new mongoose.Schema({
+    token: { type: String, unique: true, required: true },
+    name: String,
+    lv: { type: Number, default: 0 },
+    xp: { type: Number, default: 0 },
+    score: { type: Number, default: 0 },
+    lastLogin: { type: Date, default: Date.now }
+});
+const Player = mongoose.model('Player', playerSchema);
 
-function loadPlayerData() {
+const drawingSchema = new mongoose.Schema({
+    filename: String,
+    artist: String,
+    prompt: String,
+    timestamp: { type: Date, default: Date.now }
+});
+const Drawing = mongoose.model('Drawing', drawingSchema);
+
+// --- 💾 永続化データ管理システム (Hybrid MongoDB/JSON) ✨💍 ---
+let persistentData = {};
+const MONGO_URI = process.env.MONGO_URI;
+
+async function connectDB() {
+    if (!MONGO_URI) {
+        console.warn('[DB-WARN] MONGO_URI is missing. Falling back to local JSON persistence. 🥺');
+        return;
+    }
     try {
+        await mongoose.connect(MONGO_URI);
+        console.log('[DB-OK] Connected to MongoDB Atlas! 💎✨💍');
+    } catch (e) {
+        console.error(`[DB-ERR] Connection failed: ${e.message}`);
+    }
+}
+
+async function loadPlayerData() {
+    try {
+        if (MONGO_URI && mongoose.connection.readyState === 1) {
+            // MongoDBからロード
+            const players = await Player.find({});
+            if (players.length > 0) {
+                players.forEach(p => {
+                    persistentData[p.token] = { name: p.name, lv: p.lv, xp: p.xp, score: p.score };
+                });
+                console.log(`[DB-LOAD] ${players.length} players loaded from MongoDB.`);
+                return;
+            }
+        }
+        
+        // 移行期：ローカルファイルがあればそっちから読み込む
         if (fs.existsSync(PLAYER_DATA_FILE)) {
             const content = fs.readFileSync(PLAYER_DATA_FILE, 'utf8');
             persistentData = JSON.parse(content || '{}');
-            console.log(`[LOAD-OK] ${Object.keys(persistentData).length} players loaded from persistence.`);
+            console.log(`[JSON-LOAD] ${Object.keys(persistentData).length} players loaded from persistence file.`);
+            
+            // MongoDBが空なら移行するよッ！💎✨💍
+            if (MONGO_URI && mongoose.connection.readyState === 1) {
+                console.log('[MIGRATION] Migrating local JSON to MongoDB… 🚀');
+                for (const token in persistentData) {
+                    const p = persistentData[token];
+                    await Player.findOneAndUpdate({ token }, { ...p, token }, { upsert: true });
+                }
+                console.log('[MIGRATION] Migration complete! ✨💍');
+            }
         }
     } catch (e) {
         console.error(`[LOAD-ERR] Failed to load player data: ${e.message}`);
@@ -58,26 +115,43 @@ function loadPlayerData() {
     }
 }
 
-function savePlayerData() {
+async function savePlayerData(targetToken = null) {
     try {
+        // ローカルファイルにもバックアップ（PC開発用）💅
         fs.writeFileSync(PLAYER_DATA_FILE, JSON.stringify(persistentData, null, 2));
+
+        if (MONGO_URI && mongoose.connection.readyState === 1) {
+            if (targetToken && persistentData[targetToken]) {
+                // 特定のプレイヤーだけ更新して高速化！⚡
+                const p = persistentData[targetToken];
+                await Player.findOneAndUpdate({ token: targetToken }, { ...p, token: targetToken }, { upsert: true });
+            } else {
+                // 全員分保存
+                const ops = Object.keys(persistentData).map(token => ({
+                    updateOne: {
+                        filter: { token },
+                        update: { ...persistentData[token], token },
+                        upsert: true
+                    }
+                }));
+                if (ops.length > 0) await Player.bulkWrite(ops);
+            }
+        }
     } catch (e) {
         console.error(`[SAVE-ERR] Failed to save player data: ${e.message}`);
     }
 }
 
-// 起動時にロード！✨
-loadPlayerData();
-
-// 保存用ディレクトリがなければ作成
-if (!fs.existsSync(DRAWINGS_DIR)) {
-    fs.mkdirSync(DRAWINGS_DIR, { recursive: true });
-}
-
-// メタデータファイルの初期化
-if (!fs.existsSync(METADATA_FILE)) {
-    fs.writeFileSync(METADATA_FILE, JSON.stringify([]));
-}
+// 起動時に接続と読み込み！💎✨
+(async () => {
+    await connectDB();
+    await loadPlayerData();
+    
+    // 保存用ディレクトリがなければ作成
+    if (!fs.existsSync(DRAWINGS_DIR)) {
+        fs.mkdirSync(DRAWINGS_DIR, { recursive: true });
+    }
+})();
 
 const PORT = process.env.PORT || 3000;
 
@@ -99,67 +173,89 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json({limit: '10mb'})); // 🎉 グローバルに設定！
 
 // 画像保存 API (ミドルウェアはグローバルに移したよ✨)
-app.post('/api/save_drawing', (req, res) => {
+app.post('/api/save_drawing', async (req, res) => {
     const { image, artist, prompt } = req.body;
     if (!image || !artist || !prompt) return res.status(400).json({ error: 'Missing data' });
 
     const filename = `drawing_${Date.now()}.png`;
     const filePath = path.join(DRAWINGS_DIR, filename);
 
-    // Base64を保存
+    // Base64を保存（物理ファイルはRenderだと消えちゃうけど、当面はこれで！💎）
     const base64Data = image.replace(/^data:image\/png;base64,/, "");
-    fs.writeFile(filePath, base64Data, 'base64', (err) => {
+    fs.writeFile(filePath, base64Data, 'base64', async (err) => {
         if (err) return res.status(500).json({ error: 'Save failed' });
 
-        // メタデータ更新（エラーハンドリング強化！）💎✨
-        let metadata = [];
         try {
+            // MongoDBに保存ッ！💎✨💍
+            if (MONGO_URI && mongoose.connection.readyState === 1) {
+                await Drawing.create({ filename, artist, prompt, timestamp: Date.now() });
+                
+                // 1000枚制限の管理（DB版）💅
+                const count = await Drawing.countDocuments();
+                if (count > 1000) {
+                    const oldest = await Drawing.findOne().sort({ timestamp: 1 });
+                    if (oldest) {
+                        const oldestPath = path.join(DRAWINGS_DIR, oldest.filename);
+                        if (fs.existsSync(oldestPath)) {
+                            try { fs.unlinkSync(oldestPath); } catch (e) {}
+                        }
+                        await Drawing.findByIdAndDelete(oldest._id);
+                    }
+                }
+            }
+            
+            // 下位互換：ローカルJSONにも一応残す！💅
+            let metadata = [];
             if (fs.existsSync(METADATA_FILE)) {
-                const content = fs.readFileSync(METADATA_FILE, 'utf8');
-                metadata = JSON.parse(content || '[]');
+                try {
+                    const content = fs.readFileSync(METADATA_FILE, 'utf8');
+                    metadata = JSON.parse(content || '[]');
+                } catch(e) { metadata = []; }
             }
+            metadata.push({ filename, artist, prompt, timestamp: Date.now() });
+            if (metadata.length > 1000) metadata.shift();
+            fs.writeFileSync(METADATA_FILE, JSON.stringify(metadata, null, 2));
+
+            console.log(`[SAVE] Drawing saved by ${artist} (Prompt: ${prompt}) -> ${filename}`);
+            res.json({ success: true, filename });
         } catch (e) {
-            console.error(`[METADATA-ERR] Failed to read/parse metadata: ${e}`);
-            metadata = []; // 壊れてたらリセットしちゃうッ！💅
+            console.error(`[SAVE-DB-ERR] ${e.message}`);
+            res.status(500).json({ error: 'Database save failed' });
         }
-        metadata.push({ filename, artist, prompt, timestamp: Date.now() });
-
-        // 1000枚制限
-        if (metadata.length > 1000) {
-            const oldest = metadata.shift();
-            const oldestPath = path.join(DRAWINGS_DIR, oldest.filename);
-            if (fs.existsSync(oldestPath)) {
-                try { fs.unlinkSync(oldestPath); } catch (e) {}
-            }
-        }
-
-        fs.writeFileSync(METADATA_FILE, JSON.stringify(metadata, null, 2));
-        console.log(`[SAVE] Drawing saved by ${artist} (Prompt: ${prompt}) -> ${filename}`);
-        res.json({ success: true, filename });
     });
 });
 
 // 画像検索プロキシ (ローカル保存された絵を検索)
-app.get('/api/search', (req, res) => {
+app.get('/api/search', async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     const query = req.query.q;
     if (!query) return res.status(400).json({ error: 'Query is required' });
 
     try {
-        const metadata = JSON.parse(fs.readFileSync(METADATA_FILE));
-        
-        // お題（部分一致）で検索
-        const filtered = metadata.filter(m => 
-            m.prompt.toLowerCase().includes(query.toLowerCase())
-        );
-
-        const results = filtered.map(m => ({
-            id: m.filename,
-            title: `${m.prompt} (by ${m.artist})`,
-            thumbnail: `/drawings/${m.filename}`,
-            url: `/drawings/${m.filename}`
-        })).reverse();
-
+        let results = [];
+        if (MONGO_URI && mongoose.connection.readyState === 1) {
+            // MongoDBから検索！💎✨💍
+            const docs = await Drawing.find({ 
+                prompt: { $regex: query, $options: 'i' } 
+            }).sort({ timestamp: -1 }).limit(100);
+            
+            results = docs.map(m => ({
+                id: m.filename,
+                title: `${m.prompt} (by ${m.artist})`,
+                thumbnail: `/drawings/${m.filename}`,
+                url: `/drawings/${m.filename}`
+            }));
+        } else {
+            // フォールバック：JSONから
+            const metadata = JSON.parse(fs.readFileSync(METADATA_FILE));
+            const filtered = metadata.filter(m => m.prompt.toLowerCase().includes(query.toLowerCase()));
+            results = filtered.map(m => ({
+                id: m.filename,
+                title: `${m.prompt} (by ${m.artist})`,
+                thumbnail: `/drawings/${m.filename}`,
+                url: `/drawings/${m.filename}`
+            })).reverse();
+        }
         res.json({ results });
     } catch (e) {
         res.status(500).json({ error: 'Failed to search drawings' });
@@ -167,63 +263,65 @@ app.get('/api/search', (req, res) => {
 });
 
 // ギャラリー全取得 API
-app.get('/api/gallery', (req, res) => {
+app.get('/api/gallery', async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     try {
-        const metadata = JSON.parse(fs.readFileSync(METADATA_FILE));
-        const results = metadata.map(m => ({
-            id: m.filename,
-            title: `${m.prompt} (by ${m.artist})`,
-            thumbnail: `/drawings/${m.filename}`,
-            url: `/drawings/${m.filename}`,
-            artist: m.artist,
-            prompt: m.prompt,
-            timestamp: m.timestamp
-        })).reverse();
+        let results = [];
+        if (MONGO_URI && mongoose.connection.readyState === 1) {
+            // MongoDBから全取得！💎✨💍
+            const docs = await Drawing.find({}).sort({ timestamp: -1 }).limit(200);
+            results = docs.map(m => ({
+                id: m.filename,
+                title: `${m.prompt} (by ${m.artist})`,
+                thumbnail: `/drawings/${m.filename}`,
+                url: `/drawings/${m.filename}`,
+                artist: m.artist,
+                prompt: m.prompt,
+                timestamp: m.timestamp
+            }));
+        } else {
+            // フォールバック
+            const metadata = JSON.parse(fs.readFileSync(METADATA_FILE));
+            results = metadata.map(m => ({
+                id: m.filename,
+                title: `${m.prompt} (by ${m.artist})`,
+                thumbnail: `/drawings/${m.filename}`,
+                url: `/drawings/${m.filename}`,
+                artist: m.artist,
+                prompt: m.prompt,
+                timestamp: m.timestamp
+            })).reverse();
+        }
         res.json({ results });
     } catch (e) {
         res.status(500).json({ error: 'Failed to fetch gallery' });
     }
 });
 
-// 画像削除 API (BAN用) 💅✨ (ミドルウェアはグローバルに移したよ💍)
-app.post('/api/delete_drawing', (req, res) => {
+// 画像削除 API (BAN用) 💅✨
+app.post('/api/delete_drawing', async (req, res) => {
     const { filename } = req.body;
-    console.log(`[BAN-REQ] Deleting drawing: ${filename}`); // ログ追加！✨
-    
-    if (!filename) {
-        console.error('[BAN-ERROR] Missing filename in request body');
-        return res.status(400).json({ error: 'Missing filename' });
-    }
+    if (!filename) return res.status(400).json({ error: 'Missing filename' });
 
-    const filePath = path.join(DRAWINGS_DIR, filename);
-    console.log(`[BAN-PATH] Target file: ${filePath}`);
-    
     try {
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-            console.log(`[BAN-FILE] Successfully deleted from disk: ${filename}`);
-        } else {
-            console.warn(`[BAN-WARN] File not found on disk: ${filename}`);
+        // DBから削除
+        if (MONGO_URI && mongoose.connection.readyState === 1) {
+            await Drawing.findOneAndDelete({ filename });
         }
         
-        // メタデータからも消すよ！💍
+        // ディスクから削除
+        const filePath = path.join(DRAWINGS_DIR, filename);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        
+        // JSONからも一応消す
         if (fs.existsSync(METADATA_FILE)) {
             let metadata = JSON.parse(fs.readFileSync(METADATA_FILE));
-            const initialCount = metadata.length;
             metadata = metadata.filter(m => m.filename !== filename);
-            
-            if (metadata.length < initialCount) {
-                fs.writeFileSync(METADATA_FILE, JSON.stringify(metadata, null, 2));
-                console.log(`[BAN-META] Removed from metadata: ${filename}`);
-            } else {
-                console.warn(`[BAN-META] Not found in metadata: ${filename}`);
-            }
+            fs.writeFileSync(METADATA_FILE, JSON.stringify(metadata, null, 2));
         }
 
         res.json({ success: true });
     } catch (e) {
-        console.error(`[BAN-FAIL] Error during deletion: ${e.message}`);
         res.status(500).json({ error: 'Delete failed' });
     }
 });
@@ -1067,7 +1165,7 @@ function getLevelThreshold(lv) {
     return (lv * 30) + 100;
 }
 
-function addXp(room, player, amount) {
+async function addXp(room, player, amount) {
     if (!player) return;
     if (player.xp === undefined) player.xp = 0;
     if (player.lv === undefined) player.lv = 0;
@@ -1089,7 +1187,7 @@ function addXp(room, player, amount) {
         persistentData[player.token].xp = player.xp;
         persistentData[player.token].lv = player.lv;
         persistentData[player.token].name = player.name; // 最新の名前をキープ！💅
-        savePlayerData();
+        await savePlayerData(player.token);
     }
     
     if (leveledUp) {
@@ -1103,7 +1201,7 @@ function addXp(room, player, amount) {
     }
 }
 
-function handleChatMessage(room, player, msg, socket) {
+async function handleChatMessage(room, player, msg, socket) {
     if (room.gamePhase === 'playing') {
         const isDrawer = room.players[room.currentPlayerIndex]?.id === player.id;
         let isCorrect = false;
@@ -1138,7 +1236,7 @@ function handleChatMessage(room, player, msg, socket) {
                     persistentData[player.token].xp = player.xp || 0;
                     persistentData[player.token].lv = player.lv || 0;
                     persistentData[player.token].name = player.name;
-                    savePlayerData();
+                    await savePlayerData(player.token);
                 }
                 if (room.players[room.currentPlayerIndex]) {
                     room.players[room.currentPlayerIndex].score += 1;
@@ -1149,14 +1247,14 @@ function handleChatMessage(room, player, msg, socket) {
                         }
                         persistentData[drawer.token].score = drawer.score;
                         persistentData[drawer.token].name = drawer.name;
-                        savePlayerData();
+                        await savePlayerData(drawer.token);
                     }
                     // 描き手にも20XP！🎨
-                    addXp(room, drawer, 20);
+                    await addXp(room, drawer, 20);
                 }
                 
                 // 回答者にも20XP！🎯
-                addXp(room, player, 20);
+                await addXp(room, player, 20);
 
                 safeRoomEmit(room, 'chat_message', { sender: 'System', text: `やば！${player.name}さんが1番乗りで大正解！🎉✨（回答者+1pt,20XP / 出題者+1pt,20XP）`, color: '#ff66b2', type: 'correct' });
             } else {
@@ -1177,7 +1275,7 @@ function handleChatMessage(room, player, msg, socket) {
 
 io.on('connection', (socket) => {
     // 🆕 プレイヤー登録（はじめて！）💅✨
-    socket.on('register', (data) => {
+    socket.on('register', async (data) => {
         const { name, password } = data;
         if (!name || !password) {
             safeEmit(socket, 'register_failed', '名前とパスワードを入れてねッ！🥺');
@@ -1199,7 +1297,7 @@ io.on('connection', (socket) => {
             xp: 0, 
             lv: 0 
         };
-        savePlayerData();
+        await savePlayerData(token);
         console.log(`[REGISTER] New player: ${name} (Token: ${token})`);
         socket.emit('register_success', { token, name });
     });
@@ -1243,7 +1341,7 @@ io.on('connection', (socket) => {
     });
 
     // 🆕 指定したルームに参加！🚀✨💍
-    socket.on('join_room', (data) => {
+    socket.on('join_room', async (data) => {
         const { roomId, playerName, playerToken, password, roomComment } = data;
         const room = rooms[roomId];
         if (!room) {
@@ -1277,7 +1375,7 @@ io.on('connection', (socket) => {
             } else {
                 persistentData[playerToken].name = playerName; // 名前変更にも対応！✨
             }
-            savePlayerData();
+            await savePlayerData(playerToken);
         }
         const saved = (playerToken && persistentData[playerToken]) ? persistentData[playerToken] : { score: 0, xp: 0, lv: 0 };
         
@@ -1334,7 +1432,7 @@ io.on('connection', (socket) => {
         })));
     });
 
-    socket.on('reset_player_data', (targetToken) => {
+    socket.on('reset_player_data', async (targetToken) => {
         console.log(`[ADMIN-ACTION] Purifying (DELETING) player data for token: ${targetToken}`);
         if (!targetToken) return;
         
@@ -1345,7 +1443,6 @@ io.on('connection', (socket) => {
             room.players = room.players.filter(p => p.token !== targetToken);
             
             if (room.players.length !== initialCount) {
-                // 人数が変わったら部屋のみんなに通知＆ルームリスト更新！
                 safeRoomEmit(room, 'update_players', room.players);
                 io.emit('room_list', Object.values(rooms).map(r => ({ id: r.id, name: r.name, playerCount: r.players.length, gamePhase: r.gamePhase })));
             }
@@ -1354,7 +1451,10 @@ io.on('connection', (socket) => {
         // 2. 永続化データから「魂」を消去ッ！！💀💍
         if (persistentData[targetToken]) {
             delete persistentData[targetToken];
-            savePlayerData();
+            if (MONGO_URI && mongoose.connection.readyState === 1) {
+                try { await Player.findOneAndDelete({ token: targetToken }); } catch(e) {}
+            }
+            await savePlayerData(); // JSONにも反映
         }
         
         io.emit('chat_message', { 
@@ -1363,7 +1463,6 @@ io.on('connection', (socket) => {
             color: '#ff3300' 
         });
 
-        // 3. 管理者に最新の全プレイヤーリストを再送してUIを更新するおッ！💅✨💍
         const allPlayers = Object.keys(persistentData).map(token => ({
             token,
             ...persistentData[token],
@@ -1372,12 +1471,12 @@ io.on('connection', (socket) => {
         socket.emit('open_admin_panel', allPlayers);
     });
 
-    socket.on('modify_player_data', (data) => {
+    socket.on('modify_player_data', async (data) => {
         const { targetToken, xp, lv, score } = data;
         console.log(`[ADMIN-ACTION] Modifying player data for token: ${targetToken} -> XP:${xp}, LV:${lv}, Score:${score}`);
         if (!targetToken) return;
 
-        // メモリ上のデータ更新（全ルーム対象）💅
+        // メモリ上のデータ更新
         for (const rid in rooms) {
             rooms[rid].players.forEach(p => {
                 if (p.token === targetToken) {
@@ -1388,14 +1487,14 @@ io.on('connection', (socket) => {
             });
         }
 
-        // 永続化データの更新
         if (!persistentData[targetToken]) {
             persistentData[targetToken] = { name: 'Unknown', score: 0, xp: 0, lv: 0 };
         }
         if (xp !== undefined) persistentData[targetToken].xp = Number(xp);
         if (lv !== undefined) persistentData[targetToken].lv = Number(lv);
         if (score !== undefined) persistentData[targetToken].score = Number(score);
-        savePlayerData();
+        
+        await savePlayerData(targetToken);
 
         // 全ルームに通知するおッ！💅✨💍
         for (const rid in rooms) {
@@ -1497,7 +1596,7 @@ io.on('connection', (socket) => {
         if (room) safeRoomEmit(room, 'clear_canvas');
     });
 
-    socket.on('send_message', (msg) => {
+    socket.on('send_message', async (msg) => {
         const room = getRoomBySocket(socket);
         if (!room) return;
 
@@ -1552,7 +1651,7 @@ io.on('connection', (socket) => {
             return;
         }
 
-        handleChatMessage(room, player, msg, socket);
+        await handleChatMessage(room, player, msg, socket);
     });
 
     socket.on('toggle_ready', (settings) => {
