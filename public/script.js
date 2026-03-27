@@ -82,7 +82,9 @@ if (autoLoginBtn) {
         const name = localStorage.getItem('galAuthName');
         const password = localStorage.getItem('galAuthPass');
         if (name && password) {
-            socket.emit('login', { name, password });
+            // 🆕 正規化して送信！💎✨
+            const normalizedName = name.trim().normalize('NFC');
+            socket.emit('login', { name: normalizedName, password: password.trim() });
         } else {
             // 万が一データが欠けてたら通常ログインへ
             welcomeBackArea.classList.add('hidden');
@@ -129,7 +131,8 @@ if (authBackBtn) {
 
 if (authSubmitBtn) {
     authSubmitBtn.addEventListener('click', () => {
-        const name = authNameInput.value.trim();
+        // ✨ 正規化とトリムを徹底！🚀
+        const name = authNameInput.value.trim().normalize('NFC');
         const password = authPasswordInput.value.trim();
         
         if (!name || !password) {
@@ -144,6 +147,7 @@ if (authSubmitBtn) {
         if (currentAuthMode === 'register') {
             socket.emit('register', { name, password });
         } else {
+            console.log(`[DEBUG] Attempting login with name: [${name}]`);
             socket.emit('login', { name, password });
         }
     });
@@ -164,7 +168,10 @@ socket.on('login_success', (data) => {
     transitionToRoomSelection();
 });
 
-socket.on('login_failed', (msg) => { alert(msg); });
+socket.on('login_failed', (msg) => { 
+    const currentName = localStorage.getItem('galAuthName');
+    alert(`${msg}\n\n[DEBUG] 送信した名前: [${currentName}]`); 
+});
 
 function transitionToRoomSelection() {
     titleScreen.style.opacity = '0';

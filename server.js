@@ -1300,14 +1300,18 @@ async function handleChatMessage(room, player, msg, socket) {
 io.on('connection', (socket) => {
     // 🆕 プレイヤー登録（はじめて！）💅✨
     socket.on('register', async (data) => {
-        const { name, password } = data;
+        let { name, password } = data;
         if (!name || !password) {
             safeEmit(socket, 'register_failed', '名前とパスワードを入れてねッ！🥺');
             return;
         }
 
+        // 🆕 正規化とトリム！💎✨
+        name = name.trim().normalize('NFC');
+        password = password.trim();
+
         // 名前の重複チェック（大文字小文字無視で可愛くチェック！💅）
-        const nameExists = Object.values(persistentData).some(p => p.name.toLowerCase() === name.toLowerCase());
+        const nameExists = Object.values(persistentData).some(p => (p.name || '').trim().normalize('NFC').toLowerCase() === name.toLowerCase());
         if (nameExists) {
             safeEmit(socket, 'register_failed', 'その名前はもう誰かが使ってるおッ！諦めて！💔');
             return;
@@ -1328,14 +1332,24 @@ io.on('connection', (socket) => {
 
     // 🆕 ログイン処理！💎✨
     socket.on('login', (data) => {
-        const { name, password } = data;
+        let { name, password } = data;
         if (!name || !password) {
             safeEmit(socket, 'login_failed', '名前とパスワードを入れてねッ！💍');
             return;
         }
 
-        const playerEntry = Object.entries(persistentData).find(([t, p]) => p.name.toLowerCase() === name.toLowerCase());
+        // 🆕 正規化とトリム！💎✨
+        name = name.trim().normalize('NFC');
+        password = password.trim();
+
+        console.log(`[LOGIN-TRY] Name: [${name}]`);
+
+        const playerEntry = Object.entries(persistentData).find(([t, p]) => (p.name || '').trim().normalize('NFC').toLowerCase() === name.toLowerCase());
         if (!playerEntry) {
+            console.warn(`[LOGIN-FAIL] Player not found: [${name}]. Available players: ${Object.values(persistentData).length}`);
+            // デバッグ用に登録済みプレイヤー名の先頭数文字を出力（個人情報に配慮しつつ）
+            const samples = Object.values(persistentData).slice(0, 5).map(p => p.name).join(', ');
+            console.log(`[DEBUG-PLAYERS] Samples in memory: ${samples}...`);
             safeEmit(socket, 'login_failed', 'そんな子知らないおッ！はじめて？💅');
             return;
         }
