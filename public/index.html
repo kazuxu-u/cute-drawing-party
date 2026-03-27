@@ -27,8 +27,48 @@
             <div class="title-content glass">
                 <h1 class="main-title">Cute Drawing Party 🎨✨</h1>
                 <p class="subtitle">〜 描いて当てて盛り上がろっ！💕 〜</p>
-                <button id="gameStartBtn" class="cute-btn primary animate-pulse" style="font-size: 2.2rem; padding: 25px 80px; letter-spacing: 2px;">GAME START! 🚀</button>
-                <p class="tip">※ 音が出るよ！注意してねっ💖💅</p>
+                <div id="initialAuthButtons" style="display: flex; gap: 20px; justify-content: center; margin-top: 30px;">
+                    <button id="loginBtn" class="cute-btn primary animate-pulse" style="flex: 1; font-size: 1.8rem; padding: 20px 40px;">ログイン 🔑</button>
+                    <button id="registerBtn" class="cute-btn animate-pulse" style="flex: 1; font-size: 1.8rem; padding: 20px 40px; background: linear-gradient(to bottom, #ff99cc, #ff3399);">はじめて 🐣</button>
+                </div>
+
+                <!-- 🆕 ログイン・登録フォームエリア ✨💍 -->
+                <div id="authFormArea" class="hidden" style="margin-top: 30px; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                    <div class="glass" style="padding: 30px; border-radius: 30px; background: rgba(255, 255, 255, 0.5); border: 2px solid white;">
+                        <h3 id="authFormTitle" style="margin-bottom: 20px; font-size: 1.8rem;">会員登録だおッ！🐣</h3>
+                        <div style="text-align: left; margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #888;">📛 なまえ：</label>
+                            <input type="text" id="authNameInput" placeholder="ギャルネームを入れてね💕" style="width: 100%; border-radius: 15px; padding: 12px 20px;">
+                        </div>
+                        <div style="text-align: left; margin-bottom: 25px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #888;">🔒 パスワード：</label>
+                            <input type="password" id="authPasswordInput" placeholder="ひみつのパスワード🔐" style="width: 100%; border-radius: 15px; padding: 12px 20px;">
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button id="authBackBtn" class="cute-btn" style="flex: 1; background: #ccc; font-size: 1.2rem; padding: 15px;">戻る 🥺</button>
+                            <button id="authSubmitBtn" class="cute-btn primary" style="flex: 2; font-size: 1.5rem; padding: 15px;">登録して開始！🚀</button>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="tip" style="margin-top: 20px;">※ 音が出るよ！注意してねっ💖💅</p>
+            </div>
+        </div>
+
+        <!-- 🎀 選んでネ！プレイルーム選択 🎀 -->
+        <div id="roomSelectScreen" class="full-overlay hidden" style="overflow-y: auto; display: block; padding: 0;">
+            <div class="title-content glass" style="width: 100%; max-width: none; min-height: 100vh; padding: 80px 40px; border-radius: 0; box-sizing: border-box;">
+                <h1 class="main-title" style="font-size: 3rem;">どのルームで遊ぶ？💎</h1>
+                <p style="font-size: 1.2rem; margin-bottom: 30px; font-weight: bold;">マブだちと同じルームを選んでネッ！🤟🍭</p>
+                
+                <div id="roomGrid" class="room-grid">
+                    <!-- ここにルームが動的に追加されるおッ！💅 -->
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <button id="refreshRoomsBtn" class="cute-btn" style="background: #66ccff; font-size: 1rem; padding: 10px 30px; margin-right: 10px;">🔄 リロード✨</button>
+                    <button id="backToTitleBtn" class="cute-btn" style="background: #ccc; font-size: 1rem; padding: 10px 30px;">タイトルに戻る🥺</button>
+                </div>
             </div>
         </div>
 
@@ -39,12 +79,13 @@
                     <button id="bgmToggleBtn" class="tool-btn" style="background:#66ccff;" data-tooltip="BGM ON/OFF🎵">🎵</button>
                     <button id="emojiToggleBtn" class="tool-btn" style="background:#ff99cc;" data-tooltip="スタンプ ON/OFF🧸">🧸</button>
                     <button id="openGalleryBtn" class="tool-btn" style="background:#cc99ff;" data-tooltip="みんなの絵を観る🖼️">🖼️</button>
+                    <button id="exitRoomBtn" class="tool-btn" style="background:#ff5555; color:white;" data-tooltip="退室する🚪">🚪</button>
                 </div>
                 
                 <h2 style="margin-top: 10px; text-align: center;">💖 参加してるみんな 💖</h2>
                 <ul id="playerList"></ul>
                 
-                <div id="setupArea">
+                <div id="setupArea" class="hidden">
                     <input type="text" id="playerNameInput" placeholder="なまえ（ギャルネーム😎）" maxlength="10">
                     <div style="display: flex; gap: 10px; margin-top: 10px; justify-content: center;">
                         <button id="joinBtn" class="tool-btn primary" data-tooltip="入室する！✨">🚪</button>
@@ -224,6 +265,39 @@
             <button id="closeBanBtn" class="cute-btn" style="background:#ff3344; color:white; font-size: 1.8rem; padding: 15px 50px; margin-top: 50px; position: sticky; bottom: 30px; border:none; border-radius: 50px; box-shadow: 0 5px 0 #cc0000;">✖ お掃除おわりッ！💖</button>
         </div>
 
+        <!-- 🔑 ルーム作成・設定モーダル -->
+        <div id="roomSetupModal" class="overlay hidden" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); display: flex; flex-direction: column; z-index: 30000; justify-content: center; align-items: center; backdrop-filter: blur(10px);">
+            <div class="glass" style="padding: 40px; border-radius: 30px; text-align: center; max-width: 500px; width: 90%; background: white; border: 6px solid #66ccff;">
+                <h2 style="color: #66ccff; margin-bottom: 20px; font-size: 2rem;">🏠 ルームを作るッ！💎</h2>
+                <div style="text-align: left; margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-size: 1rem; color: #888; font-weight: bold;">🌈 ルームのひとこと (8文字まで):</label>
+                    <input type="text" id="setupCommentInput" placeholder="例：初心者歓迎！💖" maxlength="8" style="width: 100%; padding: 12px; border-radius: 15px; border: 3px solid #e0faff; font-size: 1.2rem; outline:none;">
+                </div>
+                <div style="text-align: left; margin-bottom: 30px;">
+                    <label style="display: block; margin-bottom: 8px; font-size: 1rem; color: #888; font-weight: bold;">🔒 4桁のパスワード (任意):</label>
+                    <input type="tel" id="setupPasswordInput" placeholder="数字4桁" maxlength="4" style="width: 100%; padding: 12px; border-radius: 15px; border: 3px solid #e0faff; font-size: 1.2rem; outline:none;">
+                    <p style="font-size: 0.8rem; color: #aaa; margin-top: 5px;">※空欄なら誰でも入れるおッ！✨</p>
+                </div>
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <button id="cancelSetupBtn" class="cute-btn" style="background: #ccc; flex: 1;">やめる🥺</button>
+                    <button id="confirmSetupBtn" class="cute-btn primary" style="background: #66ccff; flex: 2; padding: 15px;">作成して入室！🚀</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🔒 パスワード入力モーダル -->
+        <div id="roomPasswordModal" class="overlay hidden" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); display: flex; flex-direction: column; z-index: 30000; justify-content: center; align-items: center; backdrop-filter: blur(10px);">
+            <div class="glass" style="padding: 40px; border-radius: 30px; text-align: center; max-width: 400px; width: 90%; background: white; border: 6px solid #ff99cc;">
+                <h2 style="color: #ff99cc; margin-bottom: 20px; font-size: 2rem;">🔒 パスワードは？💍</h2>
+                <p style="margin-bottom: 20px; font-weight: bold;">このルームには鍵がかかってるおッ！💅</p>
+                <input type="tel" id="joinPasswordInput" placeholder="数字4桁" maxlength="4" style="width: 100%; padding: 12px; border-radius: 15px; border: 3px solid #ffe0f0; font-size: 1.5rem; text-align: center; outline:none; margin-bottom: 30px;">
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <button id="cancelPasswordBtn" class="cute-btn" style="background: #ccc; flex: 1;">戻る🥺</button>
+                    <button id="confirmPasswordBtn" class="cute-btn primary" style="background: #ff99cc; flex: 2; padding: 15px;">入室する！✨</button>
+                </div>
+            </div>
+        </div>
+
         <!-- 💾 保存時のお題入力モーダル -->
         <div id="savePromptModal" class="overlay hidden" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); flex-direction: column; z-index: 15000; justify-content: center; align-items: center; backdrop-filter: blur(8px);">
             <div class="glass" style="padding: 40px; border-radius: 30px; text-align: center; max-width: 500px; width: 90%; background: white; border: 6px solid var(--primary-color);">
@@ -255,6 +329,18 @@
                 <!-- ここにプレイヤーが並ぶよ💅 -->
             </div>
             <button id="closeAdminBtn" class="cute-btn" style="margin-top:20px; background:#666;">❌ 閉じる</button>
+        </div>
+    </div>
+    
+    <!-- 💖 ギャル専用・特製確認モーダル 💖 -->
+    <div id="customConfirmOverlay" class="overlay hidden" style="z-index: 40000;">
+        <div class="confirm-modal glass">
+            <h2 id="confirmTitle" style="color: var(--primary-color); font-size: 2rem; margin-bottom: 20px;">ホントにいいの？🥺</h2>
+            <p id="confirmMessage" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 30px; line-height: 1.4;"></p>
+            <div style="display: flex; gap: 15px; width: 100%;">
+                <button id="confirmCancelBtn" class="cute-btn" style="flex: 1; background: #ccc; box-shadow: 0 5px 0 #999;">やめる🥺</button>
+                <button id="confirmOkBtn" class="cute-btn primary" style="flex: 2; padding: 15px;">おk！💖</button>
+            </div>
         </div>
     </div>
 

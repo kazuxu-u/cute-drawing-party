@@ -228,32 +228,60 @@ app.post('/api/delete_drawing', (req, res) => {
     }
 });
 
-let players = [];
-let maxPlayers = 4;
-let currentPlayerIndex = -1;
-let currentWordObj = null;
-let currentWordList = []; // 選ばれたカテゴリー用リスト
-let isLastTurnGlobal = false; // 🆕 最後のターンかどうかをグローバルに持つよ！💍
-let gamePhase = 'waiting'; // waiting, playing, between_turns, results
-let roundTimer = null;
-let timeLeft = 120;
-let timeLimit = 120;
-let pointsAwardedThisTurn = false;
-let nextTurnTimer = null; // 🆕 ターン遷移タイマーを管理ッ！💅
-let isStartingNextTurn = false;
-let isSyncingCanvas = false; // 🆕 キャンバス同期中フラグ
-let recentWords = []; // 🆕 お題の履歴管理（同じのが続かないように！💍）
+// --- 🏰 ルーム管理システム 🏰 ---
+const rooms = {
+    'R-1': createRoomState('R-1', 'キュート・ルーム💖'),
+    'R-2': createRoomState('R-2', 'ぎゃる・ルーム💅'),
+    'R-3': createRoomState('R-3', 'えも・ルーム💍'),
+    'R-4': createRoomState('R-4', 'ぴんく・ルーム🎀'),
+    'R-5': createRoomState('R-5', 'あおい・ルーム💎'),
+    'R-6': createRoomState('R-6', 'まぢ・ルーム🔥'),
+    'R-7': createRoomState('R-7', 'ゆめかわ・ルーム🦄'),
+    'R-8': createRoomState('R-8', 'ねおん・ルーム🌟')
+};
 
-// トークンごとのユーザーデータ記録メモ（XP/Lv/Score）📝💅
+function createRoomState(id, name) {
+    return {
+        id,
+        name,
+        players: [],
+        maxPlayers: 4,
+        hostName: '', // ホストの名前💅
+        comment: '',  // ルームのコメント✨
+        password: '', // 4桁のパスワード🔒
+        currentPlayerIndex: -1,
+        currentWordObj: null,
+        recentWords: [],
+        gamePhase: 'waiting',
+        currentRound: 1,
+        maxRounds: 3,
+        turnsPlayedInRound: 0,
+        timeLeft: 120,
+        timeLimit: 120,
+        pointsAwardedThisTurn: false,
+        isStartingNextTurn: false,
+        isLastTurnGlobal: false,
+        npcTimers: {},
+        roundTimer: null,
+        nextTurnTimer: null
+    };
+}
 
-// NPC関連の管理用
-let npcTimers = {}; // { playerId: [timeoutId, ...] }
-const npcNames = ['AIギャル💖れいな', 'AIギャル💅ゆき', 'AIギャル👗みく', 'AIギャル💍なな'];
+function getRoomBySocket(socket) {
+    for (const id in rooms) {
+        const room = rooms[id];
+        if (room.players.some(p => p.id === socket.id)) return room;
+    }
+    return null;
+}
 
-// ターン（周）の管理
-let currentRound = 1;
-let maxRounds = 3;
-let turnsPlayedInRound = 0;
+function safeRoomEmit(room, event, data) {
+    try {
+        io.to(room.id).emit(event, data);
+    } catch (e) {
+        console.error(`[ROOM-EMIT-ERR] Failed to emit ${event} to room ${room.id}: ${e.message}`);
+    }
+}
 
 const cuteWords = {
     mix: [], // 後でぜんぶまとめる用
@@ -610,17 +638,17 @@ function kanaToHira(str) {
     });
 }
 
-function checkReadiness(settings, socketId) {
-    if (gamePhase !== 'waiting' && gamePhase !== 'between_turns') return;
-    if (isLastTurnGlobal) return;
+function checkReadiness(room, settings, socketId) {
+    if (room.gamePhase !== 'waiting' && room.gamePhase !== 'between_turns') return;
+    if (room.isLastTurnGlobal) return;
 
     // NPC以外のプレイヤーを取得
-    const humans = players.filter(p => p && !p.isNpc);
+    const humans = room.players.filter(p => p && !p.isNpc);
     if (humans.length === 0) return;
 
     // --- 👑 設定とカテゴリーの保存 💅 ---
     if (socketId) {
-        const p = players.find(ptr => ptr.id === socketId);
+        const p = room.players.find(ptr => ptr.id === socketId);
         if (p && settings) {
             // 個人のカテゴリー設定を保存 💖
             if (settings.category) {
@@ -631,98 +659,97 @@ function checkReadiness(settings, socketId) {
             const host = humans[0];
             if (socketId === host.id) {
                 let changed = false;
-                if (settings.timeLimit !== undefined && timeLimit !== settings.timeLimit) {
-                    timeLimit = settings.timeLimit;
+                if (settings.timeLimit !== undefined && room.timeLimit !== settings.timeLimit) {
+                    room.timeLimit = settings.timeLimit;
                     changed = true;
                 }
-                if (settings.rounds !== undefined && maxRounds !== settings.rounds) {
-                    maxRounds = settings.rounds;
+                if (settings.rounds !== undefined && room.maxRounds !== settings.rounds) {
+                    room.maxRounds = settings.rounds;
                     changed = true;
                 }
                 if (changed) {
-                    console.log(`[SETTINGS-SYNC] Host ${host.name} updated rules: Rounds=${maxRounds}, Time=${timeLimit}s ✨`);
+                    console.log(`[SETTINGS-SYNC] Room ${room.id} Host ${host.name} updated rules: Rounds=${room.maxRounds}, Time=${room.timeLimit}s ✨`);
                 }
             }
         }
     }
 
     const allReady = humans.every(p => p && p.isReady);
-    console.log(`[READY-CHECK] Total humans: ${humans.length}, Ready: ${humans.filter(p => p && p.isReady).length}, AllReady: ${allReady}`);
+    console.log(`[READY-CHECK-ROOM] Room: ${room.id}, Humans: ${humans.length}, Ready: ${humans.filter(p => p && p.isReady).length}, AllReady: ${allReady}`);
     
     if (allReady) {
-        if (gamePhase === 'waiting') {
-            console.log(`[START] Starting game with settings: Rounds=${maxRounds}, Time=${timeLimit}s 🚀`);
-            gamePhase = 'playing';
+        if (room.gamePhase === 'waiting') {
+            console.log(`[START-ROOM] Room ${room.id} starting game: Rounds=${room.maxRounds}, Time=${room.timeLimit}s 🚀`);
+            room.gamePhase = 'playing';
             
-            currentRound = 1;
-            turnsPlayedInRound = 0;
-            currentPlayerIndex = -1;
-            isLastTurnGlobal = false;
+            room.currentRound = 1;
+            room.turnsPlayedInRound = 0;
+            room.currentPlayerIndex = -1;
+            room.isLastTurnGlobal = false;
 
-            players.forEach(p => {
+            room.players.forEach(p => {
                 p.score = 0;
                 p.isReady = false;
             });
             
-            safeIoEmit('game_start_imminent');
+            safeRoomEmit(room, 'game_start_imminent');
             setTimeout(() => {
-                // 1秒後のチェック：フェーズが変わってたり人数が減ってたら中止💅
-                if (gamePhase !== 'playing' || players.length === 0) return;
-                startNextTurn();
+                if (room.gamePhase !== 'playing' || room.players.length === 0) return;
+                startNextTurn(room);
             }, 1000);
-        } else if (gamePhase === 'between_turns') {
-            gamePhase = 'playing';
+        } else if (room.gamePhase === 'between_turns') {
+            room.gamePhase = 'playing';
             
-            players.forEach(p => {
+            room.players.forEach(p => {
                 if (p) p.isReady = false;
             });
             
-            startNextTurn();
+            startNextTurn(room);
         }
     }
 }
 
-function startNextTurn() {
+function startNextTurn(room) {
     try {
-        if (players.length === 0) {
-            console.log('[WARN] No players left to start next turn');
-            isStartingNextTurn = false;
+        if (room.players.length === 0) {
+            console.log(`[WARN-ROOM] Room ${room.id} has no players left to start next turn`);
+            room.isStartingNextTurn = false;
             return;
         }
-        if (isStartingNextTurn) {
-            console.log('[WARN] startNextTurn called while already starting. Ignoring.');
+        if (room.isStartingNextTurn) {
+            console.log(`[WARN-ROOM] Room ${room.id} startNextTurn called while already starting. Ignoring.`);
             return;
         }
         
         // 周回の整合性チェック 💅
-        if (turnsPlayedInRound >= players.length || currentPlayerIndex === -1) {
-            if (currentPlayerIndex !== -1) {
-                currentRound++;
-                turnsPlayedInRound = 0;
-                console.log(`[ROUND-INC] All human/NPC players finished. Now Round ${currentRound}`);
+        if (room.turnsPlayedInRound >= room.players.length || room.currentPlayerIndex === -1) {
+            if (room.currentPlayerIndex !== -1) {
+                room.currentRound++;
+                room.turnsPlayedInRound = 0;
+                console.log(`[ROUND-INC-ROOM] Room ${room.id}: All human/NPC players finished. Now Round ${room.currentRound}`);
             } else {
-                console.log(`[ROUND-START] Game starting at Round 1`);
+                console.log(`[ROUND-START-ROOM] Room ${room.id}: Game starting at Round 1`);
             }
         }
 
         // 指定周回数を超えてたら強制終了ッ！ 🏁
-        if (maxRounds > 0 && currentRound > maxRounds) {
-            console.log(`[GAME-END] Max rounds reached (${maxRounds}). currentRound is ${currentRound}. Ending.`);
-            endGame();
+        if (room.maxRounds > 0 && room.currentRound > room.maxRounds) {
+            console.log(`[GAME-END-ROOM] Room ${room.id}: Max rounds reached (${room.maxRounds}). currentRound is ${room.currentRound}. Ending.`);
+            endGame(room);
             return;
         }
 
-        isStartingNextTurn = true;
-        turnsPlayedInRound++;
-        gamePhase = 'playing';
-        players.forEach(p => { if (p) p.hasGuessed = false; });
+        room.isStartingNextTurn = true;
+        room.turnsPlayedInRound++;
+        room.gamePhase = 'playing';
+        room.players.forEach(p => { if (p) p.hasGuessed = false; });
 
-        currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
-        const drawer = players[currentPlayerIndex];
+        room.currentPlayerIndex = (room.currentPlayerIndex + 1) % room.players.length;
+        const drawer = room.players[room.currentPlayerIndex];
 
         if (!drawer) {
-            console.error('[CRITICAL] No drawer found at index', currentPlayerIndex);
-            isStartingNextTurn = false;
+            console.error(`[CRITICAL-ROOM] Room ${room.id}: No drawer found at index`, room.currentPlayerIndex);
+            room.isStartingNextTurn = false;
             return;
         }
 
@@ -736,45 +763,45 @@ function startNextTurn() {
         // 直近10回に出たお題は避けるようにするねッ！✨🤟💎
         while (attempts < 15) {
             pickedWord = wordList[Math.floor(Math.random() * wordList.length)];
-            if (!recentWords.includes(pickedWord.display) || wordList.length <= recentWords.length) {
+            if (!room.recentWords.includes(pickedWord.display) || wordList.length <= room.recentWords.length) {
                 break;
             }
             attempts++;
         }
         
-        currentWordObj = pickedWord || wordList[0];
-        if (!currentWordObj) {
-            currentWordObj = cuteWords.mix[Math.floor(Math.random() * cuteWords.mix.length)];
+        room.currentWordObj = pickedWord || wordList[0];
+        if (!room.currentWordObj) {
+            room.currentWordObj = cuteWords.mix[Math.floor(Math.random() * cuteWords.mix.length)];
         }
         
         // 履歴に追加（最大10個まで覚えるお💅）
-        recentWords.unshift(currentWordObj.display);
-        if (recentWords.length > 10) recentWords.pop();
+        room.recentWords.unshift(room.currentWordObj.display);
+        if (room.recentWords.length > 10) room.recentWords.pop();
         
-        console.log(`[TURN-START] Round: ${currentRound}/${maxRounds}, Turn: ${turnsPlayedInRound}/${players.length}, Drawer: ${drawer.name}`);
+        console.log(`[TURN-START-ROOM] Room: ${room.id}, Round: ${room.currentRound}/${room.maxRounds}, Turn: ${room.turnsPlayedInRound}/${room.players.length}, Drawer: ${drawer.name}`);
 
-        timeLeft = timeLimit;
-        pointsAwardedThisTurn = false;
+        room.timeLeft = room.timeLimit;
+        room.pointsAwardedThisTurn = false;
 
-        safeIoEmit('clear_canvas');
-        safeIoEmit('update_players', players);
+        safeRoomEmit(room, 'clear_canvas');
+        safeRoomEmit(room, 'update_players', room.players);
 
-        const roundInfoTxt = (maxRounds === 0) 
-            ? `${currentRound}周目 (∞)` 
-            : `${currentRound}周目 (${turnsPlayedInRound}/${players.length})`;
+        const roundInfoTxt = (room.maxRounds === 0) 
+            ? `${room.currentRound}周目 (∞)` 
+            : `${room.currentRound}周目 (${room.turnsPlayedInRound}/${room.players.length})`;
 
         safeEmit(io.to(drawer.id), 'round_start', {
-            word: currentWordObj.display,
-            timeLimit,
+            word: room.currentWordObj.display,
+            timeLimit: room.timeLimit,
             isDrawer: true,
             roundInfo: roundInfoTxt
         });
 
-        players.forEach(p => {
+        room.players.forEach(p => {
             if (p && p.id !== drawer.id) {
                 safeEmit(io.to(p.id), 'round_start', {
                     word: '????',
-                    timeLimit,
+                    timeLimit: room.timeLimit,
                     isDrawer: false,
                     drawerName: drawer.name,
                     roundInfo: roundInfoTxt
@@ -782,91 +809,91 @@ function startNextTurn() {
             }
         });
 
-        players.forEach(p => {
-            if (p && p.isNpc) handleNpcAction(p);
+        room.players.forEach(p => {
+            if (p && p.isNpc) handleNpcAction(room, p);
         });
 
-        if (roundTimer) clearInterval(roundTimer);
-        safeIoEmit('timer', timeLeft);
+        if (room.roundTimer) clearInterval(room.roundTimer);
+        safeRoomEmit(room, 'timer', room.timeLeft);
 
-        roundTimer = setInterval(() => {
-            if (timeLimit > 0) {
-                timeLeft--;
-                safeIoEmit('timer', timeLeft);
-                if (timeLeft <= 0) {
-                    clearInterval(roundTimer);
-                    endTurn();
+        room.roundTimer = setInterval(() => {
+            if (room.timeLimit > 0) {
+                room.timeLeft--;
+                safeRoomEmit(room, 'timer', room.timeLeft);
+                if (room.timeLeft <= 0) {
+                    clearInterval(room.roundTimer);
+                    endTurn(room);
                 }
             } else {
-                safeIoEmit('timer', '∞');
+                safeRoomEmit(room, 'timer', '∞');
             }
         }, 1000);
 
-        if (nextTurnTimer) {
-            clearTimeout(nextTurnTimer);
-            nextTurnTimer = null;
+        if (room.nextTurnTimer) {
+            clearTimeout(room.nextTurnTimer);
+            room.nextTurnTimer = null;
         }
     } catch (e) {
-        console.error(`[END-TURN-ERR] ${e}`);
+        console.error(`[END-TURN-ERR-ROOM] Room ${room.id}: ${e}`);
     } finally {
-        isStartingNextTurn = false; // 確実にロック解除するよッ！💅✨💍
+        room.isStartingNextTurn = false; 
     }
 }
 
-function endTurn() {
+function endTurn(room) {
     try {
-        if (roundTimer) clearInterval(roundTimer);
-        gamePhase = 'between_turns';
+        if (room.roundTimer) clearInterval(room.roundTimer);
+        room.gamePhase = 'between_turns';
 
-        players.forEach(p => {
-            if (p && p.isNpc && npcTimers[p.id]) {
-                npcTimers[p.id].forEach(t => {
+        room.players.forEach(p => {
+            if (p && p.isNpc && room.npcTimers[p.id]) {
+                room.npcTimers[p.id].forEach(t => {
                     if (t.type === 'interval') clearInterval(t.timer);
                     else clearTimeout(t.timer);
                 });
-                npcTimers[p.id] = [];
+                room.npcTimers[p.id] = [];
             }
         });
 
         let isLastTurn = false;
-        if (maxRounds > 0 && currentRound >= maxRounds && turnsPlayedInRound >= players.length) {
+        if (room.maxRounds > 0 && room.currentRound >= room.maxRounds && room.turnsPlayedInRound >= room.players.length) {
             isLastTurn = true;
-            isLastTurnGlobal = true;
+            room.isLastTurnGlobal = true;
         }
 
         const nextMsg = isLastTurn ? "結果発表にいくよ〜！🏆" : "全員が「準備オッケー！」したら次に行くよっ！💖💅✨";
-        const wordDisplay = currentWordObj ? currentWordObj.display : '????';
+        const wordDisplay = room.currentWordObj ? room.currentWordObj.display : '????';
         
-        safeIoEmit('chat_message', { sender: 'System', text: `時間終了〜！正解は「${wordDisplay}」でした！✨ ${nextMsg}`, color: '#ff66b2', type: 'finish' });
+        safeRoomEmit(room, 'chat_message', { sender: 'System', text: `時間終了〜！正解は「${wordDisplay}」でした！✨ ${nextMsg}`, color: '#ff66b2', type: 'finish' });
 
-        const drawer = players[currentPlayerIndex];
+        const drawer = room.players[room.currentPlayerIndex];
         const drawerName = drawer ? drawer.name : 'Unknown';
         
-        safeIoEmit('round_end', { players, word: wordDisplay, drawer: drawerName });
-        safeIoEmit('game_state', { phase: 'between_turns', timeLeft: 0, isLastTurn: isLastTurn });
+        safeRoomEmit(room, 'round_end', { players: room.players, word: wordDisplay, drawer: drawerName });
+        safeRoomEmit(room, 'game_state', { phase: 'between_turns', timeLeft: 0, isLastTurn: isLastTurn });
 
         if (isLastTurn) {
             setTimeout(() => {
-                if (gamePhase === 'between_turns') endGame();
+                if (room.gamePhase === 'between_turns') endGame(room);
             }, 5000);
         }
     } catch (err) {
-        console.error(`[ERR] Error in endTurn: ${err.stack}`);
+        console.error(`[ERR-ROOM] Room ${room.id} error in endTurn: ${err.stack}`);
     }
 }
 
-function endGame() {
+function endGame(room) {
     try {
-        gamePhase = 'results';
-        isLastTurnGlobal = false;
+        room.gamePhase = 'results';
+        room.isLastTurnGlobal = false;
         // 点数順にソート（nullチェック付き）💍
-        const sortedPlayers = [...players]
+        const sortedPlayers = [...room.players]
             .filter(p => p !== null)
             .sort((a, b) => (b.score || 0) - (a.score || 0));
-        safeIoEmit('game_over', sortedPlayers);
-        console.log('[GAME-OVER] Results emitted.');
+        safeRoomEmit(room, 'game_over', sortedPlayers);
+        console.log(`[GAME-OVER-ROOM] Room ${room.id}: Results emitted.`);
     } catch (err) {
-        console.error(`[ERR] Error in endGame: ${err.stack}`);
+        console.error(`[ERR-ROOM] Room ${room.id} error in endGame: ${err.stack}`);
     }
 }
 
@@ -917,22 +944,22 @@ function getNpcDrawingStrategy(word) {
     return { color, pattern, offsetX, offsetY, hash, category };
 }
 
-function handleNpcAction(npc) {
-    if (!npcTimers[npc.id]) npcTimers[npc.id] = [];
-    npcTimers[npc.id].forEach(t => {
+function handleNpcAction(room, npc) {
+    if (!room.npcTimers[npc.id]) room.npcTimers[npc.id] = [];
+    room.npcTimers[npc.id].forEach(t => {
         if (t.type === 'interval') clearInterval(t.timer);
         else clearTimeout(t.timer);
     });
-    npcTimers[npc.id] = [];
+    room.npcTimers[npc.id] = [];
 
-    const isDrawer = (players[currentPlayerIndex]?.id === npc.id);
+    const isDrawer = (room.players[room.currentPlayerIndex]?.id === npc.id);
 
     if (isDrawer) {
-        if (!currentWordObj) {
-            console.error('[NPC-ERR] No currentWordObj found for drawer NPC');
+        if (!room.currentWordObj) {
+            console.error(`[NPC-ERR-ROOM] Room ${room.id}: No currentWordObj found for drawer NPC`);
             return;
         }
-        const strategy = getNpcDrawingStrategy(currentWordObj.display);
+        const strategy = getNpcDrawingStrategy(room.currentWordObj.display);
         const getNpcComment = (word) => {
             const w = word.toLowerCase();
             if (w.match(/🍎|🍓|🍔|🍣|たべもの/)) return [`${word}、おいしそうに描くね！😋💖`, `お腹空いてきちゃった～ｗ🍴✨`, `かずぅさんも一口食べる？（意味深）`];
@@ -954,17 +981,17 @@ function handleNpcAction(npc) {
             ];
         };
 
-        const comments = getNpcComment(currentWordObj.display);
+        const comments = getNpcComment(room.currentWordObj.display);
         const commentInterval = setInterval(() => {
-            if (gamePhase !== 'playing') { clearInterval(commentInterval); return; }
-            safeIoEmit('chat_message', { sender: npc.name, text: comments[Math.floor(Math.random() * comments.length)], color: '#333' });
+            if (room.gamePhase !== 'playing') { clearInterval(commentInterval); return; }
+            safeRoomEmit(room, 'chat_message', { sender: npc.name, text: comments[Math.floor(Math.random() * comments.length)], color: '#333' });
         }, 5000 + Math.random() * 4000);
-        npcTimers[npc.id].push({ timer: commentInterval, type: 'interval' });
+        room.npcTimers[npc.id].push({ timer: commentInterval, type: 'interval' });
 
         let step = 0;
         let lastX = 0, lastY = 0;
         const drawInterval = setInterval(() => {
-            if (gamePhase !== 'playing') { clearInterval(drawInterval); return; }
+            if (room.gamePhase !== 'playing') { clearInterval(drawInterval); return; }
             
             let x0, y0, x1, y1;
             const centerX = 300 + strategy.offsetX, centerY = 250 + strategy.offsetY;
@@ -1003,36 +1030,36 @@ function handleNpcAction(npc) {
             y1 = clamp(nextY, margin, 500 - margin);
             x0 = (step === 0) ? x1 : lastX; y0 = (step === 0) ? y1 : lastY;
 
-            safeIoEmit('draw', { x0, y0, x1, y1, color: strategy.color, size: 8 + Math.random() * 8, isEraser: false, isGlow: true, isRainbow: (strategy.category === 'yabai' && Math.random() > 0.8) });
+            safeRoomEmit(room, 'draw', { x0, y0, x1, y1, color: strategy.color, size: 8 + Math.random() * 8, isEraser: false, isGlow: true, isRainbow: (strategy.category === 'yabai' && Math.random() > 0.8) });
 
-            if (step === 10) safeIoEmit('chat_message', { sender: npc.name, text: 'まずは大体の形から描くね！✨', color: '#333' });
-            else if (step === 60 && (c === 'animal' || c === 'vehicle')) safeIoEmit('chat_message', { sender: npc.name, text: (c === 'animal' ? '次はこれ、耳だよ！🐾' : 'タイヤも付けちゃうよ！🚗'), color: '#333' });
-            else if (step === 90) safeIoEmit('chat_message', { sender: npc.name, text: '仕上げに細かく描いていくよ💖💍', color: '#333' });
+            if (step === 10) safeRoomEmit(room, 'chat_message', { sender: npc.name, text: 'まずは大体の形から描くね！✨', color: '#333' });
+            else if (step === 60 && (c === 'animal' || c === 'vehicle')) safeRoomEmit(room, 'chat_message', { sender: npc.name, text: (c === 'animal' ? '次はこれ、耳だよ！🐾' : 'タイヤも付けちゃうよ！🚗'), color: '#333' });
+            else if (step === 90) safeRoomEmit(room, 'chat_message', { sender: npc.name, text: '仕上げに細かく描いていくよ💖💍', color: '#333' });
 
             lastX = x1; lastY = y1; step++;
         }, 80);
-        npcTimers[npc.id].push({ timer: drawInterval, type: 'interval' });
+        room.npcTimers[npc.id].push({ timer: drawInterval, type: 'interval' });
 
         const finishTimeout = setTimeout(() => {
             clearInterval(drawInterval);
             clearInterval(commentInterval);
-            if (gamePhase === 'playing' && players[currentPlayerIndex]?.id === npc.id) {
-                safeIoEmit('chat_message', { sender: npc.name, text: 'できた！可愛くない？💖✨💍', color: '#ff66b2' });
-                endTurn();
+            if (room.gamePhase === 'playing' && room.players[room.currentPlayerIndex]?.id === npc.id) {
+                safeRoomEmit(room, 'chat_message', { sender: npc.name, text: 'できた！可愛くない？💖✨💍', color: '#ff66b2' });
+                endTurn(room);
             }
         }, 12000 + Math.random() * 8000);
-        npcTimers[npc.id].push({ timer: finishTimeout, type: 'timeout' });
+        room.npcTimers[npc.id].push({ timer: finishTimeout, type: 'timeout' });
     } else {
         const delay = (20 + Math.random() * 40) * 1000;
         const guessTimeout = setTimeout(() => {
-            if (gamePhase !== 'playing' || npc.hasGuessed) return;
-            const answer = currentWordObj.answers[0];
+            if (room.gamePhase !== 'playing' || npc.hasGuessed) return;
+            const answer = room.currentWordObj.answers[0];
             const prefix = ['', 'え、これ', 'もしかして', 'わかった！', 'んー、', 'これ', '絶対'];
             const suffix = ['', 'じゃない？ｗ', 'かも！💖', 'だと思う！✨', 'だよ💅', 'だよね💍'];
             const text = prefix[Math.floor(Math.random() * prefix.length)] + answer + suffix[Math.floor(Math.random() * suffix.length)];
-            handleChatMessage(npc, text);
+            handleChatMessage(room, npc, text);
         }, delay);
-        npcTimers[npc.id].push({ timer: guessTimeout, type: 'timeout' });
+        room.npcTimers[npc.id].push({ timer: guessTimeout, type: 'timeout' });
     }
 }
 
@@ -1040,7 +1067,7 @@ function getLevelThreshold(lv) {
     return (lv * 30) + 100;
 }
 
-function addXp(player, amount) {
+function addXp(room, player, amount) {
     if (!player) return;
     if (player.xp === undefined) player.xp = 0;
     if (player.lv === undefined) player.lv = 0;
@@ -1066,7 +1093,7 @@ function addXp(player, amount) {
     }
     
     if (leveledUp) {
-        safeIoEmit('chat_message', { 
+        safeRoomEmit(room, 'chat_message', { 
             sender: 'System', 
             text: `✨🆙 LEVEL UP!! ${player.name}さんは Lv.${player.lv} になったよ！おめ！💖💍✨`, 
             color: '#ffcc00' 
@@ -1076,17 +1103,17 @@ function addXp(player, amount) {
     }
 }
 
-function handleChatMessage(player, msg, socket) {
-    if (gamePhase === 'playing') {
-        const isDrawer = players[currentPlayerIndex]?.id === player.id;
+function handleChatMessage(room, player, msg, socket) {
+    if (room.gamePhase === 'playing') {
+        const isDrawer = room.players[room.currentPlayerIndex]?.id === player.id;
         let isCorrect = false;
         let isAlmost = false;
 
         const cleanInput = msg.trim().toLowerCase().replace(/[\s　]/g, '');
         const normalizedInput = kanaToHira(cleanInput);
 
-        if (!isDrawer && !player.hasGuessed && currentWordObj) {
-            for (let ans of currentWordObj.answers) {
+        if (!isDrawer && !player.hasGuessed && room.currentWordObj) {
+            for (let ans of room.currentWordObj.answers) {
                 const normalizedAns = kanaToHira(ans.toLowerCase().replace(/[\s　]/g, ''));
                 if (normalizedInput === normalizedAns) { isCorrect = true; break; }
                 if (normalizedAns.length >= 2) {
@@ -1100,22 +1127,22 @@ function handleChatMessage(player, msg, socket) {
 
         if (isCorrect) {
             player.hasGuessed = true;
-            if (!pointsAwardedThisTurn) {
-                pointsAwardedThisTurn = true;
+            if (!room.pointsAwardedThisTurn) {
+                room.pointsAwardedThisTurn = true;
                 player.score += 1;
                 if (player.token) {
-            if (!persistentData[player.token]) {
-                persistentData[player.token] = { name: player.name || 'Unknown', score: 0, xp: 0, lv: 0 };
-            }
-            persistentData[player.token].score = player.score;
-            persistentData[player.token].xp = player.xp || 0;
-            persistentData[player.token].lv = player.lv || 0;
-            persistentData[player.token].name = player.name;
-            savePlayerData();
-        }
-                if (players[currentPlayerIndex]) {
-                    players[currentPlayerIndex].score += 1;
-                    const drawer = players[currentPlayerIndex];
+                    if (!persistentData[player.token]) {
+                        persistentData[player.token] = { name: player.name || 'Unknown', score: 0, xp: 0, lv: 0 };
+                    }
+                    persistentData[player.token].score = player.score;
+                    persistentData[player.token].xp = player.xp || 0;
+                    persistentData[player.token].lv = player.lv || 0;
+                    persistentData[player.token].name = player.name;
+                    savePlayerData();
+                }
+                if (room.players[room.currentPlayerIndex]) {
+                    room.players[room.currentPlayerIndex].score += 1;
+                    const drawer = room.players[room.currentPlayerIndex];
                     if (drawer.token) {
                         if (!persistentData[drawer.token]) {
                             persistentData[drawer.token] = { name: drawer.name || 'Unknown', score: 0, xp: 0, lv: 0 };
@@ -1125,92 +1152,122 @@ function handleChatMessage(player, msg, socket) {
                         savePlayerData();
                     }
                     // 描き手にも20XP！🎨
-                    addXp(drawer, 20);
+                    addXp(room, drawer, 20);
                 }
                 
                 // 回答者にも20XP！🎯
-                addXp(player, 20);
+                addXp(room, player, 20);
 
-                safeIoEmit('chat_message', { sender: 'System', text: `やば！${player.name}さんが1番乗りで大正解！🎉✨（回答者+1pt,20XP / 出題者+1pt,20XP）`, color: '#ff66b2', type: 'correct' });
+                safeRoomEmit(room, 'chat_message', { sender: 'System', text: `やば！${player.name}さんが1番乗りで大正解！🎉✨（回答者+1pt,20XP / 出題者+1pt,20XP）`, color: '#ff66b2', type: 'correct' });
             } else {
-                safeIoEmit('chat_message', { sender: 'System', text: `${player.name}さんも正解！👏（ポイントは最初の人だけだよ！）`, color: '#ff66b2', type: 'correct' });
+                safeRoomEmit(room, 'chat_message', { sender: 'System', text: `${player.name}さんも正解！👏（ポイントは最初の人だけだよ！）`, color: '#ff66b2', type: 'correct' });
             }
-            safeIoEmit('update_players', players);
-            if (player.isNpc) safeIoEmit('chat_message', { sender: player.name, text: msg, color: '#333' });
+            safeRoomEmit(room, 'update_players', room.players);
+            if (player.isNpc) safeRoomEmit(room, 'chat_message', { sender: player.name, text: msg, color: '#333' });
         } else if (isAlmost && !isCorrect && !isDrawer && !player.hasGuessed) {
             if (!player.isNpc) safeEmit(io.to(player.id), 'chat_message', { sender: 'System', text: `「${msg}」…惜しい！あとちょっと！🥺`, color: '#ff9900', type: 'oshii' });
-            safeIoEmit('chat_message', { sender: player.name, text: msg, color: '#333' });
+            safeRoomEmit(room, 'chat_message', { sender: player.name, text: msg, color: '#333' });
         } else {
-            safeIoEmit('chat_message', { sender: player.name, text: msg, color: '#333' });
+            safeRoomEmit(room, 'chat_message', { sender: player.name, text: msg, color: '#333' });
         }
     } else {
-        safeIoEmit('chat_message', { sender: player.name, text: msg, color: '#333' });
+        safeRoomEmit(room, 'chat_message', { sender: player.name, text: msg, color: '#333' });
     }
 }
 
 io.on('connection', (socket) => {
-    socket.on('reset_player_data', (targetToken) => {
-        if (!targetToken) return;
-        
-        // メモリ上のデータリセット
-        players.forEach(p => {
-            if (p.token === targetToken) {
-                p.xp = 0;
-                p.lv = 0;
-                p.score = 0;
-            }
-        });
-        
-        // 永続化データのリセット
-        if (persistentData[targetToken]) {
-            persistentData[targetToken].xp = 0;
-            persistentData[targetToken].lv = 0;
-            persistentData[targetToken].score = 0;
-            savePlayerData();
-        }
-        
-        safeIoEmit('update_players', players);
-        safeIoEmit('chat_message', { 
-            sender: 'System', 
-            text: `⚠️ プレイヤーデータの初期化（浄化）が実行されたよッ！✨💍`, 
-            color: '#ff3300' 
-        });
-    });
-
-    socket.on('modify_player_data', (data) => {
-        const { targetToken, xp, lv, score } = data;
-        if (!targetToken) return;
-
-        // メモリ上のデータ更新
-        players.forEach(p => {
-            if (p.token === targetToken) {
-                if (xp !== undefined) p.xp = Number(xp);
-                if (lv !== undefined) p.lv = Number(lv);
-                if (score !== undefined) p.score = Number(score);
-            }
-        });
-
-        // 永続化データの更新
-        if (!persistentData[targetToken]) {
-            persistentData[targetToken] = { name: 'Unknown', score: 0, xp: 0, lv: 0 };
-        }
-        if (xp !== undefined) persistentData[targetToken].xp = Number(xp);
-        if (lv !== undefined) persistentData[targetToken].lv = Number(lv);
-        if (score !== undefined) persistentData[targetToken].score = Number(score);
-        savePlayerData();
-
-        safeIoEmit('update_players', players);
-        safeIoEmit('chat_message', { 
-            sender: 'System', 
-            text: `🛠️ プレイヤーデータが「神（管理者）」によって書き換えられたよッ！✨💍`, 
-            color: '#ffcc00' 
-        });
-    });
-
-    socket.on('join_game', (playerName, playerToken) => {
-        if (players.length >= maxPlayers) {
-            safeEmit(socket, 'error', '満室だよ〜！ごめんね🥺');
+    // 🆕 プレイヤー登録（はじめて！）💅✨
+    socket.on('register', (data) => {
+        const { name, password } = data;
+        if (!name || !password) {
+            safeEmit(socket, 'register_failed', '名前とパスワードを入れてねッ！🥺');
             return;
+        }
+
+        // 名前の重複チェック（大文字小文字無視で可愛くチェック！💅）
+        const nameExists = Object.values(persistentData).some(p => p.name.toLowerCase() === name.toLowerCase());
+        if (nameExists) {
+            safeEmit(socket, 'register_failed', 'その名前はもう誰かが使ってるおッ！諦めて！💔');
+            return;
+        }
+
+        const token = `tk_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        persistentData[token] = { 
+            name, 
+            password, // ⚠️ 本来はハッシュ化すべきだけど、今回は楽しさ優先で平文だお！💍
+            score: 0, 
+            xp: 0, 
+            lv: 0 
+        };
+        savePlayerData();
+        console.log(`[REGISTER] New player: ${name} (Token: ${token})`);
+        socket.emit('register_success', { token, name });
+    });
+
+    // 🆕 ログイン処理！💎✨
+    socket.on('login', (data) => {
+        const { name, password } = data;
+        if (!name || !password) {
+            safeEmit(socket, 'login_failed', '名前とパスワードを入れてねッ！💍');
+            return;
+        }
+
+        const playerEntry = Object.entries(persistentData).find(([t, p]) => p.name.toLowerCase() === name.toLowerCase());
+        if (!playerEntry) {
+            safeEmit(socket, 'login_failed', 'そんな子知らないおッ！はじめて？💅');
+            return;
+        }
+
+        const [token, player] = playerEntry;
+        if (player.password !== password) {
+            safeEmit(socket, 'login_failed', 'パスワードが違うおッ！浮気した？💔');
+            return;
+        }
+
+        console.log(`[LOGIN] Player logged in: ${name}`);
+        socket.emit('login_success', { token, name, score: player.score, xp: player.xp, lv: player.lv });
+    });
+
+    // 🆕 ルーム一覧の取得（タイトル画面 or ルーム選択画面用）💅✨💍
+    socket.on('get_rooms', () => {
+        const roomData = Object.values(rooms).map(r => ({
+            id: r.id,
+            name: r.name,
+            playerCount: r.players.length,
+            gamePhase: r.gamePhase,
+            hostName: r.hostName || '', // ホスト名
+            comment: r.comment || '',   // コメント
+            hasPassword: !!r.password   // パスワードの有無
+        }));
+        socket.emit('room_list', roomData);
+    });
+
+    // 🆕 指定したルームに参加！🚀✨💍
+    socket.on('join_room', (data) => {
+        const { roomId, playerName, playerToken, password, roomComment } = data;
+        const room = rooms[roomId];
+        if (!room) {
+            safeEmit(socket, 'error', 'ルームが見つからないよ🥺');
+            return;
+        }
+
+        // 入室人数制限（最大4人ッ！💅）
+        if (room.players.length >= room.maxPlayers) {
+            safeEmit(socket, 'error', '満室だよ〜！他のルームを選んでね🥺');
+            return;
+        }
+
+        // 誰もいないルームなら、最初に入った人がホストになって設定を決めるおッ！💎✨
+        if (room.players.length === 0) {
+            room.hostName = playerName;
+            room.comment = (roomComment || '').substring(0, 8); // 8文字制限
+            room.password = (password || '').substring(0, 4); // 4桁制限
+        } else {
+            // パスワードがかかってる場合のチェック🔒
+            if (room.password && room.password !== password) {
+                safeEmit(socket, 'join_failed', 'パスワードが違うよッ！🙅‍♀️');
+                return;
+            }
         }
 
         // トークンがあったら以前のデータを思い出してあげるよ！✨💍💅
@@ -1223,259 +1280,349 @@ io.on('connection', (socket) => {
             savePlayerData();
         }
         const saved = (playerToken && persistentData[playerToken]) ? persistentData[playerToken] : { score: 0, xp: 0, lv: 0 };
+        
         // 既に同じトークンで入ってる子がいたら、古い方を追い出しちゃうおッ！🚫✨💍
         if (playerToken) {
-            const existingIndex = players.findIndex(p => p.token === playerToken);
+            const existingIndex = room.players.findIndex(p => p.token === playerToken);
             if (existingIndex !== -1) {
-                console.log(`[JOIN-DUP] Removing existing player with same token: ${players[existingIndex].name}`);
-                players.splice(existingIndex, 1);
+                room.players.splice(existingIndex, 1);
             }
         }
 
-        const name = playerName || `Player ${players.length + 1}`;
+        const name = playerName || `Player ${room.players.length + 1}`;
 
-        players.push({
+        const newPlayer = {
             id: socket.id,
             token: playerToken,
             name: name,
-            score: saved.score || 0,
+            score: 0,
+            totalScore: saved.score || 0,
             xp: saved.xp || 0,
             lv: saved.lv || 0,
             hasGuessed: false,
-            isReady: false, // 🆕 準備中モード追加！
+            isReady: false,
             isNpc: false
-        });
+        };
 
-        console.log(`[JOIN] ${name} joined with token ${playerToken} (Score: ${saved.score || 0})`);
+        room.players.push(newPlayer);
+        socket.join(room.id);
 
-        safeIoEmit('update_players', players);
+        console.log(`[JOIN-ROOM] Room ${room.id}: ${name} joined (Host: ${room.hostName})`);
+
+        socket.emit('join_success', { roomId: room.id, roomName: room.name });
+        
+        safeRoomEmit(room, 'update_players', room.players);
         safeEmit(socket, 'game_state', {
-            phase: gamePhase,
-            timeLeft,
-            currentWord: (gamePhase === 'playing' ? (players[currentPlayerIndex]?.id === socket.id ? currentWordObj.display : '????') : '')
+            phase: room.gamePhase,
+            timeLeft: room.timeLeft,
+            currentWord: (room.gamePhase === 'playing' ? (room.players[room.currentPlayerIndex]?.id === socket.id ? room.currentWordObj.display : '????') : '')
         });
 
-        if (gamePhase === 'playing' && players[currentPlayerIndex]) {
-            safeIoEmit('drawer_update', players[currentPlayerIndex].id);
+        if (room.gamePhase === 'playing' && room.players[room.currentPlayerIndex]) {
+            safeEmit(socket, 'drawer_update', room.players[room.currentPlayerIndex].id);
         }
+
+        // ルーム一覧を更新（人数やホスト情報が変わったからねッ！💅）
+        io.emit('room_list', Object.values(rooms).map(r => ({
+            id: r.id,
+            name: r.name,
+            playerCount: r.players.length,
+            gamePhase: r.gamePhase,
+            hostName: r.hostName,
+            comment: r.comment,
+            hasPassword: !!r.password
+        })));
     });
 
-    socket.on('start_game', (settings) => {
-        if (players.length < 1) return;
+    socket.on('reset_player_data', (targetToken) => {
+        console.log(`[ADMIN-ACTION] Purifying (DELETING) player data for token: ${targetToken}`);
+        if (!targetToken) return;
+        
+        // 1. 全ルームから対象プレイヤーを物理的に削除するおッ！😱💅
+        for (const rid in rooms) {
+            const room = rooms[rid];
+            const initialCount = room.players.length;
+            room.players = room.players.filter(p => p.token !== targetToken);
+            
+            if (room.players.length !== initialCount) {
+                // 人数が変わったら部屋のみんなに通知＆ルームリスト更新！
+                safeRoomEmit(room, 'update_players', room.players);
+                io.emit('room_list', Object.values(rooms).map(r => ({ id: r.id, name: r.name, playerCount: r.players.length, gamePhase: r.gamePhase })));
+            }
+        }
+        
+        // 2. 永続化データから「魂」を消去ッ！！💀💍
+        if (persistentData[targetToken]) {
+            delete persistentData[targetToken];
+            savePlayerData();
+        }
+        
+        io.emit('chat_message', { 
+            sender: 'System', 
+            text: `⚠️ プレイヤーの魂が「浄化（消滅）」されたよッ！南無三ッ！✨💀💍`, 
+            color: '#ff3300' 
+        });
 
-        console.log(`[START-LEGACY] Host clicked start button! 🚀`);
-        gamePhase = 'playing';
+        // 3. 管理者に最新の全プレイヤーリストを再送してUIを更新するおッ！💅✨💍
+        const allPlayers = Object.keys(persistentData).map(token => ({
+            token,
+            ...persistentData[token],
+            isOnline: Object.values(rooms).some(r => r.players.some(p => p.token === token))
+        }));
+        socket.emit('open_admin_panel', allPlayers);
+    });
 
-        if (settings) {
-            timeLimit = settings.timeLimit ?? 120;
-            maxRounds = (settings.rounds !== undefined) ? settings.rounds : 3;
-            if (settings.category) {
-                currentWordList = cuteWords[settings.category] || cuteWords.mix;
+    socket.on('modify_player_data', (data) => {
+        const { targetToken, xp, lv, score } = data;
+        console.log(`[ADMIN-ACTION] Modifying player data for token: ${targetToken} -> XP:${xp}, LV:${lv}, Score:${score}`);
+        if (!targetToken) return;
+
+        // メモリ上のデータ更新（全ルーム対象）💅
+        for (const rid in rooms) {
+            rooms[rid].players.forEach(p => {
+                if (p.token === targetToken) {
+                    if (xp !== undefined) p.xp = Number(xp);
+                    if (lv !== undefined) p.lv = Number(lv);
+                    if (score !== undefined) p.score = Number(score);
+                }
+            });
+        }
+
+        // 永続化データの更新
+        if (!persistentData[targetToken]) {
+            persistentData[targetToken] = { name: 'Unknown', score: 0, xp: 0, lv: 0 };
+        }
+        if (xp !== undefined) persistentData[targetToken].xp = Number(xp);
+        if (lv !== undefined) persistentData[targetToken].lv = Number(lv);
+        if (score !== undefined) persistentData[targetToken].score = Number(score);
+        savePlayerData();
+
+        // 全ルームに通知するおッ！💅✨💍
+        for (const rid in rooms) {
+            const room = rooms[rid];
+            if (room.players.some(p => p.token === targetToken)) {
+                safeRoomEmit(room, 'update_players', room.players);
             }
         }
 
-        currentRound = 1;
-        turnsPlayedInRound = 0;
-        currentPlayerIndex = -1;
-        isLastTurnGlobal = false;
+        io.emit('chat_message', { 
+            sender: 'System', 
+            text: `🛠️ プレイヤーデータが「神（管理者）」によって書き換えられたよッ！✨💍`, 
+            color: '#ffcc00' 
+        });
 
-        players.forEach(p => {
+        // 管理者に最新の全プレイヤーリストを再送してUIを更新するおッ！💅✨💍
+        const allPlayers = Object.keys(persistentData).map(token => ({
+            token,
+            ...persistentData[token],
+            isOnline: Object.values(rooms).some(r => r.players.some(p => p.token === token))
+        }));
+        socket.emit('open_admin_panel', allPlayers);
+    });
+
+    socket.on('start_game', (settings) => {
+        const room = getRoomBySocket(socket);
+        if (!room || room.players.length < 1) return;
+
+        console.log(`[START-MANUAL-ROOM] Room ${room.id} manual start! 🚀`);
+        
+        if (settings) {
+            room.timeLimit = settings.timeLimit ?? 120;
+            room.maxRounds = (settings.rounds !== undefined) ? settings.rounds : 3;
+        }
+
+        room.gamePhase = 'playing';
+        room.currentRound = 1;
+        room.turnsPlayedInRound = 0;
+        room.currentPlayerIndex = -1;
+        room.isLastTurnGlobal = false;
+
+        room.players.forEach(p => {
             p.score = 0;
             p.isReady = false;
         });
 
-        safeIoEmit('game_start_imminent');
-        if (nextTurnTimer) clearTimeout(nextTurnTimer);
-        nextTurnTimer = setTimeout(() => {
-            nextTurnTimer = null;
-            startNextTurn();
+        safeRoomEmit(room, 'game_start_imminent');
+        if (room.nextTurnTimer) clearTimeout(room.nextTurnTimer);
+        room.nextTurnTimer = setTimeout(() => {
+            room.nextTurnTimer = null;
+            startNextTurn(room);
         }, 1000);
     });
 
     socket.on('return_to_lobby', () => {
-        gamePhase = 'waiting';
-        players.forEach(p => {
+        const room = getRoomBySocket(socket);
+        if (!room) return;
+        
+        room.gamePhase = 'waiting';
+        room.players.forEach(p => {
             p.score = 0;
-            p.isReady = false; // ロビーに戻ったらリセット！✨
+            p.isReady = false;
         });
-        safeIoEmit('update_players', players);
-        safeIoEmit('game_state', { phase: 'waiting', timeLeft: 0 });
+        safeRoomEmit(room, 'update_players', room.players);
+        safeRoomEmit(room, 'game_state', { phase: 'waiting', timeLeft: 0 });
     });
 
     socket.on('manual_turn_end', () => {
-        console.log(`[MANUAL-END] Request from ${socket.id}. Phase: ${gamePhase}, DrawerIdx: ${currentPlayerIndex}`);
+        const room = getRoomBySocket(socket);
+        if (!room) return;
         
-        // 描き手本人か、一人プレイの場合は無条件で終了を許可するおッ！💅✨
-        const isDrawer = (players[currentPlayerIndex] && players[currentPlayerIndex].id === socket.id);
-        const isSolo = (players.length === 1 && players[0].id === socket.id);
+        const isDrawer = (room.players[room.currentPlayerIndex] && room.players[room.currentPlayerIndex].id === socket.id);
+        const isSolo = (room.players.length === 1 && room.players[0].id === socket.id);
         
-        if (gamePhase === 'playing' && (isDrawer || isSolo)) {
-            const name = players[currentPlayerIndex] ? players[currentPlayerIndex].name : 'Unknown';
-            safeIoEmit('chat_message', { sender: 'System', text: `描き手の${name}さんがターンを終了させたよ！✨`, color: '#ff66b2' });
-            endTurn();
-        } else {
-            console.warn(`[MANUAL-END-REJECTED] Phase: ${gamePhase}, isDrawer: ${isDrawer}, isSolo: ${isSolo}`);
+        if (room.gamePhase === 'playing' && (isDrawer || isSolo)) {
+            const name = room.players[room.currentPlayerIndex] ? room.players[room.currentPlayerIndex].name : 'Unknown';
+            safeRoomEmit(room, 'chat_message', { sender: 'System', text: `描き手の${name}さんがターンを終了させたよ！✨`, color: '#ff66b2' });
+            endTurn(room);
         }
     });
 
     socket.on('draw', (data) => {
-        try { socket.broadcast.emit('draw', data); } catch(e) {}
+        const room = getRoomBySocket(socket);
+        if (room) socket.to(room.id).emit('draw', data);
     });
 
     socket.on('fill', (data) => {
-        try { socket.broadcast.emit('fill', data); } catch(e) {}
+        const room = getRoomBySocket(socket);
+        if (room) socket.to(room.id).emit('fill', data);
     });
 
     socket.on('sync_canvas', (dataURL) => {
-        try { socket.broadcast.emit('sync_canvas', dataURL); } catch(e) {}
+        const room = getRoomBySocket(socket);
+        if (room) socket.to(room.id).emit('sync_canvas', dataURL);
     });
 
     socket.on('clear_canvas', () => {
-        safeIoEmit('clear_canvas');
+        const room = getRoomBySocket(socket);
+        if (room) safeRoomEmit(room, 'clear_canvas');
     });
 
     socket.on('send_message', (msg) => {
+        const room = getRoomBySocket(socket);
+        if (!room) return;
+
         const trimmedMsg = msg.trim();
         if (trimmedMsg === '/kill') {
-            const player = players.find(p => p.id === socket.id);
-            console.log(`[ADMIN-CMD] /kill received from: ${player?.name || 'Unknown'} (Socket: ${socket.id})`);
+            const player = room.players.find(p => p.id === socket.id);
             if (player) {
-                // 永続化されている全プレイヤーデータをリスト化しておくるよ！✨💍💅
                 const allPlayers = Object.keys(persistentData).map(token => ({
                     token,
                     ...persistentData[token],
-                    isOnline: players.some(p => p.token === token)
+                    isOnline: Object.values(rooms).some(r => r.players.some(p => p.token === token))
                 }));
-                console.log(`[ADMIN-CMD] Sending full admin list with ${allPlayers.length} records to ${player.name}`);
                 safeEmit(socket, 'open_admin_panel', allPlayers);
-            } else {
-                console.warn(`[ADMIN-CMD] Player not found for socket ${socket.id}`);
             }
             return;
         }
 
-        // --- 🧹 BANページへの誘導 (/ban) ---
-        if (msg.trim() === '/ban') {
+        if (trimmedMsg === '/ban') {
             socket.emit('redirect', '/ban.html');
-            socket.emit('chat_message', { sender: 'System', text: '💅 BANページにジャンプするよ！お掃除よろしくねッ！💖', color: '#ff66b2' });
             return;
         }
 
-        // --- 📜 コマンド一覧 (/list) ---
-        if (msg.trim() === '/list') {
-            const listMsg = "💋 秘密のメニューだよ 💋<br>" +
-                           "--------------------------<br>" +
-                           "🔹 /pt0 : 自分のポイントを0にするよ🤫<br>" +
-                           "🔹 /npc : AIギャル友を召喚するよ💖💅<br>" +
-                           "🔹 /kill : 裏・管理パネルを開くよ🔞💎<br>" +
-                           "🔹 /list : この一覧を表示するよ✨💍";
+        if (trimmedMsg === '/list') {
+            const listMsg = "💋 秘密のメニューだよ 💋<br>🔹 /pt0 : スコアを0にする💅<br>🔹 /npc : ギャル友召喚💖<br>🔹 /kill : 管理パネル🔞<br>🔹 /list : メニュー表示✨";
             socket.emit('chat_message', { sender: 'System', text: listMsg, color: '#ff66b2' });
             return;
         }
 
-        // --- 👱‍♀️ NPC召喚 (/npc) ---
-        if (msg.trim() === '/npc') {
-            if (players.length >= maxPlayers) {
-                socket.emit('chat_message', { sender: 'System', text: '満室でギャル友呼べないよ🥺ごめんね！', color: '#ff66b2' });
+        if (trimmedMsg === '/npc') {
+            if (room.players.length >= room.maxPlayers) {
+                socket.emit('chat_message', { sender: 'System', text: '満室だよ🥺', color: '#ff66b2' });
                 return;
             }
             const npcName = npcNames[Math.floor(Math.random() * npcNames.length)];
             const npcId = 'npc_' + Math.random().toString(36).substr(2, 9);
             const npcToken = 'token_npc_' + npcId;
 
-            const categories = Object.keys(cuteWords);
-            const npcCategory = categories[Math.floor(Math.random() * categories.length)];
-
-            players.push({
-                id: npcId,
-                token: npcToken,
-                name: npcName,
-                score: 0,
-                hasGuessed: false,
-                isReady: true,
-                isNpc: true,
-                category: npcCategory // NPCにも個性を！💅✨💍
+            room.players.push({
+                id: npcId, token: npcToken, name: npcName, score: 0, hasGuessed: false, isReady: true, isNpc: true
             });
-            safeIoEmit('update_players', players);
-            safeIoEmit('chat_message', { sender: 'System', text: `${npcName}が遊びに来たよ！💖✨`, color: '#ff66b2' });
+            safeRoomEmit(room, 'update_players', room.players);
+            safeRoomEmit(room, 'chat_message', { sender: 'System', text: `${npcName}が遊びに来たよ！💖✨`, color: '#ff66b2' });
             return;
         }
 
-        const player = players.find(p => p.id === socket.id);
+        const player = room.players.find(p => p.id === socket.id);
         if (!player) return;
 
-        // --- 🤫 隠しコマンド！ (/pt0) ---
-        if (msg.trim() === '/pt0') {
+        if (trimmedMsg === '/pt0') {
             player.score = 0;
-            if (player.token) {
-                if (!persistentData[player.token]) persistentData[player.token] = { name: player.name, score: 0, xp: 0, lv: 0 };
-                persistentData[player.token].score = 0;
-                savePlayerData();
-            }
-            safeIoEmit('update_players', players);
-            safeEmit(socket, 'chat_message', { sender: 'System', text: '🤫 ポイントをリセットしたよ✨', color: '#ff66b2' });
+            safeRoomEmit(room, 'update_players', room.players);
             return;
         }
 
-        handleChatMessage(player, msg, socket);
+        handleChatMessage(room, player, msg, socket);
     });
 
-    // 🆕 「準備オッケー！」のトグル処理 ✨💍💖
     socket.on('toggle_ready', (settings) => {
-        const player = players.find(p => p.id === socket.id);
-        if (!player || (gamePhase !== 'waiting' && gamePhase !== 'between_turns')) {
-            console.log(`[READY-REJECT] ${player?.name || 'Unknown'} tried to toggle ready but gamePhase is ${gamePhase}`);
-            return;
-        }
+        const room = getRoomBySocket(socket);
+        if (!room) return;
+        
+        const player = room.players.find(p => p.id === socket.id);
+        if (!player || (room.gamePhase !== 'waiting' && room.gamePhase !== 'between_turns')) return;
 
         player.isReady = !player.isReady;
-        console.log(`[READY-TOGGLE] ${player.name} is now ${player.isReady ? 'READY! 💖' : 'not ready... 🥺'} (Phase: ${gamePhase})`);
-        
-        safeIoEmit('update_players', players);
-
-        // 全員準備オッケーならスタート！🚀✨（待機中 or ターン間）
-        checkReadiness(settings, socket.id);
+        safeRoomEmit(room, 'update_players', room.players);
+        checkReadiness(room, settings, socket.id);
     });
 
+    socket.on('leave_room', () => {
+        handlePlayerLeaveRoom(socket);
+    });
 
     socket.on('disconnect', () => {
-        const index = players.findIndex(p => p.id === socket.id);
+        handlePlayerLeaveRoom(socket);
+    });
+
+    function handlePlayerLeaveRoom(socket) {
+        const room = getRoomBySocket(socket);
+        if (!room) return;
+
+        const index = room.players.findIndex(p => p.id === socket.id);
         if (index === -1) return;
 
-        const p = players[index];
-        console.log(`[LEAVE] ${p.name} left. (Idx: ${index}, CurrentDrawerIdx: ${currentPlayerIndex})`);
-        players.splice(index, 1);
+        const p = room.players[index];
+        console.log(`[LEAVE-ROOM] ${p.name} left room ${room.id}.`);
+        room.players.splice(index, 1);
+        
+        // Socket.ioのレコメンデーションに従ってルームから退出ッ！🚪✨
+        socket.leave(room.id);
 
-        // 人間が一人もいなくなったらNPCも全員消去💍
-        const humanPlayers = players.filter(p => !p.isNpc);
+        const humanPlayers = room.players.filter(p => !p.isNpc);
         if (humanPlayers.length === 0) {
-            players.forEach(p_npc => {
-                if (p_npc.isNpc && npcTimers[p_npc.id]) {
-                    npcTimers[p_npc.id].forEach(t => {
+            // NPCの後始末
+            room.players.forEach(p_npc => {
+                if (p_npc.isNpc && room.npcTimers[p_npc.id]) {
+                    room.npcTimers[p_npc.id].forEach(t => {
                         if (t.type === 'interval') clearInterval(t.timer);
                         else clearTimeout(t.timer);
                     });
                 }
             });
-            players = [];
-            npcTimers = {};
-            gamePhase = 'waiting';
-            if (roundTimer) clearInterval(roundTimer);
+            room.players = [];
+            room.npcTimers = {};
+            room.gamePhase = 'waiting';
+            room.hostName = ''; // ホスト情報リセット💅
+            room.comment = '';  // コメントリセット✨
+            room.password = ''; // パスワードリセット🔒
+            if (room.roundTimer) clearInterval(room.roundTimer);
         } else {
-            // 描き手のインデックスを調整💅
-            if (index < currentPlayerIndex) {
-                currentPlayerIndex--;
-            } else if (index === currentPlayerIndex) {
-                currentPlayerIndex--; // 次の startNextTurn で正しくインクリメントされるように
-                if (gamePhase === 'playing') {
-                    safeIoEmit('chat_message', { sender: 'System', text: '描き手がいなくなっちゃったから、次のターンに行くねッ！🥺', color: '#ff66b2' });
-                    endTurn();
+            if (index < room.currentPlayerIndex) {
+                room.currentPlayerIndex--;
+            } else if (index === room.currentPlayerIndex) {
+                room.currentPlayerIndex--;
+                if (room.gamePhase === 'playing') {
+                    safeRoomEmit(room, 'chat_message', { sender: 'System', text: '描き手がいなくなっちゃったから、次のターンに行くねッ！🥺', color: '#ff66b2' });
+                    endTurn(room);
                 }
             }
         }
 
-        safeIoEmit('update_players', players);
-    });
+        safeRoomEmit(room, 'update_players', room.players);
+        // ルーム一覧を更新（人数が変わったからねッ！💅）
+        io.emit('room_list', Object.values(rooms).map(r => ({ id: r.id, name: r.name, playerCount: r.players.length, gamePhase: r.gamePhase })));
+    }
 
 
 

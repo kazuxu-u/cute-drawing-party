@@ -28,25 +28,136 @@ const wordPopupSubtext = document.getElementById('wordPopupSubtext');
 const danmakuContainer = document.getElementById('danmakuContainer');
 const sparkleContainer = document.getElementById('sparkleContainer'); // 追加✨
 
-// --- 💎 タイトル画面の制御 💎 ---
+// --- 💎 タイトル画面・ルーム選択の制御 💎 ---
 const titleScreen = document.getElementById('titleScreen');
 const gameStartBtn = document.getElementById('gameStartBtn');
+const roomSelectScreen = document.getElementById('roomSelectScreen');
+const roomGrid = document.getElementById('roomGrid');
+const refreshRoomsBtn = document.getElementById('refreshRoomsBtn');
 
-if (gameStartBtn) {
-    gameStartBtn.addEventListener('click', () => {
+const initialAuthButtons = document.getElementById('initialAuthButtons');
+const loginBtn = document.getElementById('loginBtn');
+const registerBtn = document.getElementById('registerBtn');
+const authFormArea = document.getElementById('authFormArea');
+const authFormTitle = document.getElementById('authFormTitle');
+const authNameInput = document.getElementById('authNameInput');
+const authPasswordInput = document.getElementById('authPasswordInput');
+const authBackBtn = document.getElementById('authBackBtn');
+const authSubmitBtn = document.getElementById('authSubmitBtn');
+
+const roomPasswordModal = document.getElementById('roomPasswordModal');
+const joinPasswordInput = document.getElementById('joinPasswordInput');
+const cancelPasswordBtn = document.getElementById('cancelPasswordBtn');
+const confirmPasswordBtn = document.getElementById('confirmPasswordBtn');
+
+let pendingJoinRoomId = null;
+let currentAuthMode = 'register';
+let playerToken = localStorage.getItem('galPlayerToken') || '';
+let currentPlayerName = localStorage.getItem('galAuthName') || ''; 
+
+// 🆕 ログイン・登録の初期表示処理ッ！✨💍
+function restoreCredentials() {
+    const savedName = localStorage.getItem('galAuthName');
+    const savedPass = localStorage.getItem('galAuthPass');
+    if (savedName) authNameInput.value = savedName;
+    if (savedPass) authPasswordInput.value = savedPass;
+}
+restoreCredentials();
+
+if (loginBtn) {
+    loginBtn.addEventListener('click', () => {
+        initAudio(); // 音を鳴らす準備ッ！🎹
+        currentAuthMode = 'login';
+        authFormTitle.innerText = 'ログインだおッ！🔑';
+        authSubmitBtn.innerText = 'ログインして開始！🚀';
+        initialAuthButtons.classList.add('hidden');
+        authFormArea.classList.remove('hidden');
+    });
+}
+
+if (registerBtn) {
+    registerBtn.addEventListener('click', () => {
         initAudio();
-        if (isBgmOn) startBGM();
+        currentAuthMode = 'register';
+        authFormTitle.innerText = '会員登録だおッ！🐣';
+        authSubmitBtn.innerText = '登録して開始！🚀';
+        initialAuthButtons.classList.add('hidden');
+        authFormArea.classList.remove('hidden');
+    });
+}
+
+if (authBackBtn) {
+    authBackBtn.addEventListener('click', () => {
+        authFormArea.classList.add('hidden');
+        initialAuthButtons.classList.remove('hidden');
+    });
+}
+
+if (authSubmitBtn) {
+    authSubmitBtn.addEventListener('click', () => {
+        const name = authNameInput.value.trim();
+        const password = authPasswordInput.value.trim();
         
-        // フェードアウトさせて消す！💅
-        titleScreen.style.opacity = '0';
-        titleScreen.style.pointerEvents = 'none';
-        
-        // 演出用に少し遅らせてDOMから消す（or 非表示）
-        setTimeout(() => {
-            titleScreen.classList.add('hidden');
-        }, 800);
-        
-        addChatMessage('System', 'パーティーへようこそ！楽しんでねっ💖✨', '#ff66b2');
+        if (!name || !password) {
+            alert("名前とパスワードは必須だおッ！🥺💔");
+            return;
+        }
+
+        // 情報を保存ッ！💎✨💍
+        localStorage.setItem('galAuthName', name);
+        localStorage.setItem('galAuthPass', password);
+
+        if (currentAuthMode === 'register') {
+            socket.emit('register', { name, password });
+        } else {
+            socket.emit('login', { name, password });
+        }
+    });
+}
+
+// 🆕 認証レスポンスの処理ッ！✨💍🌈
+socket.on('register_success', (data) => {
+    playerToken = data.token;
+    localStorage.setItem('galPlayerToken', playerToken);
+    transitionToRoomSelection();
+});
+
+socket.on('register_failed', (msg) => { alert(msg); });
+
+socket.on('login_success', (data) => {
+    playerToken = data.token;
+    localStorage.setItem('galPlayerToken', playerToken);
+    transitionToRoomSelection();
+});
+
+socket.on('login_failed', (msg) => { alert(msg); });
+
+function transitionToRoomSelection() {
+    titleScreen.style.opacity = '0';
+    titleScreen.style.pointerEvents = 'none';
+    
+    setTimeout(() => {
+        titleScreen.classList.add('hidden');
+        roomSelectScreen.classList.remove('hidden');
+        socket.emit('get_rooms');
+    }, 800);
+    
+    addChatMessage('System', 'パーティーへようこそ！次は遊びに行くルームを選んでね💖✨', '#ff66b2');
+}
+
+if (refreshRoomsBtn) {
+    refreshRoomsBtn.addEventListener('click', () => {
+        socket.emit('get_rooms');
+    });
+}
+
+const backToTitleBtn = document.getElementById('backToTitleBtn');
+if (backToTitleBtn) {
+    backToTitleBtn.addEventListener('click', () => {
+        roomSelectScreen.classList.add('hidden');
+        titleScreen.classList.remove('hidden');
+        titleScreen.style.opacity = '1';
+        titleScreen.style.pointerEvents = 'auto';
     });
 }
 
@@ -100,6 +211,14 @@ const toolbar = document.getElementById('toolbar');
 const adminOverlay = document.getElementById('adminOverlay');
 const adminPlayerList = document.getElementById('adminPlayerList');
 const closeAdminBtn = document.getElementById('closeAdminBtn');
+const exitRoomBtn = document.getElementById('exitRoomBtn');
+
+// 🆕 特製確認モーダル用 💎✨
+const customConfirmOverlay = document.getElementById('customConfirmOverlay');
+const confirmMessage = document.getElementById('confirmMessage');
+const confirmOkBtn = document.getElementById('confirmOkBtn');
+const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+let currentConfirmAction = null;
 
 let myId = null;
 let isDrawing = false;
@@ -156,11 +275,10 @@ function getCookie(name) {
     }, '');
 }
 
-// プレイヤー識別用のトークン生成（または取得）🚀
-let playerToken = getCookie('galPlayerToken');
+// クッキー・トークン・名前の復元（新システムに移行したからお役御免だおッ！💅✨）
 if (!playerToken) {
     playerToken = 'token_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
-    setCookie('galPlayerToken', playerToken);
+    localStorage.setItem('galPlayerToken', playerToken);
 }
 
 function startBGM() {
@@ -1228,17 +1346,139 @@ function createRankCard(player, className) {
 
 backToWaitingBtn.addEventListener('click', () => { socket.emit('return_to_lobby'); });
 
+// 以前の join_game はタイトル画面の「GAME START」で名前チェックする方式にしたよ💅
+// ここでは特に何もしないけど、コードから消さずにコメントアウトしておくね✨
+/*
 joinBtn.addEventListener('click', () => {
     initAudio();
     if (isBgmOn) startBGM();
     const name = playerNameInput.value.trim();
     if(name === "") return alert("名前入れてよね！🥺");
     
-    // クッキーとローカルストレージ両方に保存しちゃう欲張りセット！💅✨💍
     localStorage.setItem('galDrawingName', name); 
     setCookie('galPlayerName', name);
     
-    socket.emit('join_game', name, playerToken); // トークンも一緒に送るよ！🚀
+    socket.emit('join_game', name, playerToken);
+});
+*/
+
+// 🆕 ルーム一覧を受け取って表示！💅✨💍
+socket.on('room_list', (rooms) => {
+    if (!roomGrid) return;
+    roomGrid.innerHTML = '';
+    
+    rooms.forEach(room => {
+        const card = document.createElement('div');
+        card.className = 'room-card';
+        if (room.playerCount >= 4) card.classList.add('full'); // 4人制限💅
+
+        const isFree = room.playerCount === 0;
+        const hostInfo = room.hostName ? `👑 ${room.hostName}` : '誰もいないお🥺';
+        const commentInfo = room.comment ? room.comment : (isFree ? '新しいルームを作っちゃお！💖' : 'まったりお絵描き中✨');
+
+        card.innerHTML = `
+            <div class="room-lock-icon">${room.hasPassword ? '🔒' : '🔓'}</div>
+            <h3 class="room-name">${commentInfo}</h3>
+            <div class="room-host">${hostInfo}</div>
+            <div class="room-players">👤 ${room.playerCount} / 4</div>
+            <button class="join-room-btn animate-pulse" ${room.playerCount >= 4 ? 'disabled' : ''}>
+                ${room.playerCount >= 4 ? '満室🥺' : (isFree ? 'ルームを作る🚀' : '遊びに行く！💖')}
+            </button>
+        `;
+        
+        const btn = card.querySelector('.join-room-btn');
+        btn.addEventListener('click', () => {
+            const name = authNameInput.value.trim(); // 認証済みの名前を使うよッ！💅
+            
+            if (isFree) {
+                // ルーム作成モーダルを開く
+                pendingJoinRoomId = room.id;
+                roomSetupModal.classList.remove('hidden');
+                setupCommentInput.value = '初心者歓迎！💖';
+                setupPasswordInput.value = '';
+            } else if (room.hasPassword) {
+                // パスワード入力モーダルを開く
+                pendingJoinRoomId = room.id;
+                roomPasswordModal.classList.remove('hidden');
+                joinPasswordInput.value = '';
+            } else {
+                // そのまま入室
+                socket.emit('join_room', { 
+                    roomId: room.id, 
+                    playerName: name, 
+                    playerToken: playerToken 
+                });
+            }
+        });
+        
+        roomGrid.appendChild(card);
+    });
+});
+
+// 🆕 ルーム作成・パスワードモーダルのボタン処理 ✨💍
+if (cancelSetupBtn) cancelSetupBtn.addEventListener('click', () => { roomSetupModal.classList.add('hidden'); });
+if (confirmSetupBtn) {
+    confirmSetupBtn.addEventListener('click', () => {
+        const name = authNameInput.value.trim();
+        const comment = setupCommentInput.value.trim();
+        const password = setupPasswordInput.value.trim();
+        
+        socket.emit('join_room', {
+            roomId: pendingJoinRoomId,
+            playerName: name,
+            playerToken: playerToken,
+            roomComment: comment,
+            password: password
+        });
+        
+        roomSetupModal.classList.add('hidden');
+    });
+}
+
+if (cancelPasswordBtn) cancelPasswordBtn.addEventListener('click', () => { roomPasswordModal.classList.add('hidden'); });
+if (confirmPasswordBtn) {
+    confirmPasswordBtn.addEventListener('click', () => {
+        const name = authNameInput.value.trim();
+        const password = joinPasswordInput.value.trim();
+        
+        socket.emit('join_room', {
+            roomId: pendingJoinRoomId,
+            playerName: name,
+            playerToken: playerToken,
+            password: password
+        });
+        
+        roomPasswordModal.classList.add('hidden');
+    });
+}
+
+// 🆕 入室失敗（パスワード間違いなど）の処理 🙅‍♀️
+socket.on('join_failed', (msg) => {
+    alert(msg);
+    // パスワード間違いなら再度入力を促すか、モーダルを閉じない
+    if (msg.includes('パスワード')) {
+        roomPasswordModal.classList.remove('hidden');
+        joinPasswordInput.value = '';
+    }
+});
+
+// 🆕 参加成功！ゲーム画面に切り替えるよッ！✨💍💖
+socket.on('join_success', (data) => {
+    roomSelectScreen.style.opacity = '0';
+    roomSelectScreen.style.pointerEvents = 'none';
+    
+    setTimeout(() => {
+        roomSelectScreen.classList.add('hidden');
+        // モーダルも念のため隠すおッ！💎✨
+        roomSetupModal.classList.add('hidden');
+        roomPasswordModal.classList.add('hidden');
+        
+        // 親のコンテナを表示させてから setupArea を表示するおッ！💎✨
+        document.querySelector('.container').classList.remove('hidden');
+        setupArea.classList.remove('hidden');
+        playArea.classList.add('hidden'); // 念のためプレイ画面は隠しておく💅
+        addChatMessage('System', `${data.roomName} に参加したよ！盛り上がっていこー！✨💍`, '#ff66b2');
+    }, 500);
 });
 
 if (readyBtn) {
@@ -1298,7 +1538,7 @@ chatInput.addEventListener('keydown', (e) => {
 function addChatMessage(sender, text, color) {
     const div = document.createElement('div');
     // 自分のメッセージならクラスを足すよ💅✨
-    const isMe = sender === (localStorage.getItem('galDrawingName') || '自分');
+    const isMe = sender === (currentPlayerName || localStorage.getItem('galDrawingName') || '自分');
     div.className = isMe ? 'chat-msg mine' : 'chat-msg';
     
     div.innerHTML = `
@@ -1446,6 +1686,31 @@ window.addEventListener('DOMContentLoaded', () => {
     updateScale(); // 初回実行！💎
 });
 
+// 🚪 ルームから脱出するおッ！✨💍
+if (exitRoomBtn) {
+    exitRoomBtn.addEventListener('click', () => {
+        showCustomConfirm('マジでこのルームからおさらばしちゃう？🥺💔', () => {
+            socket.emit('leave_room');
+            
+            // UIをルーム選択画面に戻すおッ！💅✨
+            document.querySelector('.container').classList.add('hidden');
+            roomSelectScreen.classList.remove('hidden');
+            roomSelectScreen.style.display = 'flex'; // 確実に表示！💎
+            roomSelectScreen.style.opacity = '1'; // 👈 透明度を戻すおッ！✨💍
+            roomSelectScreen.style.pointerEvents = 'auto'; // 👈 操作できるように戻すおッ！🤟💖
+            
+            // ステータスをリセット
+            if (bgmPlayer) bgmPlayer.pause();
+            inSoloMode = false;
+            canIDraw = false;
+            isDrawing = false;
+            
+            // ルーム一覧を最新にする
+            socket.emit('get_rooms');
+        });
+    });
+}
+
 // --- 💎 デスクトップUI維持スケーリングの魔法 (Overlays Included!) 💎 ---
 function updateScale() {
     const appRoot = document.getElementById('app-root');
@@ -1459,6 +1724,7 @@ function updateScale() {
     const scale = Math.min(currentHeight / baseHeight, 1.0);
     
     // スケールさせる対象リスト（メインコンテナ ＋ 各種オーバーレイ）
+    // ルーム選択とタイトル画面は独自にレスポンシブにするから除外するおッ！💎
     const targets = ['.container', '#podiumOverlay', '#galleryOverlay', '#banOverlay', '#wordPopupOverlay'];
     
     targets.forEach(selector => {
@@ -1510,6 +1776,31 @@ socket.on('level_up_effect', (data) => {
         setTimeout(() => popup.remove(), 1000);
     }, 3000);
 });
+
+// 🆕 ギャル専用・特製確認モーダルを表示するよッ！💎✨💍
+function showCustomConfirm(msg, onOk) {
+    confirmMessage.innerText = msg;
+    currentConfirmAction = onOk;
+    customConfirmOverlay.classList.remove('hidden');
+    customConfirmOverlay.style.display = 'flex';
+}
+
+if (confirmOkBtn) {
+    confirmOkBtn.addEventListener('click', () => {
+        if (currentConfirmAction) currentConfirmAction();
+        customConfirmOverlay.classList.add('hidden');
+        customConfirmOverlay.style.display = 'none';
+        currentConfirmAction = null;
+    });
+}
+if (confirmCancelBtn) {
+    confirmCancelBtn.addEventListener('click', () => {
+        customConfirmOverlay.classList.add('hidden');
+        customConfirmOverlay.style.display = 'none';
+        currentConfirmAction = null;
+    });
+}
+
 socket.on('open_admin_panel', (players) => {
     if (!adminOverlay) return;
     
@@ -1565,27 +1856,35 @@ if (closeAdminBtn) {
 // ボタンのイベント委譲
 if (adminPlayerList) {
     adminPlayerList.addEventListener('click', (e) => {
-        const token = e.target.getAttribute('data-token');
-        if (!token) return;
-
-        if (e.target.classList.contains('reset-btn')) {
-            if (confirm('本当にこのプレイヤーを浄化（リセット）しちゃう？🥺💍')) {
+        const resetBtn = e.target.closest('.reset-btn');
+        const applyBtn = e.target.closest('.apply-btn');
+        
+        if (resetBtn) {
+            const token = resetBtn.getAttribute('data-token');
+            console.log(`[ADMIN] Reset request for token: ${token}`);
+            // alert(`[DEBUG] 浄化ボタンが押されたお！トークン: ${token}`); // デバッグ用は外すね💅
+            
+            showCustomConfirm('本当にこのプレイヤーを浄化（リセット）しちゃう？🥺💍', () => {
                 socket.emit('reset_player_data', token);
-            }
+            });
         } 
-        else if (e.target.classList.contains('apply-btn')) {
-            const card = e.target.closest('.admin-player-card');
+        else if (applyBtn) {
+            const token = applyBtn.getAttribute('data-token');
+            const card = applyBtn.closest('.admin-player-card');
             const lv = card.querySelector('.edit-lv').value;
             const xp = card.querySelector('.edit-xp').value;
             const score = card.querySelector('.edit-score').value;
             
-            socket.emit('modify_player_data', {
-                targetToken: token,
-                lv: parseInt(lv),
-                xp: parseInt(xp),
-                score: parseInt(score)
-            });
-            alert('神（管理者）の力でデータを書き換えたお！💖✨💍');
+            console.log(`[ADMIN] Modify request for token: ${token}, val: lv=${lv}, xp=${xp}, score=${score}`);
+            if (token) {
+                socket.emit('modify_player_data', {
+                    targetToken: token,
+                    lv: parseInt(lv),
+                    xp: parseInt(xp),
+                    score: parseInt(score)
+                });
+                alert('神（管理者）の力でデータを書き換えたお！💖✨💍');
+            }
         }
     });
 }
