@@ -49,6 +49,10 @@ const roomPasswordModal = document.getElementById('roomPasswordModal');
 const joinPasswordInput = document.getElementById('joinPasswordInput');
 const cancelPasswordBtn = document.getElementById('cancelPasswordBtn');
 const confirmPasswordBtn = document.getElementById('confirmPasswordBtn');
+const welcomeBackArea = document.getElementById('welcomeBackArea'); // 🆕 追加ッ！✨
+const welcomeBackMsg = document.getElementById('welcomeBackMsg'); // 🆕 追加ッ！✨
+const autoLoginBtn = document.getElementById('autoLoginBtn'); // 🆕 追加ッ！✨
+const switchUserBtn = document.getElementById('switchUserBtn'); // 🆕 追加ッ！✨
 
 let pendingJoinRoomId = null;
 let currentAuthMode = 'register';
@@ -61,8 +65,38 @@ function restoreCredentials() {
     const savedPass = localStorage.getItem('galAuthPass');
     if (savedName) authNameInput.value = savedName;
     if (savedPass) authPasswordInput.value = savedPass;
+    
+    // 🆕 おかえり！フローの初期化 💖💍
+    if (playerToken && savedName && initialAuthButtons) {
+        initialAuthButtons.classList.add('hidden');
+        welcomeBackArea.classList.remove('hidden');
+        welcomeBackMsg.innerHTML = `おかえり、<span style="color:#ff3399;">${savedName}</span>さん💖<br><span style="font-size:0.9rem; color:#888;">前回のバイブスで再開しちゃう？✨</span>`;
+    }
 }
 restoreCredentials();
+
+// 🆕 おかえり！ボタンのイベント 💎✨
+if (autoLoginBtn) {
+    autoLoginBtn.addEventListener('click', () => {
+        initAudio(); // 音を鳴らす準備ッ！🎹
+        const name = localStorage.getItem('galAuthName');
+        const password = localStorage.getItem('galAuthPass');
+        if (name && password) {
+            socket.emit('login', { name, password });
+        } else {
+            // 万が一データが欠けてたら通常ログインへ
+            welcomeBackArea.classList.add('hidden');
+            initialAuthButtons.classList.remove('hidden');
+        }
+    });
+}
+
+if (switchUserBtn) {
+    switchUserBtn.addEventListener('click', () => {
+        welcomeBackArea.classList.add('hidden');
+        initialAuthButtons.classList.remove('hidden');
+    });
+}
 
 if (loginBtn) {
     loginBtn.addEventListener('click', () => {

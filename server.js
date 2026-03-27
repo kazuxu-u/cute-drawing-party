@@ -1232,7 +1232,8 @@ async function handleChatMessage(room, player, msg, socket) {
                     if (!persistentData[player.token]) {
                         persistentData[player.token] = { name: player.name || 'Unknown', score: 0, xp: 0, lv: 0 };
                     }
-                    persistentData[player.token].score = player.score;
+                    persistentData[player.token].score = (persistentData[player.token].score || 0) + 1; // 🎯 修正：上書きじゃなくて加算するおッ！✨💍
+                    player.totalScore = persistentData[player.token].score; // メモリ上の「トータル」も更新ッ！💅
                     persistentData[player.token].xp = player.xp || 0;
                     persistentData[player.token].lv = player.lv || 0;
                     persistentData[player.token].name = player.name;
@@ -1245,7 +1246,8 @@ async function handleChatMessage(room, player, msg, socket) {
                         if (!persistentData[drawer.token]) {
                             persistentData[drawer.token] = { name: drawer.name || 'Unknown', score: 0, xp: 0, lv: 0 };
                         }
-                        persistentData[drawer.token].score = drawer.score;
+                        persistentData[drawer.token].score = (persistentData[drawer.token].score || 0) + 1; // 🎯 描き手も累積スコア加算ッ！🎨
+                        drawer.totalScore = persistentData[drawer.token].score;
                         persistentData[drawer.token].name = drawer.name;
                         await savePlayerData(drawer.token);
                     }
