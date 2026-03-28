@@ -59,6 +59,7 @@ const drawingSchema = new mongoose.Schema({
     filename: String,
     artist: String,
     prompt: String,
+    imageData: String, // 🆕 画像データそのものもDBに保存しちゃうおッ！💎✨💍
     timestamp: { type: Date, default: Date.now }
 });
 const Drawing = mongoose.model('Drawing', drawingSchema);
@@ -182,13 +183,41 @@ const initApp = async () => {
 const PORT = process.env.PORT || 3000;
 
 // ギャラリーの画像がちゃんと読み込まれてるかチェックするためのログ！💍✨
-app.use('/drawings', (req, res, next) => {
-    console.log(`[IMG-REQ] Request for image: ${req.url}`);
-    next();
+app.use('/drawings/:filename', async (req, res, next) => {
+    const filename = req.params.filename;
+    const filePath = path.join(DRAWINGS_DIR, filename);
+
+    // 1. まずはディスクにあるかチェック！💅
+    if (fs.existsSync(filePath)) {
+        console.log(`[IMG-DISK] Serving from disk: ${filename}`);
+        return res.sendFile(filePath);
+    }
+
+    // 2. ディスクになければDBから探すおッ！💎✨💍 (Render対策)
+    if (MONGO_URI && mongoose.connection.readyState === 1) {
+        try {
+            const doc = await Drawing.findOne({ filename });
+            if (doc && doc.imageData) {
+                console.log(`[IMG-DB] Serving from MongoDB: ${filename} 💎✨💍`);
+                const img = Buffer.from(doc.imageData.replace(/^data:image\/png;base64,/, ""), 'base64');
+                res.writeHead(200, {
+                    'Content-Type': 'image/png',
+                    'Content-Length': img.length,
+                    'Cache-Control': 'public, max-age=31536000' // キャッシュもしっかり！✨
+                });
+                return res.end(img);
+            }
+        } catch (e) {
+            console.error(`[IMG-DB-ERR] ${e.message}`);
+        }
+    }
+
+    console.log(`[IMG-404] Not found: ${filename} 🥺`);
+    res.status(404).send('Not found');
 });
 
-// 静的ディレクトリのマッピングを強化！💍✨
-app.use('/drawings', express.static(DRAWINGS_DIR));
+// 静的ディレクトリのマッピングは↑に任せるからコメントアウト！💍✨
+// app.use('/drawings', express.static(DRAWINGS_DIR));
 
 // ソロモード用にお題リストを全部返すよ！💎✨💍
 // cuteWordsは下の方で定義されてるけど、function宣言じゃないから
@@ -212,9 +241,15 @@ app.post('/api/save_drawing', async (req, res) => {
         if (err) return res.status(500).json({ error: 'Save failed' });
 
         try {
-            // MongoDBに保存ッ！💎✨💍
+            // MongoDBに保存ッ！画像データも一緒だおッ！💎✨💍
             if (MONGO_URI && mongoose.connection.readyState === 1) {
-                await Drawing.create({ filename, artist, prompt, timestamp: Date.now() });
+                await Drawing.create({ 
+                    filename, 
+                    artist, 
+                    prompt, 
+                    imageData: image, // 🆕 これが永続化の鍵！💍 
+                    timestamp: Date.now() 
+                });
                 
                 // 1000枚制限の管理（DB版）💅
                 const count = await Drawing.countDocuments();
@@ -230,7 +265,7 @@ app.post('/api/save_drawing', async (req, res) => {
                 }
             }
             
-            // 下位互換：ローカルJSONにも一応残す！💅
+            // 下位互換：ローカルJSONにも一応残す（画像データは重いからJSONには入れないお！💅）
             let metadata = [];
             if (fs.existsSync(METADATA_FILE)) {
                 try {

@@ -32,10 +32,11 @@
     height: 100%;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start; /* 👈 修正：頂上から並べる（見切れ防止！）💅 */
     background: linear-gradient(135deg, rgba(255,240,245,0.9), rgba(240,248,255,0.9));
     z-index: 10000;
-    overflow: hidden;
+    overflow-y: auto; /* 👈 修正：縦スクロール許可ッ！🚀 */
+    padding: 40px 0; /* 👈 修正：上下に余白！✨ */
 }
 
 html, body {
@@ -1319,10 +1320,11 @@ input[type="text"]:focus {
     display: grid;
     grid-template-columns: repeat(4, 1fr); /* 強制的に横4列ッ！🤟✨ */
     grid-template-rows: repeat(2, auto);    /* 縦は2列を想定！💖 */
-    gap: 50px; /* フルワイドに合わせて広々と！💎 */
+    gap: 40px; /* 👈 少し詰めて見やすくしたおッ！💎 */
     width: 100%;
-    margin-top: 50px;
-    padding: 40px; /* 余裕を持たせたッ！✨ */
+    max-width: 1400px; /* 👈 広がりすぎ防止ッ！✨ */
+    margin: 40px auto; /* 👈 中央寄せ！💎 */
+    padding: 0 40px;
 }
 
 /* モバイル対応（一応ねっ💅） */
