@@ -957,7 +957,7 @@ function startNextTurn(room) {
         
         // 描き手のLV設定でフィルタリングするおッ！💎（設定なければ自分のPlayerLvに合わせてあげるよッ！💅）
         const targetLv = drawer.preferredWordLv || Math.max(1, (drawer.lv || 1));
-        const lvFilteredList = fullWordList.filter(w => w.lv === targetLv);
+        const lvFilteredList = fullWordList.filter(w => w.lv <= targetLv);
         const wordList = lvFilteredList.length >= 3 ? lvFilteredList : fullWordList; // 候補が少なければ全体から選ぶ💅
         
         let attempts = 0;
