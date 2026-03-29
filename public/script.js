@@ -1050,6 +1050,8 @@ socket.on('update_players', (players) => {
     if (inSoloMode) return;
     playerList.innerHTML = '';
     let amIin = false;
+    const MIN_SLOTS = 4; // 👈 最低4人分の枠を表示するおッ！💎
+    
     players.forEach(p => {
         const li = document.createElement('li');
         li.className = 'player-item'; // 🆕 クラス追加ッ！💅✨
@@ -1097,6 +1099,19 @@ socket.on('update_players', (players) => {
         }
         playerList.appendChild(li);
     });
+
+    // 🌟 足りない枠を空枠で埋めるおッ！🤟💖
+    for (let i = players.length; i < MIN_SLOTS; i++) {
+        const li = document.createElement('li');
+        li.className = 'player-item empty-slot'; // 空枠専用クラス✨
+        li.innerHTML = `
+            <span class="player-lv-badge" style="background:#eee; color:#aaa; border-color:#ddd;">-</span> 
+            <span style="color: #aaa; font-style: italic;">参加者まち...🥺</span>
+        `;
+        li.style.background = 'rgba(255, 255, 255, 0.2)';
+        li.style.border = '2px dashed #ffccdd';
+        playerList.appendChild(li);
+    }
 
     const humans = players.filter(p => !p.isNpc);
     const readyHumans = humans.filter(p => p.isReady);
@@ -1203,10 +1218,10 @@ socket.on('round_start', (data) => {
         wordPopupOverlay.classList.remove('hidden');
         
         if (canIDraw) {
-            wordPopupText.innerHTML = `<span style="font-size:1.5rem; color:#666;">お題：</span><br>${getDisplayText(data.word)}`;
+            wordPopupText.innerHTML = `<span style="font-size:2.5rem; color:#666; display:block; margin-bottom:15px;">お題</span>${getDisplayText(data.word)}`;
             wordPopupSubtext.textContent = 'あなたが描く番だよ！🖌️✨';
         } else {
-            wordPopupText.innerHTML = `${data.drawerName} <span style="font-size:1.5rem; color:#666;">の番！</span>`;
+            wordPopupText.innerHTML = `${data.drawerName}<br><span style="font-size:2.5rem; color:#666; display:block; margin-top:10px;">の番！</span>`;
             wordPopupSubtext.textContent = '何を描いてるか当てよう！👀';
         }
         
@@ -1796,32 +1811,57 @@ function updateScale() {
     // 💎 新時代の「ハイブリッド・フルワイド・スケーリング」開幕っ！💅✨💍
     // 横幅は 100% ギリギリまで使い切るのがギャルの鉄則！🤟💖
     
-    const baseHeight = 920; // ちょっと余裕を持たせたベース高さ
-    const currentHeight = window.innerHeight;
-    const scale = Math.min(currentHeight / baseHeight, 1.0);
+    const baseHeight = 850; // 👈 サイドバーの中身が全部入るように高さを確保ッ！💎
+    const baseWidth = 1530;  // 👈 横幅も少し広げてバランスを取るおッ！✨
     
-    // スケールさせる対象リスト（メインコンテナ ＋ 各種オーバーレイ）
-    // ルーム選択とタイトル画面は独自にレスポンシブにするから除外するおッ！💎
-    const targets = ['.container', '#podiumOverlay', '#galleryOverlay', '#banOverlay', '#wordPopupOverlay'];
+    const currentHeight = window.innerHeight;
+    const currentWidth = window.innerWidth;
+    
+    // 縦横どっちかキツい方に合わせて縮めるおッ！🚀
+    const scale = Math.min(currentHeight / baseHeight, currentWidth / baseWidth);
+    
+    // スケールさせる対象リスト
+    const targets = ['.container', '#podiumOverlay', '#galleryOverlay', '#banOverlay', '#wordPopupOverlay', '.full-overlay'];
     
     targets.forEach(selector => {
-        const el = document.querySelector(selector) || document.getElementById(selector.replace('#',''));
-        if (el) {
-            if (scale < 1.0) {
-                // 画面が低い時は、中身をキュッと縮めて見切れを防止！💎
-                el.style.transform = `scale(${scale})`;
-                el.style.transformOrigin = 'top center';
-                el.style.width = `${100 / scale}%`; // スケール分を打ち消して横幅を100%に維持！💅
-                el.style.height = `${100 / scale}%`;
+        const els = document.querySelectorAll(selector);
+        els.forEach(el => {
+            // 💎 新時代の「ピクセル・パーフェクト・センター・スケーリング」！🤟💖
+            el.style.position = 'absolute';
+            el.style.top = '0';
+            el.style.left = '50%';
+            
+            // 幅と高さは基準値でガッチリ固定するおッ！💎（これがズレると中身が崩れる！）
+            el.style.width = `${baseWidth}px`;
+            if (selector === '.container') {
+                el.style.height = `${baseHeight}px`; // 👈 `auto`は絶ッ対にNG！中身が押しつぶされる原因！💅
+                el.style.maxHeight = 'none'; // 👈 制限解除！
             } else {
-                el.style.transform = 'none';
-                el.style.width = '100%';
-                el.style.height = '100%';
+                el.style.height = 'auto';
+                el.style.minHeight = `${baseHeight}px`;
             }
-        }
+            
+            el.style.transform = `translateX(-50%) scale(${scale})`;
+            el.style.transformOrigin = 'top center'; // 👈 中央起点でスケーリング！✨
+            
+            el.style.display = 'flex';
+            if (selector === '.container') {
+                el.style.flexDirection = 'row';
+                el.style.alignItems = 'stretch';
+                el.style.justifyContent = 'center'; // 横方向に中央寄せ！💍
+            } else {
+                el.style.flexDirection = 'column';
+                el.style.alignItems = 'center';
+                el.style.justifyContent = 'flex-start'; // 縦は上から！💅
+            }
+
+            if (el.classList.contains('full-overlay')) {
+                el.style.overflowY = 'visible'; 
+            }
+        });
     });
     
-    console.log(`[APP-WIDE-SCALE] Scale: ${scale.toFixed(3)} (ViewHeight: ${currentHeight})`);
+    console.log(`[APP-WIDE-SCALE] Scale: ${scale.toFixed(3)} (W: ${currentWidth}, H: ${currentHeight})`);
 }
 
 window.addEventListener('resize', updateScale);

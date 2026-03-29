@@ -9,6 +9,15 @@ const https = require('https');
 const fs = require('fs');
 const mongoose = require('mongoose'); // 🆕 データベースの味方！💎✨💍
 
+process.on('uncaughtException', (err) => {
+    console.error('UNCAUGHT EXCEPTION!', err);
+    fs.appendFileSync('crash.log', `[${new Date().toISOString()}] UNCAUGHT EXCEPTION: ${err.stack}\n`);
+});
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('UNHANDLED REJECTION!', reason);
+    fs.appendFileSync('crash.log', `[${new Date().toISOString()}] UNHANDLED REJECTION: ${reason.stack || reason}\n`);
+});
+
 // --- 🛡️ サーバー最強伝説！落ちないためのガード ✨ ---
 function safeEmit(target, event, data) {
     try {
