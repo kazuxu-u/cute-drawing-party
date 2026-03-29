@@ -86,15 +86,15 @@
         <div class="container">
             <!-- サイドバー（設定・プレイヤー） -->
             <aside class="sidebar glass">
+                <div class="player-scroll-area">
+                    <ul id="playerList"></ul>
+                </div>
+
                 <div style="display: flex; gap: 10px; margin-bottom: 20px; justify-content: center;">
                     <button id="bgmToggleBtn" class="tool-btn" style="background:#66ccff;" data-tooltip="BGM ON/OFF🎵">🎵</button>
                     <button id="emojiToggleBtn" class="tool-btn" style="background:#ff99cc;" data-tooltip="スタンプ ON/OFF🧸">🧸</button>
                     <button id="openGalleryBtn" class="tool-btn" style="background:#cc99ff;" data-tooltip="みんなの絵を観る🖼️">🖼️</button>
                     <button id="exitRoomBtn" class="tool-btn" style="background:#ff5555; color:white;" data-tooltip="退室する🚪">🚪</button>
-                </div>
-                
-                <div class="player-scroll-area">
-                    <ul id="playerList"></ul>
                 </div>
                 
                 <div id="setupArea" class="hidden">

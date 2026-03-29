@@ -162,7 +162,7 @@ h2, h3 {
     overflow-x: visible; 
     position: relative;
     margin: 10px -10px; 
-    padding: 60px 10px 0 10px; /* 🆕 上にデカめの余白を作って、バルーンが隠れないようにするおッ！💎✨💍 */
+    padding: 10px 10px 0 10px; /* 🆕 余白をギュッと詰めて最上部へ！💎✨💍 */
     display: flex;
     flex-direction: column;
 }
@@ -198,8 +198,8 @@ h2, h3 {
 
 #playerList li {
     background: rgba(255, 255, 255, 0.6);
-    margin: 12px 0;
-    padding: 15px 25px;
+    margin: 8px 0; /* 🆕 間隔を詰めるおッ！🤟💖 */
+    padding: 10px 15px; /* 🆕 中身もギュッと！💎💍 */
     border-radius: 20px;
     font-weight: bold;
     display: flex;
