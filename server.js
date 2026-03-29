@@ -51,6 +51,7 @@ process.on('unhandledRejection', (reason, promise) => {
 const DRAWINGS_DIR = path.join(__dirname, 'public', 'drawings');
 const METADATA_FILE = path.join(__dirname, 'drawings_metadata.json');
 const PLAYER_DATA_FILE = path.join(__dirname, 'players_persistence.json');
+const WORDS_DATA_FILE = path.join(__dirname, 'words_persistence.json'); // 🆕 お題LVの保存ファイルッ！💎✨💍
 
 // --- 💾 MongoDB Schema (Data Warehouse) ✨💍 ---
 const playerSchema = new mongoose.Schema({
@@ -72,6 +73,13 @@ const drawingSchema = new mongoose.Schema({
     timestamp: { type: Date, default: Date.now }
 });
 const Drawing = mongoose.model('Drawing', drawingSchema);
+
+const wordSchema = new mongoose.Schema({
+    display: { type: String, unique: true },
+    lv: Number,
+    category: String
+});
+const Word = mongoose.model('Word', wordSchema);
 
 // --- 💾 永続化データ管理システム (Hybrid MongoDB/JSON) ✨💍 ---
 let persistentData = {};
@@ -177,6 +185,7 @@ async function savePlayerData(targetToken = null) {
 const initApp = async () => {
     await connectDB();
     await loadPlayerData();
+    await loadWordLvs(); // 🆕 お題LVをロードッ！💎✨💍
     
     // 保存用ディレクトリがなければ作成
     if (!fs.existsSync(DRAWINGS_DIR)) {
@@ -1633,7 +1642,7 @@ io.on('connection', (socket) => {
 
     // 💎 個別お題のLVを一括変更するよッ！（管理者・全員が使えるお） 💅✨
     // data = [{ display: '🐼パンダ', lv: 5 }, ...]
-    socket.on('bulk_set_word_lvs', (changes) => {
+    socket.on('bulk_set_word_lvs', async (changes) => {
         if (!Array.isArray(changes)) return;
         const allCategories = ['animal','food','daily','yabai','situation','pose','job','vehicle','landmark','item','bug','mix','mix_safe'];
         for (const { display, lv } of changes) {
@@ -1646,6 +1655,7 @@ io.on('connection', (socket) => {
             }
         }
         calculateMinLvs(); // 最小LVを再計算ッ！💅✨
+        await saveWordLvs(); // 🆕 DB/JSONに保存ッ！💎✨💍
         safeEmit(socket, 'word_lvs_saved', { count: changes.length });
         io.emit('min_lvs_update', minLvPerCategory); // 全員に教えるおッ！💎
     });
