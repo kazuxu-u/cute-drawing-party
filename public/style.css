@@ -241,9 +241,9 @@ h2, h3 {
 
 .player-xp-bubble {
     position: absolute;
-    bottom: 125%; /* 🆕 上に戻すおッ！💖 */
+    top: 115%; /* 🆕 上じゃなくて下に出すように変更ッ！💖 */
     left: 50%;
-    transform: translateX(-50%) translateY(10px);
+    transform: translateX(-50%) translateY(-10px);
     background: linear-gradient(135deg, #ffcc33, #ff9900);
     color: #fff;
     padding: 10px 15px;
@@ -263,11 +263,11 @@ h2, h3 {
 .player-xp-bubble::before {
     content: '';
     position: absolute;
-    top: 100%; /* 下側に三角を出す！💅 */
+    bottom: 100%; /* 上側に三角を出す！💅 */
     left: 50%;
     transform: translateX(-50%);
     border: 8px solid transparent;
-    border-top-color: #ffcc33;
+    border-bottom-color: #ffcc33;
 }
 
 .player-item:hover .player-xp-bubble {
