@@ -1267,7 +1267,8 @@ function handleNpcAction(room, npc) {
 }
 
 function getLevelThreshold(lv) {
-    return (lv * 30) + 100;
+    // 🆕 かずぅさん指定の設計：(Lv + 1) * 5
+    return (lv + 1) * 5;
 }
 
 async function addXp(room, player, amount) {
@@ -1278,7 +1279,7 @@ async function addXp(room, player, amount) {
     player.xp += amount;
     let leveledUp = false;
     
-    // かずぅさん指定の設計：(Lv * 30) + 100
+    // かずぅさん指定の設計：(Lv + 1) * 5
     while (player.xp >= getLevelThreshold(player.lv)) {
         player.xp -= getLevelThreshold(player.lv);
         player.lv++;

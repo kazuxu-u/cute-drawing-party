@@ -1,0 +1,6 @@
+[2026-03-29T14:48:36.755Z] UNCAUGHT EXCEPTION: Error: listen EADDRINUSE: address already in use :::3000
+    at Server.setupListenHandle [as _listen2] (node:net:1948:16)
+    at listenInCluster (node:net:2005:12)
+    at Server.listen (node:net:2110:7)
+    at initApp (C:\Users\momop\.gemini\antigravity\scratch\cute-drawing-party\server.js:186:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
