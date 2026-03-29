@@ -1526,7 +1526,7 @@ io.on('connection', (socket) => {
         room.players.push(newPlayer);
         socket.join(room.id);
 
-        console.log(`[JOIN-ROOM] Room ${room.id}: ${name} joined (Host: ${room.hostName})`);
+        console.log(`[JOIN-ROOM] Room ${room.id}: ${finalName} joined (Host: ${room.hostName})`);
 
         socket.emit('join_success', { roomId: room.id, roomName: room.name });
         
