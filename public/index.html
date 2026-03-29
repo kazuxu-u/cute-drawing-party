@@ -248,24 +248,58 @@
         </div>
 
         <!-- 💎 お題難易度LV設定オーバーレイ (/pointコマンドで開くよ！) 💅✨ -->
-        <div id="lvSettingsOverlay" class="overlay hidden" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 230, 242, 0.97); flex-direction: column; z-index: 6000; justify-content: center; align-items: center; text-align: center; padding: 40px;">
-            <h1 style="font-size: 3rem; color: var(--primary-color); text-shadow: 3px 3px 0 white; margin-bottom: 10px;">🎯 お題のむずかしさLV設定！</h1>
-            <p style="font-size: 1.3rem; color: #666; margin-bottom: 30px;">LVが高いほど、正解した時に貰えるポイントと経験値が増えるよ！💎</p>
-            
-            <div style="background: rgba(255,255,255,0.7); border-radius: 30px; padding: 30px 40px; box-shadow: 0 10px 40px rgba(255,51,153,0.2);">
-                <div style="font-size: 8rem; margin-bottom: 10px;" id="lvDisplayEmoji">🌟</div>
-                <div style="font-size: 3.5rem; font-weight: 900; color: var(--primary-color);" id="lvDisplayNumber">LV 1</div>
-                <div style="font-size: 1.2rem; color: #888; margin-bottom: 20px;" id="lvDisplayDesc">初心者向け！気楽に描こう💕</div>
+        <div id="lvSettingsOverlay" class="overlay hidden" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 230, 242, 0.98); flex-direction: column; z-index: 6000; justify-content: center; align-items: center; padding: 20px;">
+            <div style="background: white; width: 95%; max-width: 1000px; height: 90%; border-radius: 40px; box-shadow: 0 20px 60px rgba(255,51,153,0.3); display: flex; flex-direction: column; overflow: hidden; border: 4px solid var(--primary-color);">
                 
-                <input type="range" id="wordLvSlider" min="1" max="20" value="1" style="width: 100%; height: 20px; accent-color: var(--primary-color); cursor: pointer; margin-bottom: 20px;">
-                
-                <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: #aaa; margin-bottom: 25px;">
-                    <span>LV1 (かんたん)</span>
-                    <span>LV20 (鬼畜)</span>
+                <!-- ヘッダー (タブ切り替え) -->
+                <div style="display: flex; background: #fff5fa; border-bottom: 2px solid #ffeef6;">
+                    <div id="tabMyPrefs" class="lv-tab active" style="flex: 1; padding: 20px; cursor: pointer; text-align: center; font-weight: 900; color: var(--primary-color); border-bottom: 5px solid var(--primary-color);">🙋‍♀️ 自分の設定</div>
+                    <div id="tabWordMaster" class="lv-tab" style="flex: 1; padding: 20px; cursor: pointer; text-align: center; font-weight: 900; color: #888; border-bottom: 5px solid transparent;">📚 お題マスターリスト</div>
                 </div>
-                
-                <button id="saveLvBtn" class="cute-btn primary" style="width: 100%; font-size: 1.3rem;">✨ この難易度で決定！ ✨</button>
-                <button id="closeLvBtn" class="cute-btn" style="width: 100%; font-size: 1rem; margin-top: 10px; background: #ccc; box-shadow: 0 6px 0 #aaa;">閉じる 🥺</button>
+
+                <!-- コンテンツエリア -->
+                <div style="flex: 1; overflow-y: auto; padding: 30px;" id="lvContentArea">
+                    
+                    <!-- 1. 自分の設定 (スライダー) -->
+                    <div id="paneMyPrefs" class="lv-pane">
+                        <h1 style="font-size: 2.2rem; color: var(--primary-color); margin-bottom: 10px;">🎯 お題のむずかしさLV設定！</h1>
+                        <p style="font-size: 1.1rem; color: #666; margin-bottom: 30px;">LVが高いほど、正解した時に貰えるポイントと経験値が増えるよ！💎</p>
+                        
+                        <div style="display: flex; flex-direction: column; align-items: center; max-width: 500px; margin: 0 auto;">
+                            <div style="font-size: 6rem; margin-bottom: 0;" id="lvDisplayEmoji">🌟</div>
+                            <div style="font-size: 3rem; font-weight: 900; color: var(--primary-color);" id="lvDisplayNumber">LV 1</div>
+                            <div style="font-size: 1.1rem; color: #888; margin-bottom: 25px;" id="lvDisplayDesc">初心者向け！気楽に描こう💕</div>
+                            
+                            <input type="range" id="wordLvSlider" min="1" max="20" value="1" style="width: 100%; height: 20px; accent-color: var(--primary-color); cursor: pointer; margin-bottom: 10px;">
+                            <div style="width: 100%; display: flex; justify-content: space-between; font-size: 0.9rem; color: #aaa; margin-bottom: 40px;">
+                                <span>LV1 (かんたん)</span>
+                                <span>LV20 (鬼畜)</span>
+                            </div>
+                            
+                            <button id="saveLvBtn" class="cute-btn primary" style="width: 100%; font-size: 1.3rem;">✨ 設定を保存するッ！ ✨</button>
+                        </div>
+                    </div>
+
+                    <!-- 2. お題マスターリスト (全お題) -->
+                    <div id="paneWordMaster" class="lv-pane hidden">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="font-size: 2rem; color: var(--primary-color); margin: 0;">📚 全お題のLVをいじるお！</h2>
+                            <button id="saveAllMasterLvsBtn" class="cute-btn primary" style="font-size: 1rem; padding: 10px 20px;">💾 全て保存ッ！</button>
+                        </div>
+                        <p style="text-align: left; background: #fff0f5; padding: 10px 15px; border-radius: 15px; font-size: 0.9rem; margin-bottom: 20px;">カテゴリーを選んで、各お題のLV（1〜20）を直接書き換えられるよ！書き換えたら右上のボタンで保存してねッ！💅</p>
+                        
+                        <div id="wordMasterContainer" style="display: flex; flex-direction: column; gap: 20px; text-align: left;">
+                            <!-- カテゴリーごとのリストがここに生成されるお！ -->
+                            <div style="text-align: center; color: #ccc; padding: 40px;">お題データを読み込み中...✨</div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- フッター (共通) -->
+                <div style="padding: 20px; background: #fff; border-top: 2px solid #ffeef6; display: flex; justify-content: flex-end;">
+                    <button id="closeLvBtn" class="cute-btn" style="background: #ccc; box-shadow: 0 5px 0 #aaa; padding: 10px 30px;">閉じる 🥺</button>
+                </div>
             </div>
         </div>
 

@@ -1614,6 +1614,35 @@ io.on('connection', (socket) => {
         }
     });
 
+    // 💎 個別お題のLVを一括変更するよッ！（管理者・全員が使えるお） 💅✨
+    // data = [{ display: '🐼パンダ', lv: 5 }, ...]
+    socket.on('bulk_set_word_lvs', (changes) => {
+        if (!Array.isArray(changes)) return;
+        const allCategories = ['animal','food','daily','yabai','situation','pose','job','vehicle','landmark','item','bug','mix','mix_safe'];
+        for (const { display, lv } of changes) {
+            const parsedLv = parseInt(lv, 10);
+            if (!display || isNaN(parsedLv) || parsedLv < 1 || parsedLv > 20) continue;
+            for (const key of allCategories) {
+                if (!cuteWords[key]) continue;
+                const word = cuteWords[key].find(w => w.display === display);
+                if (word) word.lv = parsedLv;
+            }
+        }
+        console.log(`[WORD-LV-BULK] Updated ${changes.length} word LVs from socket ${socket.id}`);
+        safeEmit(socket, 'word_lvs_saved', { count: changes.length });
+    });
+
+    // 💎 全てのお題データを取得するおッ！💅✨
+    socket.on('request_all_words', () => {
+        // mixとか除外して純粋なカテゴリーだけ送るお
+        const categories = {};
+        for (const key in cuteWords) {
+            if (['mix', 'mix_safe'].includes(key)) continue;
+            categories[key] = cuteWords[key];
+        }
+        safeEmit(socket, 'all_words_data', categories);
+    });
+
     socket.on('reset_player_data', async (targetToken) => {
         console.log(`[ADMIN-ACTION] Purifying (DELETING) player data for token: ${targetToken}`);
         if (!targetToken) return;

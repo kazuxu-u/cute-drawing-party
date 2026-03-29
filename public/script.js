@@ -1602,6 +1602,14 @@ const lvDisplayDesc = document.getElementById('lvDisplayDesc');
 const saveLvBtn = document.getElementById('saveLvBtn');
 const closeLvBtn = document.getElementById('closeLvBtn');
 
+// 🆕 タブとパネルの要素
+const tabMyPrefs = document.getElementById('tabMyPrefs');
+const tabWordMaster = document.getElementById('tabWordMaster');
+const paneMyPrefs = document.getElementById('paneMyPrefs');
+const paneWordMaster = document.getElementById('paneWordMaster');
+const wordMasterContainer = document.getElementById('wordMasterContainer');
+const saveAllMasterLvsBtn = document.getElementById('saveAllMasterLvsBtn');
+
 const LV_EMOJI = ['🌱','🌱','💧','💧','🌊','🌊','🔥','🔥','⚡','⚡','🌙','🌙','🍀','🍀','🔰','🔰','💎','💎','👑','💀'];
 const LV_DESC = [
     '初心者向け！気楽に描こう💕', '初心者向け！気楽に描こう💕',
@@ -1620,7 +1628,135 @@ function openLvModal() {
     if (!lvSettingsOverlay) return;
     lvSettingsOverlay.classList.remove('hidden');
     lvSettingsOverlay.style.display = 'flex';
+    switchLvTab('myPrefs'); // 最初は自分の設定を出す
 }
+
+function switchLvTab(tab) {
+    if (!tabMyPrefs || !tabWordMaster || !paneMyPrefs || !paneWordMaster) return;
+    
+    if (tab === 'myPrefs') {
+        tabMyPrefs.classList.add('active');
+        tabMyPrefs.style.color = 'var(--primary-color)';
+        tabMyPrefs.style.borderBottom = '5px solid var(--primary-color)';
+        tabWordMaster.classList.remove('active');
+        tabWordMaster.style.color = '#888';
+        tabWordMaster.style.borderBottom = '5px solid transparent';
+        paneMyPrefs.classList.remove('hidden');
+        paneWordMaster.classList.add('hidden');
+    } else {
+        tabWordMaster.classList.add('active');
+        tabWordMaster.style.color = 'var(--primary-color)';
+        tabWordMaster.style.borderBottom = '5px solid var(--primary-color)';
+        tabMyPrefs.classList.remove('active');
+        tabMyPrefs.style.color = '#888';
+        tabMyPrefs.style.borderBottom = '5px solid transparent';
+        paneWordMaster.classList.remove('hidden');
+        paneMyPrefs.classList.add('hidden');
+        
+        // マスターリストを表示する時はデータを要求するお！
+        socket.emit('request_all_words');
+    }
+}
+
+if (tabMyPrefs) tabMyPrefs.addEventListener('click', () => switchLvTab('myPrefs'));
+if (tabWordMaster) tabWordMaster.addEventListener('click', () => switchLvTab('wordMaster'));
+
+// 💎 サーバーからお題データが届いたお！💅✨
+socket.on('all_words_data', (categories) => {
+    if (!wordMasterContainer) return;
+    wordMasterContainer.innerHTML = '';
+    
+    // カテゴリー名を日本語にするマッピング
+    const catNames = {
+        animal: '🐾 動物', food: '🍓 食べ物', daily: '🏠 日用品', yabai: '🔞 ヤバい系',
+        situation: '💑 シチュエーション', pose: '💃 ポーズ', job: '👮 職業',
+        vehicle: '🚀 乗り物', landmark: '🗼 名所', item: '📦 アイテム', bug: '🦟 虫'
+    };
+
+    for (const catKey in categories) {
+        const words = categories[catKey];
+        const catSection = document.createElement('div');
+        catSection.style.marginBottom = '30px';
+        
+        const title = document.createElement('h3');
+        title.textContent = catNames[catKey] || catKey;
+        title.style.borderLeft = '10px solid var(--primary-color)';
+        title.style.paddingLeft = '15px';
+        title.style.marginBottom = '15px';
+        title.style.fontSize = '1.4rem';
+        catSection.appendChild(title);
+        
+        const list = document.createElement('div');
+        list.style.display = 'grid';
+        list.style.gridTemplateColumns = 'repeat(auto-fill, minmax(180px, 1fr))';
+        list.style.gap = '10px';
+        
+        words.forEach(word => {
+            const item = document.createElement('div');
+            item.style.background = '#fff';
+            item.style.padding = '10px 15px';
+            item.style.borderRadius = '15px';
+            item.style.border = '1px solid #eee';
+            item.style.display = 'flex';
+            item.style.justifyContent = 'space-between';
+            item.style.alignItems = 'center';
+            item.className = 'word-lv-edit-item';
+            
+            const label = document.createElement('span');
+            label.textContent = word.display;
+            label.style.fontSize = '0.9rem';
+            
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.min = '1';
+            input.max = '20';
+            input.value = word.lv;
+            input.dataset.display = word.display; // 検索キー
+            input.style.width = '45px';
+            input.style.padding = '5px';
+            input.style.borderRadius = '8px';
+            input.style.border = '2px solid #ffcce6';
+            input.style.textAlign = 'center';
+            input.style.fontWeight = 'bold';
+            
+            item.appendChild(label);
+            item.appendChild(input);
+            list.appendChild(item);
+        });
+        
+        catSection.appendChild(list);
+        wordMasterContainer.appendChild(catSection);
+    }
+});
+
+// 💾 全お題のLVを一括保存するおッ！✨
+if (saveAllMasterLvsBtn) {
+    saveAllMasterLvsBtn.addEventListener('click', () => {
+        const inputs = wordMasterContainer.querySelectorAll('input[type="number"]');
+        const changes = [];
+        inputs.forEach(input => {
+            changes.push({
+                display: input.dataset.display,
+                lv: parseInt(input.value, 10)
+            });
+        });
+        
+        socket.emit('bulk_set_word_lvs', changes);
+        saveAllMasterLvsBtn.textContent = '⌛ 保存中...';
+        saveAllMasterLvsBtn.disabled = true;
+    });
+}
+
+socket.on('word_lvs_saved', (data) => {
+    if (saveAllMasterLvsBtn) {
+        saveAllMasterLvsBtn.textContent = '✅ 保存完了ッ！✨';
+        setTimeout(() => {
+            saveAllMasterLvsBtn.textContent = '💾 全て保存ッ！';
+            saveAllMasterLvsBtn.disabled = false;
+        }, 2000);
+    }
+    addChatMessage('System', `${data.count}個のお題LVを更新したよッ！💎💅`, '#ff66b2');
+});
 
 if (wordLvSlider) {
     wordLvSlider.addEventListener('input', () => {

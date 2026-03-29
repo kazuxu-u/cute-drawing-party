@@ -1701,3 +1701,40 @@ input[type="text"]:focus {
     animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+/* 💎 お題難易度LV設定モーダル用のスタイル 💅✨ */
+.lv-tab {
+    transition: all 0.3s ease;
+}
+.lv-tab:hover {
+    background: rgba(255, 102, 178, 0.05);
+}
+.lv-tab.active {
+    background: white;
+}
+
+.lv-pane {
+    animation: fadeInPane 0.3s ease-out;
+}
+
+@keyframes fadeInPane {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.word-lv-edit-item {
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+}
+
+.word-lv-edit-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(255,102,178,0.15);
+    border-color: var(--primary-color) !important;
+}
+
+.word-lv-edit-item input:focus {
+    outline: none;
+    border-color: var(--secondary-color) !important;
+    background: #fffafa;
+}
+
