@@ -955,8 +955,8 @@ function startNextTurn(room) {
         const category = drawer.category || 'mix';
         const fullWordList = cuteWords[category] || cuteWords.mix;
         
-        // 描き手のLV設定でフィルタリングするおッ！💎（設定なければ自分のPlayerLvに自動で合わせる）
-        const targetLv = drawer.preferredWordLv || Math.min(20, Math.max(1, (drawer.lv || 0) + 1));
+        // 描き手のLV設定でフィルタリングするおッ！💎（設定なければ自分のPlayerLvに合わせてあげるよッ！💅）
+        const targetLv = drawer.preferredWordLv || Math.max(1, (drawer.lv || 1));
         const lvFilteredList = fullWordList.filter(w => w.lv === targetLv);
         const wordList = lvFilteredList.length >= 3 ? lvFilteredList : fullWordList; // 候補が少なければ全体から選ぶ💅
         
