@@ -2,6 +2,7 @@ const socket = io();
 
 // 必要なDOM要素の取得
 const playerList = document.getElementById('playerList');
+let lastPlayersList = []; // 🆕 キャッシュ用にお引越しッ！💎✨💍
 const playerNameInput = document.getElementById('playerNameInput');
 const joinBtn = document.getElementById('joinBtn');
 const soloModeBtn = document.getElementById('soloModeBtn');
@@ -1048,7 +1049,12 @@ socket.on('connect', () => { myId = socket.id; });
 
 socket.on('update_players', (players) => {
     if (inSoloMode) return;
+    lastPlayersList = players; // キャッシュしておくおッ！💎
     playerList.innerHTML = '';
+    
+    const playerMe = players.find(p => p.id === myId);
+    if (playerMe) updateCategorySelect(playerMe.lv || 0);
+
     let amIin = false;
     const MIN_SLOTS = 4; // 👈 最低4人分の枠を表示するおッ！💎
     
@@ -1056,8 +1062,8 @@ socket.on('update_players', (players) => {
         const li = document.createElement('li');
         li.className = 'player-item'; // 🆕 クラス追加ッ！💅✨
         
-        // 🆕 XP進捗の計算ッ！💎✨💍
-        const nextLvXp = (p.lv || 0) * 30 + 100;
+        // 🆕 XP進捗の計算ッ！💎✨💍 (公式: (Lv + 1) * 5)
+        const nextLvXp = (p.lv || 0 + 1) * 5;
         const xpPercent = Math.min(100, Math.floor(((p.xp || 0) / nextLvXp) * 100));
         
         // 🆕 自分の時だけバルーンを出すおッ！🤟💖
@@ -1115,10 +1121,9 @@ socket.on('update_players', (players) => {
 
     const humans = players.filter(p => !p.isNpc);
     const readyHumans = humans.filter(p => p.isReady);
-    const me = players.find(p => p.id === myId);
-
+    const meAuth = players.find(p => p.id === myId);
     if (readyBubble) {
-        if (me && !me.isReady && readyHumans.length > 0 && readyHumans.length < humans.length) {
+        if (meAuth && !meAuth.isReady && readyHumans.length > 0 && readyHumans.length < humans.length) {
             readyBubble.classList.remove('hidden');
             if (humans.length - readyHumans.length === 1) {
                 readyBubble.textContent = 'あと一人っ！早く押して〜！💅✨';
@@ -1563,10 +1568,53 @@ socket.on('join_success', (data) => {
         // 親のコンテナを表示させてから setupArea を表示するおッ！💎✨
         document.querySelector('.container').classList.remove('hidden');
         setupArea.classList.remove('hidden');
-        playArea.classList.add('hidden'); // 念のためプレイ画面は隠しておく💅
+        playArea.classList.add('hidden'); // プレイ画面はまだ隠しておく💅
+
+        if (data.minLvPerCategory) {
+            window.minLvPerCategory = data.minLvPerCategory; // グローバルに保存！💎
+            // 自分のレベルに合わせてカテゴリーリストを更新するお
+            const meJoined = lastPlayersList.find(p => p.id === myId);
+            if (meJoined) updateCategorySelect(meJoined.lv || 0);
+        }
+
         addChatMessage('System', `${data.roomName} に参加したよ！盛り上がっていこー！✨💍`, '#ff66b2');
     }, 500);
 });
+
+// 🆕 カテゴリーのLV制限を反映させるおッ！💎✨💍
+function updateCategorySelect(myLv) {
+    if (!categorySelect || !window.minLvPerCategory) return;
+    
+    Array.from(categorySelect.options).forEach(opt => {
+        const catKey = opt.value;
+        const minLv = window.minLvPerCategory[catKey] || 1;
+        
+        if (myLv < minLv) {
+            opt.disabled = true;
+            opt.style.color = '#ccc';
+            opt.style.background = '#f5f5f5';
+            opt.text = `${opt.text.split(' (')[0]} (Lv.${minLv}〜)`;
+        } else {
+            opt.disabled = false;
+            opt.style.color = '';
+            opt.style.background = '';
+            opt.text = opt.text.split(' (')[0]; // 元の名前に戻す
+        }
+    });
+
+    // もし選択中のカテゴリーがロックされちゃったら、mixに戻すお💅
+    if (categorySelect.selectedOptions[0]?.disabled) {
+        categorySelect.value = 'mix';
+    }
+}
+
+socket.on('min_lvs_update', (data) => {
+    window.minLvPerCategory = data;
+    const me = lastPlayersList.find(p => p.id === myId);
+    if (me) updateCategorySelect(me.lv || 0);
+});
+
+// lastPlayersList moved to top
 
 if (readyBtn) {
     readyBtn.addEventListener('click', () => {

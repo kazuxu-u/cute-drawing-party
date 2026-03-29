@@ -801,6 +801,17 @@ function calcWordLv(wordObj) {
 }
 
 // すべてのカテゴリーのお題にLVを付けるおッ！💎
+const minLvPerCategory = {};
+function calculateMinLvs() {
+    for (const key in cuteWords) {
+        if (!Array.isArray(cuteWords[key]) || cuteWords[key].length === 0) {
+            minLvPerCategory[key] = 1;
+            continue;
+        }
+        minLvPerCategory[key] = Math.min(...cuteWords[key].map(w => w.lv || 20));
+    }
+}
+
 (function autoAssignLvs() {
     const allLists = ['animal','food','daily','yabai','situation','pose','job','vehicle','landmark','item','bug','mix','mix_safe'];
     for (const key of allLists) {
@@ -809,7 +820,8 @@ function calcWordLv(wordObj) {
             if (!word.lv) word.lv = calcWordLv(word);
         }
     }
-    console.log('[LV-ASSIGN] All words have been assigned a difficulty LV! 💎✨');
+    calculateMinLvs(); // ここで最小LVを計算しちゃうッ！💅
+    console.log('[LV-ASSIGN] All words have been assigned a difficulty LV and minLvs calculated! 💎✨');
 })();
 
 // ソロモード用にお題リストを全部返すよ！💎✨💍
@@ -1575,7 +1587,11 @@ io.on('connection', (socket) => {
 
         console.log(`[JOIN-ROOM] Room ${room.id}: ${finalName} joined (Host: ${room.hostName})`);
 
-        socket.emit('join_success', { roomId: room.id, roomName: room.name });
+        socket.emit('join_success', { 
+            roomId: room.id, 
+            roomName: room.name,
+            minLvPerCategory // 🆕 最小LVデータも送ってあげるおッ！💎✨💍
+        });
         
         safeRoomEmit(room, 'update_players', room.players);
         safeEmit(socket, 'game_state', {
@@ -1629,8 +1645,9 @@ io.on('connection', (socket) => {
                 if (word) word.lv = parsedLv;
             }
         }
-        console.log(`[WORD-LV-BULK] Updated ${changes.length} word LVs from socket ${socket.id}`);
+        calculateMinLvs(); // 最小LVを再計算ッ！💅✨
         safeEmit(socket, 'word_lvs_saved', { count: changes.length });
+        io.emit('min_lvs_update', minLvPerCategory); // 全員に教えるおッ！💎
     });
 
     // 💎 全てのお題データを取得するおッ！💅✨
