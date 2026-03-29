@@ -1,5 +1,12 @@
 const socket = io();
 
+// 🆕 レベル制限データを即座に受け取れるように、接続直後にリスナーを登録ッ！💎✨💍
+socket.on('min_lvs_update', (data) => {
+    window.minLvPerCategory = data;
+    console.log("[CAT-SYNC] min_lvs_update received:", data);
+    if (typeof myLv !== 'undefined') updateCategorySelect(myLv);
+});
+
 // 必要なDOM要素の取得
 const playerList = document.getElementById('playerList');
 let lastPlayersList = []; // 🆕 キャッシュ用にお引越しッ！💎✨💍
@@ -157,6 +164,7 @@ if (authSubmitBtn) {
 // 🆕 認証レスポンスの処理ッ！✨💍🌈
 socket.on('register_success', (data) => {
     playerToken = data.token;
+    myLv = 0; // 🆕 新規はLV0ッ！🐣
     localStorage.setItem('galPlayerToken', playerToken);
     transitionToRoomSelection();
 });
@@ -165,6 +173,7 @@ socket.on('register_failed', (msg) => { alert(msg); });
 
 socket.on('login_success', (data) => {
     playerToken = data.token;
+    myLv = data.lv || 0; // 🆕 レベルを保存ッ！✨
     localStorage.setItem('galPlayerToken', playerToken);
     transitionToRoomSelection();
 });
@@ -269,6 +278,7 @@ const confirmCancelBtn = document.getElementById('confirmCancelBtn');
 let currentConfirmAction = null;
 
 let myId = null;
+let myLv = 0; // 🆕 自分のレベルを記憶しておくおッ！💎
 let isDrawing = false;
 let canIDraw = false;
 let inSoloMode = false;
@@ -1574,8 +1584,7 @@ socket.on('join_success', (data) => {
         if (data.minLvPerCategory) {
             window.minLvPerCategory = data.minLvPerCategory; // グローバルに保存！💎
             // 自分のレベルに合わせてカテゴリーリストを更新するお
-            const meJoined = lastPlayersList.find(p => p.id === myId);
-            if (meJoined) updateCategorySelect(meJoined.lv || 0);
+            updateCategorySelect(myLv); // 🆕 myLv を使うように修正ッ！✨💍
         }
 
         addChatMessage('System', `${data.roomName} に参加したよ！盛り上がっていこー！✨💍`, '#ff66b2');
@@ -1611,12 +1620,6 @@ function updateCategorySelect(myLv) {
         categorySelect.value = 'mix';
     }
 }
-
-socket.on('min_lvs_update', (data) => {
-    window.minLvPerCategory = data;
-    const me = lastPlayersList.find(p => p.id === myId);
-    if (me) updateCategorySelect(me.lv || 0);
-});
 
 // lastPlayersList moved to top
 
