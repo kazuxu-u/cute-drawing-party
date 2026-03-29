@@ -782,6 +782,36 @@ cuteWords.mix = [...cuteWords.animal, ...cuteWords.food, ...cuteWords.daily, ...
 cuteWords.mix_safe = [...cuteWords.animal, ...cuteWords.food, ...cuteWords.daily, ...cuteWords.situation, ...cuteWords.pose, ...cuteWords.job, ...cuteWords.vehicle, ...cuteWords.landmark, ...cuteWords.item, ...cuteWords.bug]
     .filter(word => !word.isEcchi);
 
+// 💎 全お題にLV(1-20)を自動割り振りするよッ！💅✨（文字数・回答数・絵文字数で算出）
+function calcWordLv(wordObj) {
+    const display = wordObj.display || '';
+    const answers = wordObj.answers || [];
+    // 絵文字を除いた実質の文字長で難しさを計算
+    const cleanDisplay = display.replace(/[\u{1F300}-\u{1FFFF}]/gu, '');
+    const charLen = [...cleanDisplay].length;
+    // 平均回答文字数
+    const avgAnsLen = answers.reduce((sum, a) => sum + [...a].length, 0) / Math.max(answers.length, 1);
+    // 回答の選択肢の少なさ（少ないほど難しい）
+    const ansVariety = answers.length;
+    // 最终スコア
+    const score = charLen * 1.2 + avgAnsLen * 0.8 + (5 - Math.min(ansVariety, 5)) * 0.5;
+    // 1-20 にマッピング
+    const lv = Math.max(1, Math.min(20, Math.ceil(score)));
+    return lv;
+}
+
+// すべてのカテゴリーのお題にLVを付けるおッ！💎
+(function autoAssignLvs() {
+    const allLists = ['animal','food','daily','yabai','situation','pose','job','vehicle','landmark','item','bug','mix','mix_safe'];
+    for (const key of allLists) {
+        if (!cuteWords[key]) continue;
+        for (const word of cuteWords[key]) {
+            if (!word.lv) word.lv = calcWordLv(word);
+        }
+    }
+    console.log('[LV-ASSIGN] All words have been assigned a difficulty LV! 💎✨');
+})();
+
 // ソロモード用にお題リストを全部返すよ！💎✨💍
 app.get('/api/words', (req, res) => {
     res.json(cuteWords);
@@ -921,9 +951,14 @@ function startNextTurn(room) {
             return;
         }
 
-        // お題リストの選定：描き手の設定したカテゴリーを優先するよ！🛡️💍
+        // お題リストの選定：描き手の設定したカテゴリーとLVを優先するよ！🛡️💍
         const category = drawer.category || 'mix';
-        const wordList = cuteWords[category] || cuteWords.mix;
+        const fullWordList = cuteWords[category] || cuteWords.mix;
+        
+        // 描き手のLV設定でフィルタリングするおッ！💎（設定なければ自分のPlayerLvに自動で合わせる）
+        const targetLv = drawer.preferredWordLv || Math.min(20, Math.max(1, (drawer.lv || 0) + 1));
+        const lvFilteredList = fullWordList.filter(w => w.lv === targetLv);
+        const wordList = lvFilteredList.length >= 3 ? lvFilteredList : fullWordList; // 候補が少なければ全体から選ぶ💅
         
         let attempts = 0;
         let pickedWord = null;
@@ -1297,38 +1332,40 @@ async function handleChatMessage(room, player, msg, socket) {
             player.hasGuessed = true;
             if (!room.pointsAwardedThisTurn) {
                 room.pointsAwardedThisTurn = true;
-                player.score += 1;
+                // 💎 お題のLVに応じたポイントとXPを付与するおッ！（LV1=+1pt/XP、LV20=+20pt/XP）
+                const wordLv = (room.currentWordObj && room.currentWordObj.lv) ? room.currentWordObj.lv : 1;
+                player.score += wordLv;
                 if (player.token) {
                     if (!persistentData[player.token]) {
                         persistentData[player.token] = { name: player.name || 'Unknown', score: 0, xp: 0, lv: 0 };
                     }
-                    persistentData[player.token].score = (persistentData[player.token].score || 0) + 1; // 🎯 修正：上書きじゃなくて加算するおッ！✨💍
-                    player.totalScore = persistentData[player.token].score; // メモリ上の「トータル」も更新ッ！💅
+                    persistentData[player.token].score = (persistentData[player.token].score || 0) + wordLv;
+                    player.totalScore = persistentData[player.token].score;
                     persistentData[player.token].xp = player.xp || 0;
                     persistentData[player.token].lv = player.lv || 0;
                     persistentData[player.token].name = player.name;
                     await savePlayerData(player.token);
                 }
                 if (room.players[room.currentPlayerIndex]) {
-                    room.players[room.currentPlayerIndex].score += 1;
+                    room.players[room.currentPlayerIndex].score += wordLv;
                     const drawer = room.players[room.currentPlayerIndex];
                     if (drawer.token) {
                         if (!persistentData[drawer.token]) {
                             persistentData[drawer.token] = { name: drawer.name || 'Unknown', score: 0, xp: 0, lv: 0 };
                         }
-                        persistentData[drawer.token].score = (persistentData[drawer.token].score || 0) + 1; // 🎯 描き手も累積スコア加算ッ！🎨
+                        persistentData[drawer.token].score = (persistentData[drawer.token].score || 0) + wordLv;
                         drawer.totalScore = persistentData[drawer.token].score;
                         persistentData[drawer.token].name = drawer.name;
                         await savePlayerData(drawer.token);
                     }
-                    // 描き手にも20XP！🎨
-                    await addXp(room, drawer, 20);
+                    // 描き手にもWordLvと同じXP！🎨
+                    await addXp(room, drawer, wordLv);
                 }
                 
-                // 回答者にも20XP！🎯
-                await addXp(room, player, 20);
+                // 回答者にもWordLvと同じXP！🎯
+                await addXp(room, player, wordLv);
 
-                safeRoomEmit(room, 'chat_message', { sender: 'System', text: `やば！${player.name}さんが1番乗りで大正解！🎉✨（回答者+1pt,20XP / 出題者+1pt,20XP）`, color: '#ff66b2', type: 'correct' });
+                safeRoomEmit(room, 'chat_message', { sender: 'System', text: `やば！${player.name}さんが1番乗りで大正解！🎉✨（回答者+${wordLv}pt,+${wordLv}XP / 出題者+${wordLv}pt,+${wordLv}XP）【LV${wordLv}のお題！】`, color: '#ff66b2', type: 'correct' });
             } else {
                 safeRoomEmit(room, 'chat_message', { sender: 'System', text: `${player.name}さんも正解！👏（ポイントは最初の人だけだよ！）`, color: '#ff66b2', type: 'correct' });
             }
@@ -1560,6 +1597,21 @@ io.on('connection', (socket) => {
             comment: r.comment,
             hasPassword: !!r.password
         })));
+    });
+
+    // 💎 お題の難しさLVをセットするよッ！(/point コマンド連携) 💅✨
+    socket.on('set_word_lv', (lv) => {
+        const parsedLv = parseInt(lv, 10);
+        if (isNaN(parsedLv) || parsedLv < 1 || parsedLv > 20) return;
+        for (const rid in rooms) {
+            const player = rooms[rid].players.find(p => p.id === socket.id);
+            if (player) {
+                player.preferredWordLv = parsedLv;
+                console.log(`[WORD-LV] ${player.name} set preferredWordLv to ${parsedLv}`);
+                safeEmit(socket, 'word_lv_updated', parsedLv);
+                break;
+            }
+        }
     });
 
     socket.on('reset_player_data', async (targetToken) => {

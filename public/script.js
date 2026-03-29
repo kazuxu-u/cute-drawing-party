@@ -1580,11 +1580,82 @@ if (readyBtn) {
 
 function sendMessage() {
     const msg = chatInput.value.trim();
-    if (msg) {
-        socket.emit('send_message', msg);
+    if (!msg) return;
+
+    // 💎 /point コマンドでお題LV設定モーダルを開くおッ！🎯✨
+    if (msg === '/point') {
         chatInput.value = '';
+        openLvModal();
+        return;
     }
+
+    socket.emit('send_message', msg);
+    chatInput.value = '';
 }
+
+// --- 💎 お題難易度LV設定モーダルのロジック 💅✨ ---
+const lvSettingsOverlay = document.getElementById('lvSettingsOverlay');
+const wordLvSlider = document.getElementById('wordLvSlider');
+const lvDisplayNumber = document.getElementById('lvDisplayNumber');
+const lvDisplayEmoji = document.getElementById('lvDisplayEmoji');
+const lvDisplayDesc = document.getElementById('lvDisplayDesc');
+const saveLvBtn = document.getElementById('saveLvBtn');
+const closeLvBtn = document.getElementById('closeLvBtn');
+
+const LV_EMOJI = ['🌱','🌱','💧','💧','🌊','🌊','🔥','🔥','⚡','⚡','🌙','🌙','🍀','🍀','🔰','🔰','💎','💎','👑','💀'];
+const LV_DESC = [
+    '初心者向け！気楽に描こう💕', '初心者向け！気楽に描こう💕',
+    'ちょっとだけ難しいよ🌱', 'ちょっとだけ難しいよ🌱',
+    '中くらいの難しさ！💪', '中くらいの難しさ！💪',
+    '脳みそ使うよ🧠✨', '脳みそ使うよ🧠✨',
+    'かなり手強い…⚡', 'かなり手強い…⚡',
+    '上級者向け！夜に向きやってみて🌙', '上級者向け！夜に向きやってみて🌙',
+    'マジで難しい！💀', 'マジで難しい！💀',
+    'ヤバいLV！鬼畜だよ🔰', 'ヤバいLV！鬼畜だよ🔰',
+    'ほぼ神様レベル…💎', 'ほぼ神様レベル…💎',
+    '👑最強鬼畜！受けて立てる？👑', '💀伝説のLV！覚悟しな💀',
+];
+
+function openLvModal() {
+    if (!lvSettingsOverlay) return;
+    lvSettingsOverlay.classList.remove('hidden');
+    lvSettingsOverlay.style.display = 'flex';
+}
+
+if (wordLvSlider) {
+    wordLvSlider.addEventListener('input', () => {
+        const lv = parseInt(wordLvSlider.value, 10);
+        if (lvDisplayNumber) lvDisplayNumber.textContent = `LV ${lv}`;
+        if (lvDisplayEmoji) lvDisplayEmoji.textContent = LV_EMOJI[lv - 1] || '🌟';
+        if (lvDisplayDesc) lvDisplayDesc.textContent = LV_DESC[lv - 1] || '';
+    });
+}
+
+if (saveLvBtn) {
+    saveLvBtn.addEventListener('click', () => {
+        const lv = parseInt(wordLvSlider.value, 10);
+        socket.emit('set_word_lv', lv);
+        if (lvSettingsOverlay) {
+            lvSettingsOverlay.classList.add('hidden');
+            lvSettingsOverlay.style.display = 'none';
+        }
+    });
+}
+
+if (closeLvBtn) {
+    closeLvBtn.addEventListener('click', () => {
+        if (lvSettingsOverlay) {
+            lvSettingsOverlay.classList.add('hidden');
+            lvSettingsOverlay.style.display = 'none';
+        }
+    });
+}
+
+// サーバーから確認が来たらチャットに出すおッ！💎
+socket.on('word_lv_updated', (lv) => {
+    addChatMessage('System', `🎯 お題のLVをLV${lv}に設定したよ！次のターンから適用されるよッ！💅✨`, '#ff66b2');
+});
+
 
 // 送信ボタンは削除されたので、Enterキーのみで送信するよ💅✨
 
