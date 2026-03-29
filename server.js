@@ -1324,7 +1324,12 @@ async function handleChatMessage(room, player, msg, socket) {
                 safeRoomEmit(room, 'chat_message', { sender: 'System', text: `${player.name}さんも正解！👏（ポイントは最初の人だけだよ！）`, color: '#ff66b2', type: 'correct' });
             }
             safeRoomEmit(room, 'update_players', room.players);
-            if (player.isNpc) safeRoomEmit(room, 'chat_message', { sender: player.name, text: msg, color: '#333' });
+            if (player.isNpc) {
+                safeRoomEmit(room, 'chat_message', { sender: player.name, text: msg, color: '#333' });
+            } else {
+                // 🆕 人間の正解メッセージも「ド派手タイプ」で送信するおッ！💎✨💍
+                safeRoomEmit(room, 'chat_message', { sender: player.name, text: msg, color: '#333', type: 'correct_user' });
+            }
         } else if (isAlmost && !isCorrect && !isDrawer && !player.hasGuessed) {
             if (!player.isNpc) safeEmit(io.to(player.id), 'chat_message', { sender: 'System', text: `「${msg}」…惜しい！あとちょっと！🥺`, color: '#ff9900', type: 'oshii' });
             safeRoomEmit(room, 'chat_message', { sender: player.name, text: msg, color: '#333' });
@@ -1480,20 +1485,35 @@ io.on('connection', (socket) => {
         }
         const saved = (playerToken && persistentData[playerToken]) ? persistentData[playerToken] : { score: 0, xp: 0, lv: 0 };
         
-        // 既に同じトークンで入ってる子がいたら、古い方を追い出しちゃうおッ！🚫✨💍
+        // 既に同じトークンで入ってる子がいたらチェックするおッ！✨💍💅
         if (playerToken) {
-            const existingIndex = room.players.findIndex(p => p.token === playerToken);
-            if (existingIndex !== -1) {
-                room.players.splice(existingIndex, 1);
+            const existingPlayer = room.players.find(p => p.token === playerToken);
+            if (existingPlayer) {
+                if (existingPlayer.id === socket.id) {
+                    // 同じソケットなら完全に再接続だから入れ替えるおッ！💅
+                    const idx = room.players.indexOf(existingPlayer);
+                    room.players.splice(idx, 1);
+                } else {
+                    // 🆕 ソケットIDが違うなら、別タブか何かで入ろうとしてるおッ！💎✨💍
+                    // テストしやすくするために、名前をちょっと変えて共存させてあげるよッ！🤟💖
+                    console.log(`[JOIN-MULTI] Same token [${playerToken}] but different socket. Allowing coexist for testing. ✨`);
+                }
             }
         }
 
-        const name = playerName || `Player ${room.players.length + 1}`;
+        let finalName = playerName || `Player ${room.players.length + 1}`;
+        // 🆕 同名のプレイヤーがルームにいたら、(2)とか付けて区別するおッ！💎✨💍
+        let dupCount = 1;
+        const baseName = playerName || 'Player';
+        while (room.players.some(p => p.name === finalName)) {
+            dupCount++;
+            finalName = `${baseName}(${dupCount})`;
+        }
 
         const newPlayer = {
             id: socket.id,
             token: playerToken,
-            name: name,
+            name: finalName,
             score: 0,
             totalScore: saved.score || 0,
             xp: saved.xp || 0,

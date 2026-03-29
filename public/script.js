@@ -1283,15 +1283,19 @@ socket.on('round_end', (data) => {
 
 socket.on('chat_message', (data) => {
     if (inSoloMode) return;
-    addChatMessage(data.sender, data.text, data.color);
+    addChatMessage(data.sender, data.text, data.color, data.type); // typeを渡すようにしたよッ！💎
+    
     if (data.sender !== 'System' || data.type === 'correct') {
-        createDanmaku(data.text, data.color, data.type === 'correct');
+        createDanmaku(data.text, data.color, data.type === 'correct' || data.type === 'correct_user');
     }
-    if (data.type === 'correct') {
+    
+    if (data.type === 'correct' || data.type === 'correct_user') {
         playSE('correct');
-        createWinSparkle(); // ✨ 修正：名前が被ってたのを直したよ！💅
+        // キラキラ演出を連発！！✨💎💍
+        for(let i=0; i<5; i++) {
+            setTimeout(() => createWinSparkle(Math.random()*100, Math.random()*100), i * 200);
+        }
         
-        // 🆕 誰かが正解した！描き手さんに「もう終わっていいよ」って教えるよ！💖💍
         if (canIDraw && turnEndBubble) {
             turnEndBubble.classList.remove('hidden');
             turnEndBubble.textContent = '誰かが正解したよッ！👏✨ はよ「終了」押して次行こ！💖🤙';
@@ -1603,11 +1607,16 @@ chatInput.addEventListener('keydown', (e) => {
     }
 });
 
-function addChatMessage(sender, text, color) {
+function addChatMessage(sender, text, color, type) {
     const div = document.createElement('div');
-    // 自分のメッセージならクラスを足すよ💅✨
     const isMe = sender === (currentPlayerName || localStorage.getItem('galDrawingName') || '自分');
-    div.className = isMe ? 'chat-msg mine' : 'chat-msg';
+    
+    // 🆕 正解メッセージならド派手な専用クラスを付与ッ！💎✨💍
+    if (type === 'correct_user') {
+        div.className = 'chat-msg correct-user';
+    } else {
+        div.className = isMe ? 'chat-msg mine' : 'chat-msg';
+    }
     
     div.innerHTML = `
         <strong style="color: ${color || '#333'}">${sender}</strong>
@@ -1621,8 +1630,9 @@ function createDanmaku(text, color, isBig = false) {
     if (!danmakuContainer) return;
     
     const div = document.createElement('div');
-    div.className = isBig ? 'danmaku-item big' : 'danmaku-item';
-    div.textContent = isBig ? `✨💖 ${text} 💖✨` : text;
+    // 🆕 正解なら専用のキラキラ＆超巨大クラスを付与ッ！🚀✨💍
+    div.className = isBig ? 'danmaku-item danmaku-correct' : 'danmaku-item';
+    div.textContent = isBig ? `💎✨ 正解：${text} ✨💎` : text;
     
     // 表示予定の最大の高さ (文字がはみ出さないように)
     const padding = isBig ? 150 : 50;
