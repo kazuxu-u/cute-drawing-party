@@ -1492,6 +1492,9 @@ async function handleChatMessage(room, player, msg, socket) {
 }
 
 io.on('connection', (socket) => {
+    // 🆕 接続時に現在のカテゴリー制限を即パケ！💎✨💍
+    socket.emit('min_lvs_update', minLvPerCategory);
+
     // 🆕 プレイヤー登録（はじめて！）💅✨
     socket.on('register', async (data) => {
         let { name, password } = data;
