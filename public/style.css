@@ -33,10 +33,13 @@
     display: flex;
     justify-content: center;
     align-items: flex-start; /* 👈 修正：長いコンテンツでも上から並べてスクロール可能に！💅 */
-    background: linear-gradient(135deg, rgba(255,240,245,0.9), rgba(240,248,255,0.9));
-    z-index: 10000;
+    background: linear-gradient(135deg, hsla(340, 100%, 95%, 0.95), hsla(280, 100%, 92%, 0.95));
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    z-index: 20000;
     overflow-y: auto; 
-    padding: 0; /* paddingは中身で調整！💎 */
+    padding: 0;
+    transition: all 1s cubic-bezier(0.645, 0.045, 0.355, 1);
 }
 
 html, body {
@@ -733,21 +736,7 @@ input[type="text"]:focus {
 }
 
 /* --- Title Screen 💎 --- */
-.full-overlay {
-    position: absolute; /* containerと同じくapp-root内に！💅 */
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, hsla(340, 100%, 95%, 0.95), hsla(280, 100%, 92%, 0.95));
-    backdrop-filter: blur(40px);
-    -webkit-backdrop-filter: blur(40px);
-    z-index: 20000; /* 全てを超越する！💎 */
-    display: flex;
-    justify-content: center;
-    align-items: flex-start; /* 👈 修正：はみ出し防止で上起点！💍 */
-    transition: all 1s cubic-bezier(0.645, 0.045, 0.355, 1);
-}
+/* .full-overlay consolidated at the topッ！✨ */
 
 .title-content {
     text-align: center;

@@ -1730,18 +1730,30 @@ io.on('connection', (socket) => {
     socket.on('bulk_set_word_lvs', async (changes) => {
         if (!Array.isArray(changes)) return;
         const allCategories = ['animal','food','daily','yabai','situation','pose','job','vehicle','landmark','item','bug','mix','mix_safe'];
+        let updateCount = 0;
         for (const { display, lv } of changes) {
             const parsedLv = parseInt(lv, 10);
             if (!display || isNaN(parsedLv) || parsedLv < 1 || parsedLv > 20) continue;
+            
+            let matched = false;
             for (const key of allCategories) {
                 if (!cuteWords[key]) continue;
                 const word = cuteWords[key].find(w => w.display === display);
-                if (word) word.lv = parsedLv;
+                if (word) {
+                    word.lv = parsedLv;
+                    matched = true;
+                }
             }
+            if (matched) updateCount++;
         }
+        
+        console.log(`[BULK-LV-UPDATE] Processed ${changes.length} requests, updated ${updateCount} unique words. ✨💍`);
+        
         calculateMinLvs(); // 最小LVを再計算ッ！💅✨
+        console.log(`[BULK-LV-UPDATE] minLvPerCategory updated: ${JSON.stringify(minLvPerCategory)} 💎`);
+
         await saveWordLvs(); // 🆕 DB/JSONに保存ッ！💎✨💍
-        safeEmit(socket, 'word_lvs_saved', { count: changes.length });
+        safeEmit(socket, 'word_lvs_saved', { count: updateCount });
         io.emit('min_lvs_update', minLvPerCategory); // 全員に教えるおッ！💎
     });
 
