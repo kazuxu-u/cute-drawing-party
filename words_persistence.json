@@ -1,0 +1,1507 @@
+[
+  {
+    "display": "🐼パンダ",
+    "lv": 3,
+    "category": "animal"
+  },
+  {
+    "display": "🐈ねこ",
+    "lv": 1,
+    "category": "animal"
+  },
+  {
+    "display": "🐕いぬ",
+    "lv": 1,
+    "category": "animal"
+  },
+  {
+    "display": "🐰うさぎ",
+    "lv": 2,
+    "category": "animal"
+  },
+  {
+    "display": "🐧ぺんぎん",
+    "lv": 2,
+    "category": "animal"
+  },
+  {
+    "display": "🐘ゾウ",
+    "lv": 2,
+    "category": "animal"
+  },
+  {
+    "display": "🦒きりん",
+    "lv": 3,
+    "category": "animal"
+  },
+  {
+    "display": "🦁らいおん",
+    "lv": 3,
+    "category": "animal"
+  },
+  {
+    "display": "🐒ごりら...じゃなくて猿",
+    "lv": 5,
+    "category": "animal"
+  },
+  {
+    "display": "🦊きつね",
+    "lv": 4,
+    "category": "animal"
+  },
+  {
+    "display": "🐻くま",
+    "lv": 2,
+    "category": "animal"
+  },
+  {
+    "display": "🐨こあら",
+    "lv": 3,
+    "category": "animal"
+  },
+  {
+    "display": "🐷ぶた",
+    "lv": 2,
+    "category": "animal"
+  },
+  {
+    "display": "🐭ねずみ",
+    "lv": 3,
+    "category": "animal"
+  },
+  {
+    "display": "🐯とら",
+    "lv": 3,
+    "category": "animal"
+  },
+  {
+    "display": "🐮うし",
+    "lv": 2,
+    "category": "animal"
+  },
+  {
+    "display": "🐴うま",
+    "lv": 2,
+    "category": "animal"
+  },
+  {
+    "display": "🐸かえる",
+    "lv": 2,
+    "category": "animal"
+  },
+  {
+    "display": "🐍へび",
+    "lv": 4,
+    "category": "animal"
+  },
+  {
+    "display": "🐬いるか",
+    "lv": 4,
+    "category": "animal"
+  },
+  {
+    "display": "🍓いちご",
+    "lv": 1,
+    "category": "food"
+  },
+  {
+    "display": "🍔ハンバーガー",
+    "lv": 3,
+    "category": "food"
+  },
+  {
+    "display": "🍦ソフトクリーム",
+    "lv": 2,
+    "category": "food"
+  },
+  {
+    "display": "🍄キノコ",
+    "lv": 2,
+    "category": "food"
+  },
+  {
+    "display": "🍎りんご",
+    "lv": 1,
+    "category": "food"
+  },
+  {
+    "display": "🍑もも",
+    "lv": 3,
+    "category": "food"
+  },
+  {
+    "display": "🍣すし",
+    "lv": 4,
+    "category": "food"
+  },
+  {
+    "display": "🍜らーめん",
+    "lv": 3,
+    "category": "food"
+  },
+  {
+    "display": "🍰けーき",
+    "lv": 4,
+    "category": "food"
+  },
+  {
+    "display": "🥩やきにく",
+    "lv": 5,
+    "category": "food"
+  },
+  {
+    "display": "🍕ぴざ",
+    "lv": 3,
+    "category": "food"
+  },
+  {
+    "display": "🍩どーなつ",
+    "lv": 2,
+    "category": "food"
+  },
+  {
+    "display": "🍫ちょこ",
+    "lv": 3,
+    "category": "food"
+  },
+  {
+    "display": "🍮ぷりん",
+    "lv": 3,
+    "category": "food"
+  },
+  {
+    "display": "🍙おにぎり",
+    "lv": 2,
+    "category": "food"
+  },
+  {
+    "display": "🍛かれー",
+    "lv": 4,
+    "category": "food"
+  },
+  {
+    "display": "🍞ぱん",
+    "lv": 1,
+    "category": "food"
+  },
+  {
+    "display": "🍳めだまやき",
+    "lv": 5,
+    "category": "food"
+  },
+  {
+    "display": "🍟ふらいどぽてと",
+    "lv": 3,
+    "category": "food"
+  },
+  {
+    "display": "🍈めろん",
+    "lv": 2,
+    "category": "food"
+  },
+  {
+    "display": "🚗くるま",
+    "lv": 1,
+    "category": "daily"
+  },
+  {
+    "display": "🌻ひまわり",
+    "lv": 3,
+    "category": "daily"
+  },
+  {
+    "display": "👻おばけ",
+    "lv": 2,
+    "category": "daily"
+  },
+  {
+    "display": "🏠いえ",
+    "lv": 1,
+    "category": "daily"
+  },
+  {
+    "display": "📱すまほ",
+    "lv": 2,
+    "category": "daily"
+  },
+  {
+    "display": "🚲じてんしゃ",
+    "lv": 4,
+    "category": "daily"
+  },
+  {
+    "display": "👓めがね",
+    "lv": 3,
+    "category": "daily"
+  },
+  {
+    "display": "⏰めざましどけい",
+    "lv": 5,
+    "category": "daily"
+  },
+  {
+    "display": "🧻といれっとぺーぱー",
+    "lv": 6,
+    "category": "daily"
+  },
+  {
+    "display": "📺てれび",
+    "lv": 2,
+    "category": "daily"
+  },
+  {
+    "display": "💻ぱそこん",
+    "lv": 3,
+    "category": "daily"
+  },
+  {
+    "display": "🛌べっど",
+    "lv": 2,
+    "category": "daily"
+  },
+  {
+    "display": "🚿しゃわー",
+    "lv": 4,
+    "category": "daily"
+  },
+  {
+    "display": "🦷はぶらし",
+    "lv": 5,
+    "category": "daily"
+  },
+  {
+    "display": "🌂かさ",
+    "lv": 2,
+    "category": "daily"
+  },
+  {
+    "display": "🔑かぎ",
+    "lv": 3,
+    "category": "daily"
+  },
+  {
+    "display": "👠はいひーる",
+    "lv": 5,
+    "category": "daily"
+  },
+  {
+    "display": "👗わんぴーす",
+    "lv": 4,
+    "category": "daily"
+  },
+  {
+    "display": "👜かばん",
+    "lv": 3,
+    "category": "daily"
+  },
+  {
+    "display": "🧴けしょうすい",
+    "lv": 8,
+    "category": "daily"
+  },
+  {
+    "display": "💩うんこ（笑）",
+    "lv": 1,
+    "category": "yabai"
+  },
+  {
+    "display": "🍌バナナ（意味深）",
+    "lv": 2,
+    "category": "yabai"
+  },
+  {
+    "display": "🍒さくらんぼ（意味深）",
+    "lv": 5,
+    "category": "yabai"
+  },
+  {
+    "display": "🍄きのこ（意味深）",
+    "lv": 6,
+    "category": "yabai"
+  },
+  {
+    "display": "💋くちびる",
+    "lv": 3,
+    "category": "yabai"
+  },
+  {
+    "display": "👙びきに",
+    "lv": 3,
+    "category": "yabai"
+  },
+  {
+    "display": "🩲ぱんつ",
+    "lv": 3,
+    "category": "yabai"
+  },
+  {
+    "display": "🍆なす（意味深）",
+    "lv": 6,
+    "category": "yabai"
+  },
+  {
+    "display": "🍈メロン（意味深）",
+    "lv": 7,
+    "category": "yabai"
+  },
+  {
+    "display": "🍑デカ尻",
+    "lv": 6,
+    "category": "yabai"
+  },
+  {
+    "display": "🍼哺乳瓶（バブみ）",
+    "lv": 7,
+    "category": "yabai"
+  },
+  {
+    "display": "🛏️ベッドイン",
+    "lv": 8,
+    "category": "yabai"
+  },
+  {
+    "display": "🏩ラブホ",
+    "lv": 7,
+    "category": "yabai"
+  },
+  {
+    "display": "⛓️手錠",
+    "lv": 9,
+    "category": "yabai"
+  },
+  {
+    "display": "💥ムチ（SM）",
+    "lv": 10,
+    "category": "yabai"
+  },
+  {
+    "display": "🕯️ロウソク",
+    "lv": 8,
+    "category": "yabai"
+  },
+  {
+    "display": "🐕首輪",
+    "lv": 9,
+    "category": "yabai"
+  },
+  {
+    "display": "💄キスマーク",
+    "lv": 8,
+    "category": "yabai"
+  },
+  {
+    "display": "📳おもちゃ（意味深）",
+    "lv": 12,
+    "category": "yabai"
+  },
+  {
+    "display": "🔴テンガ",
+    "lv": 13,
+    "category": "yabai"
+  },
+  {
+    "display": "📳マッサージ機（意味深）",
+    "lv": 13,
+    "category": "yabai"
+  },
+  {
+    "display": "🧼ソープ",
+    "lv": 9,
+    "category": "yabai"
+  },
+  {
+    "display": "👙ボディーストッキング",
+    "lv": 14,
+    "category": "yabai"
+  },
+  {
+    "display": "🤤よだれダラダラ",
+    "lv": 8,
+    "category": "yabai"
+  },
+  {
+    "display": "🥛怪しい液体",
+    "lv": 15,
+    "category": "yabai"
+  },
+  {
+    "display": "🎀リボン緊縛",
+    "lv": 14,
+    "category": "yabai"
+  },
+  {
+    "display": "🥚ローター（卵型）",
+    "lv": 14,
+    "category": "yabai"
+  },
+  {
+    "display": "🤤涎だらだら喘ぎ顔",
+    "lv": 15,
+    "category": "yabai"
+  },
+  {
+    "display": "🍑お尻ペンペン",
+    "lv": 12,
+    "category": "yabai"
+  },
+  {
+    "display": "🧊氷攻め",
+    "lv": 16,
+    "category": "yabai"
+  },
+  {
+    "display": "🥛顔射（！？）",
+    "lv": 17,
+    "category": "yabai"
+  },
+  {
+    "display": "👄ディープキス",
+    "lv": 9,
+    "category": "yabai"
+  },
+  {
+    "display": "🧴ローションまみれ",
+    "lv": 13,
+    "category": "yabai"
+  },
+  {
+    "display": "🛀泡風呂で密着",
+    "lv": 12,
+    "category": "yabai"
+  },
+  {
+    "display": "👘はだけた浴衣",
+    "lv": 13,
+    "category": "yabai"
+  },
+  {
+    "display": "👗透け透けワンピ",
+    "lv": 14,
+    "category": "yabai"
+  },
+  {
+    "display": "🥵興奮して顔真っ赤",
+    "lv": 11,
+    "category": "yabai"
+  },
+  {
+    "display": "👣足コキ",
+    "lv": 16,
+    "category": "yabai"
+  },
+  {
+    "display": "🖐️手コキ",
+    "lv": 16,
+    "category": "yabai"
+  },
+  {
+    "display": "🥧パイズリ",
+    "lv": 17,
+    "category": "yabai"
+  },
+  {
+    "display": "🐱クリ（意味深）",
+    "lv": 18,
+    "category": "yabai"
+  },
+  {
+    "display": "💎真珠（意味深）",
+    "lv": 17,
+    "category": "yabai"
+  },
+  {
+    "display": "🔥発情期",
+    "lv": 14,
+    "category": "yabai"
+  },
+  {
+    "display": "🐕‍🦺散歩（SM）",
+    "lv": 16,
+    "category": "yabai"
+  },
+  {
+    "display": "🥛ザーメン（直球）",
+    "lv": 18,
+    "category": "yabai"
+  },
+  {
+    "display": "💦潮吹き",
+    "lv": 15,
+    "category": "yabai"
+  },
+  {
+    "display": "🍑桃尻を揉む",
+    "lv": 13,
+    "category": "yabai"
+  },
+  {
+    "display": "🍼バブみを感じる",
+    "lv": 18,
+    "category": "yabai"
+  },
+  {
+    "display": "👗ミニスカの中覗き",
+    "lv": 14,
+    "category": "yabai"
+  },
+  {
+    "display": "🥵絶頂寸前",
+    "lv": 15,
+    "category": "yabai"
+  },
+  {
+    "display": "👄アゴクイ",
+    "lv": 11,
+    "category": "yabai"
+  },
+  {
+    "display": "👅耳舐め",
+    "lv": 14,
+    "category": "yabai"
+  },
+  {
+    "display": "🚿シャワー室で二人きり",
+    "lv": 12,
+    "category": "yabai"
+  },
+  {
+    "display": "🖐️胸を揉む",
+    "lv": 14,
+    "category": "yabai"
+  },
+  {
+    "display": "💏熱い抱擁",
+    "lv": 8,
+    "category": "yabai"
+  },
+  {
+    "display": "🥵欲求不満",
+    "lv": 15,
+    "category": "yabai"
+  },
+  {
+    "display": "👙手ブラ",
+    "lv": 15,
+    "category": "yabai"
+  },
+  {
+    "display": "🔞バック（意味深）",
+    "lv": 18,
+    "category": "yabai"
+  },
+  {
+    "display": "🍑生尻",
+    "lv": 16,
+    "category": "yabai"
+  },
+  {
+    "display": "🧴ヌルヌル液体",
+    "lv": 15,
+    "category": "yabai"
+  },
+  {
+    "display": "🎀亀甲縛り",
+    "lv": 19,
+    "category": "yabai"
+  },
+  {
+    "display": "🥛オトナのミルク",
+    "lv": 17,
+    "category": "yabai"
+  },
+  {
+    "display": "🩲勝負下着",
+    "lv": 12,
+    "category": "yabai"
+  },
+  {
+    "display": "💋キスマーク",
+    "lv": 9,
+    "category": "yabai"
+  },
+  {
+    "display": "🤤アヘ顔Wピース",
+    "lv": 18,
+    "category": "yabai"
+  },
+  {
+    "display": "👢ニーハイ",
+    "lv": 12,
+    "category": "yabai"
+  },
+  {
+    "display": "💦潮吹き（海水…？ｗ）",
+    "lv": 16,
+    "category": "yabai"
+  },
+  {
+    "display": "🛌ピロートーク",
+    "lv": 17,
+    "category": "yabai"
+  },
+  {
+    "display": "🥵絶頂！アッー！",
+    "lv": 17,
+    "category": "yabai"
+  },
+  {
+    "display": "👄ディープな交流",
+    "lv": 13,
+    "category": "yabai"
+  },
+  {
+    "display": "💑デート",
+    "lv": 3,
+    "category": "situation"
+  },
+  {
+    "display": "🛁お風呂",
+    "lv": 2,
+    "category": "situation"
+  },
+  {
+    "display": "💕壁ドン",
+    "lv": 7,
+    "category": "situation"
+  },
+  {
+    "display": "🛏️添い寝",
+    "lv": 8,
+    "category": "situation"
+  },
+  {
+    "display": "💋キス待ち",
+    "lv": 8,
+    "category": "situation"
+  },
+  {
+    "display": "💏密着",
+    "lv": 6,
+    "category": "situation"
+  },
+  {
+    "display": "💰パパ活",
+    "lv": 15,
+    "category": "situation"
+  },
+  {
+    "display": "💔浮気発覚",
+    "lv": 12,
+    "category": "situation"
+  },
+  {
+    "display": "🍻合コン",
+    "lv": 7,
+    "category": "situation"
+  },
+  {
+    "display": "👀ナンパ待ち",
+    "lv": 13,
+    "category": "situation"
+  },
+  {
+    "display": "🌅朝帰り",
+    "lv": 11,
+    "category": "situation"
+  },
+  {
+    "display": "😘キス",
+    "lv": 4,
+    "category": "situation"
+  },
+  {
+    "display": "💌告白",
+    "lv": 8,
+    "category": "situation"
+  },
+  {
+    "display": "💍プロポーズ",
+    "lv": 10,
+    "category": "situation"
+  },
+  {
+    "display": "💢喧嘩",
+    "lv": 7,
+    "category": "situation"
+  },
+  {
+    "display": "🍺酔っ払い",
+    "lv": 9,
+    "category": "situation"
+  },
+  {
+    "display": "🥱サボり",
+    "lv": 7,
+    "category": "situation"
+  },
+  {
+    "display": "🥺ぴえん",
+    "lv": 5,
+    "category": "situation"
+  },
+  {
+    "display": "💖推し活",
+    "lv": 11,
+    "category": "situation"
+  },
+  {
+    "display": "📸自撮り",
+    "lv": 8,
+    "category": "situation"
+  },
+  {
+    "display": "🚿一緒にお風呂",
+    "lv": 12,
+    "category": "situation"
+  },
+  {
+    "display": "🍱あーんして",
+    "lv": 9,
+    "category": "situation"
+  },
+  {
+    "display": "👔ネクタイを緩める",
+    "lv": 13,
+    "category": "situation"
+  },
+  {
+    "display": "🧼背中を流す",
+    "lv": 12,
+    "category": "situation"
+  },
+  {
+    "display": "🌅朝のひととき",
+    "lv": 11,
+    "category": "situation"
+  },
+  {
+    "display": "🧥シャツ一枚",
+    "lv": 14,
+    "category": "situation"
+  },
+  {
+    "display": "🚃満員電車で密着",
+    "lv": 14,
+    "category": "situation"
+  },
+  {
+    "display": "🏫放課後の教室で…",
+    "lv": 15,
+    "category": "situation"
+  },
+  {
+    "display": "🎡観覧車の頂上でキス",
+    "lv": 14,
+    "category": "situation"
+  },
+  {
+    "display": "🌙夜の公園で二人きり",
+    "lv": 12,
+    "category": "situation"
+  },
+  {
+    "display": "🏢会社の給湯室で…",
+    "lv": 17,
+    "category": "situation"
+  },
+  {
+    "display": "👗試着室に二人で入る",
+    "lv": 16,
+    "category": "situation"
+  },
+  {
+    "display": "🏊プールサイドで休憩",
+    "lv": 10,
+    "category": "situation"
+  },
+  {
+    "display": "⛺テントの中で密着",
+    "lv": 14,
+    "category": "situation"
+  },
+  {
+    "display": "🎬映画館の後ろの席で",
+    "lv": 16,
+    "category": "situation"
+  },
+  {
+    "display": "🎡誰もいない遊園地",
+    "lv": 13,
+    "category": "situation"
+  },
+  {
+    "display": "🚗車内での密会",
+    "lv": 15,
+    "category": "situation"
+  },
+  {
+    "display": "⛩️神社でお参り（という名のデート）",
+    "lv": 15,
+    "category": "situation"
+  },
+  {
+    "display": "🚿お風呂でマッサージ",
+    "lv": 15,
+    "category": "situation"
+  },
+  {
+    "display": "🛌昼からベッド",
+    "lv": 17,
+    "category": "situation"
+  },
+  {
+    "display": "✌️ぴーす",
+    "lv": 1,
+    "category": "pose"
+  },
+  {
+    "display": "😉ウインク",
+    "lv": 4,
+    "category": "pose"
+  },
+  {
+    "display": "🫶ハート作る",
+    "lv": 3,
+    "category": "pose"
+  },
+  {
+    "display": "🫦セクシーポーズ",
+    "lv": 12,
+    "category": "pose"
+  },
+  {
+    "display": "💦アヘ顔（笑）",
+    "lv": 17,
+    "category": "pose"
+  },
+  {
+    "display": "🦵M字開脚（ヤバ",
+    "lv": 18,
+    "category": "pose"
+  },
+  {
+    "display": "👀振り向き",
+    "lv": 7,
+    "category": "pose"
+  },
+  {
+    "display": "💅ギャルピース",
+    "lv": 8,
+    "category": "pose"
+  },
+  {
+    "display": "🤸コマネチ",
+    "lv": 12,
+    "category": "pose"
+  },
+  {
+    "display": "🫰指ハート",
+    "lv": 9,
+    "category": "pose"
+  },
+  {
+    "display": "🦢がちょーん",
+    "lv": 15,
+    "category": "pose"
+  },
+  {
+    "display": "👅あっかんべー",
+    "lv": 8,
+    "category": "pose"
+  },
+  {
+    "display": "🥺体育座り",
+    "lv": 11,
+    "category": "pose"
+  },
+  {
+    "display": "🙇‍♀️土下座",
+    "lv": 10,
+    "category": "pose"
+  },
+  {
+    "display": "🌟ジョジョ立ち",
+    "lv": 16,
+    "category": "pose"
+  },
+  {
+    "display": "🦷シェー",
+    "lv": 15,
+    "category": "pose"
+  },
+  {
+    "display": "🥺ぶりっ子",
+    "lv": 10,
+    "category": "pose"
+  },
+  {
+    "display": "🙌万歳",
+    "lv": 5,
+    "category": "pose"
+  },
+  {
+    "display": "💪ガッツポーズ",
+    "lv": 7,
+    "category": "pose"
+  },
+  {
+    "display": "🐶四つん這い",
+    "lv": 13,
+    "category": "pose"
+  },
+  {
+    "display": "👅ペロペロ",
+    "lv": 12,
+    "category": "pose"
+  },
+  {
+    "display": "🤟内緒ポーズ",
+    "lv": 11,
+    "category": "pose"
+  },
+  {
+    "display": "👙胸を寄せる",
+    "lv": 14,
+    "category": "pose"
+  },
+  {
+    "display": "🦵網タイツ",
+    "lv": 14,
+    "category": "pose"
+  },
+  {
+    "display": "💃自撮りポーズ",
+    "lv": 9,
+    "category": "pose"
+  },
+  {
+    "display": "💋舌ぺろポーズ",
+    "lv": 12,
+    "category": "pose"
+  },
+  {
+    "display": "👗スカートをめくる",
+    "lv": 15,
+    "category": "pose"
+  },
+  {
+    "display": "🤱授乳ポーズ（！？）",
+    "lv": 17,
+    "category": "pose"
+  },
+  {
+    "display": "🛌誘ってる寝ポーズ",
+    "lv": 16,
+    "category": "pose"
+  },
+  {
+    "display": "🦵太ももを強調",
+    "lv": 15,
+    "category": "pose"
+  },
+  {
+    "display": "🙆‍♀️手で胸を隠す",
+    "lv": 15,
+    "category": "pose"
+  },
+  {
+    "display": "🍑Ｔバック食い込み",
+    "lv": 18,
+    "category": "pose"
+  },
+  {
+    "display": "🥵欲情して腰を振る",
+    "lv": 19,
+    "category": "pose"
+  },
+  {
+    "display": "💋指を舐める",
+    "lv": 14,
+    "category": "pose"
+  },
+  {
+    "display": "💦汗だくでハァハァ",
+    "lv": 16,
+    "category": "pose"
+  },
+  {
+    "display": "🧜‍♀️脚を絡める",
+    "lv": 17,
+    "category": "pose"
+  },
+  {
+    "display": "👮警察官",
+    "lv": 4,
+    "category": "job"
+  },
+  {
+    "display": "🧑‍🚒消防士",
+    "lv": 5,
+    "category": "job"
+  },
+  {
+    "display": "🧑‍⚕️医者",
+    "lv": 4,
+    "category": "job"
+  },
+  {
+    "display": "🩺看護師",
+    "lv": 5,
+    "category": "job"
+  },
+  {
+    "display": "👨‍✈️パイロット",
+    "lv": 7,
+    "category": "job"
+  },
+  {
+    "display": "🧑‍🏫先生",
+    "lv": 4,
+    "category": "job"
+  },
+  {
+    "display": "🪚大工",
+    "lv": 7,
+    "category": "job"
+  },
+  {
+    "display": "🧑‍🍳コック",
+    "lv": 6,
+    "category": "job"
+  },
+  {
+    "display": "✂️美容師",
+    "lv": 8,
+    "category": "job"
+  },
+  {
+    "display": "🧑‍🚀宇宙飛行士",
+    "lv": 10,
+    "category": "job"
+  },
+  {
+    "display": "📹ユーチューバー",
+    "lv": 9,
+    "category": "job"
+  },
+  {
+    "display": "🎤歌手",
+    "lv": 6,
+    "category": "job"
+  },
+  {
+    "display": "✨アイドル",
+    "lv": 7,
+    "category": "job"
+  },
+  {
+    "display": "⚾野球選手",
+    "lv": 8,
+    "category": "job"
+  },
+  {
+    "display": "🕵️探偵",
+    "lv": 9,
+    "category": "job"
+  },
+  {
+    "display": "💼サラリーマン",
+    "lv": 9,
+    "category": "job"
+  },
+  {
+    "display": "🧑‍🌾農家",
+    "lv": 10,
+    "category": "job"
+  },
+  {
+    "display": "🎩マジシャン",
+    "lv": 11,
+    "category": "job"
+  },
+  {
+    "display": "✍️漫画家",
+    "lv": 10,
+    "category": "job"
+  },
+  {
+    "display": "👨‍⚖️裁判官",
+    "lv": 13,
+    "category": "job"
+  },
+  {
+    "display": "🚗車",
+    "lv": 1,
+    "category": "vehicle"
+  },
+  {
+    "display": "🚲自転車",
+    "lv": 3,
+    "category": "vehicle"
+  },
+  {
+    "display": "🚃電車",
+    "lv": 4,
+    "category": "vehicle"
+  },
+  {
+    "display": "🚅新幹線",
+    "lv": 6,
+    "category": "vehicle"
+  },
+  {
+    "display": "✈️飛行機",
+    "lv": 5,
+    "category": "vehicle"
+  },
+  {
+    "display": "🚁ヘリコプター",
+    "lv": 8,
+    "category": "vehicle"
+  },
+  {
+    "display": "🚢船",
+    "lv": 4,
+    "category": "vehicle"
+  },
+  {
+    "display": "⛵ヨット",
+    "lv": 7,
+    "category": "vehicle"
+  },
+  {
+    "display": "🛥️潜水艦",
+    "lv": 10,
+    "category": "vehicle"
+  },
+  {
+    "display": "🚑救急車",
+    "lv": 7,
+    "category": "vehicle"
+  },
+  {
+    "display": "🚓パトカー",
+    "lv": 6,
+    "category": "vehicle"
+  },
+  {
+    "display": "🚒消防車",
+    "lv": 7,
+    "category": "vehicle"
+  },
+  {
+    "display": "🚜トラクター",
+    "lv": 10,
+    "category": "vehicle"
+  },
+  {
+    "display": "🚚トラック",
+    "lv": 5,
+    "category": "vehicle"
+  },
+  {
+    "display": "🚌バス",
+    "lv": 2,
+    "category": "vehicle"
+  },
+  {
+    "display": "🚕タクシー",
+    "lv": 5,
+    "category": "vehicle"
+  },
+  {
+    "display": "🚀ロケット",
+    "lv": 7,
+    "category": "vehicle"
+  },
+  {
+    "display": "🛸ＵＦＯ",
+    "lv": 8,
+    "category": "vehicle"
+  },
+  {
+    "display": "🎈気球",
+    "lv": 9,
+    "category": "vehicle"
+  },
+  {
+    "display": "🏍️バイク",
+    "lv": 6,
+    "category": "vehicle"
+  },
+  {
+    "display": "🗼東京タワー",
+    "lv": 5,
+    "category": "landmark"
+  },
+  {
+    "display": "🗼スカイツリー",
+    "lv": 8,
+    "category": "landmark"
+  },
+  {
+    "display": "🗽自由の女神",
+    "lv": 10,
+    "category": "landmark"
+  },
+  {
+    "display": "🗼エッフェル塔",
+    "lv": 9,
+    "category": "landmark"
+  },
+  {
+    "display": "🏜️ピラミッド",
+    "lv": 6,
+    "category": "landmark"
+  },
+  {
+    "display": "🏢ピサの斜塔",
+    "lv": 12,
+    "category": "landmark"
+  },
+  {
+    "display": "🦁スフィンクス",
+    "lv": 13,
+    "category": "landmark"
+  },
+  {
+    "display": "🏛️凱旋門",
+    "lv": 13,
+    "category": "landmark"
+  },
+  {
+    "display": "🧱万里の長城",
+    "lv": 14,
+    "category": "landmark"
+  },
+  {
+    "display": "🎭オペラハウス",
+    "lv": 14,
+    "category": "landmark"
+  },
+  {
+    "display": "🏯大仏さん",
+    "lv": 10,
+    "category": "landmark"
+  },
+  {
+    "display": "🏟️コロッセオ",
+    "lv": 15,
+    "category": "landmark"
+  },
+  {
+    "display": "🕰️ビッグベン",
+    "lv": 13,
+    "category": "landmark"
+  },
+  {
+    "display": "🏮雷門",
+    "lv": 14,
+    "category": "landmark"
+  },
+  {
+    "display": "🏯金閣寺",
+    "lv": 12,
+    "category": "landmark"
+  },
+  {
+    "display": "🏯大阪城",
+    "lv": 13,
+    "category": "landmark"
+  },
+  {
+    "display": "🗿モアイ像",
+    "lv": 9,
+    "category": "landmark"
+  },
+  {
+    "display": "🏯五重塔",
+    "lv": 14,
+    "category": "landmark"
+  },
+  {
+    "display": "🏯姫路城",
+    "lv": 15,
+    "category": "landmark"
+  },
+  {
+    "display": "🗿マーライオン",
+    "lv": 16,
+    "category": "landmark"
+  },
+  {
+    "display": "🪥歯ブラシ",
+    "lv": 4,
+    "category": "item"
+  },
+  {
+    "display": "🧻トイレットペーパー",
+    "lv": 5,
+    "category": "item"
+  },
+  {
+    "display": "🧴シャンプー",
+    "lv": 7,
+    "category": "item"
+  },
+  {
+    "display": "✂️ハサミ",
+    "lv": 3,
+    "category": "item"
+  },
+  {
+    "display": "🕰️時計",
+    "lv": 4,
+    "category": "item"
+  },
+  {
+    "display": "☂️傘",
+    "lv": 3,
+    "category": "item"
+  },
+  {
+    "display": "👓メガネ",
+    "lv": 2,
+    "category": "item"
+  },
+  {
+    "display": "📱スマホ",
+    "lv": 2,
+    "category": "item"
+  },
+  {
+    "display": "💻パソコン",
+    "lv": 3,
+    "category": "item"
+  },
+  {
+    "display": "🗑️ゴミ箱",
+    "lv": 6,
+    "category": "item"
+  },
+  {
+    "display": "🤧ティッシュ",
+    "lv": 7,
+    "category": "item"
+  },
+  {
+    "display": "🥄スプーン",
+    "lv": 5,
+    "category": "item"
+  },
+  {
+    "display": "🥤コップ",
+    "lv": 4,
+    "category": "item"
+  },
+  {
+    "display": "🍳フライパン",
+    "lv": 6,
+    "category": "item"
+  },
+  {
+    "display": "🔪包丁",
+    "lv": 7,
+    "category": "item"
+  },
+  {
+    "display": "📺テレビ",
+    "lv": 2,
+    "category": "item"
+  },
+  {
+    "display": "🧺洗濯機",
+    "lv": 10,
+    "category": "item"
+  },
+  {
+    "display": "🧹掃除機",
+    "lv": 11,
+    "category": "item"
+  },
+  {
+    "display": "🔌コンセント",
+    "lv": 11,
+    "category": "item"
+  },
+  {
+    "display": "🔋電池",
+    "lv": 9,
+    "category": "item"
+  },
+  {
+    "display": "🦋ちょうちょ",
+    "lv": 4,
+    "category": "bug"
+  },
+  {
+    "display": "🐝はち",
+    "lv": 5,
+    "category": "bug"
+  },
+  {
+    "display": "🐞てんとう虫",
+    "lv": 7,
+    "category": "bug"
+  },
+  {
+    "display": "🐜あり",
+    "lv": 6,
+    "category": "bug"
+  },
+  {
+    "display": "🕷️くも",
+    "lv": 8,
+    "category": "bug"
+  },
+  {
+    "display": "🦗バッタ",
+    "lv": 9,
+    "category": "bug"
+  },
+  {
+    "display": "🪲カブトムシ",
+    "lv": 9,
+    "category": "bug"
+  },
+  {
+    "display": "🦟か（蚊）",
+    "lv": 11,
+    "category": "bug"
+  },
+  {
+    "display": "🪰はえ",
+    "lv": 9,
+    "category": "bug"
+  },
+  {
+    "display": "🐛いもむし",
+    "lv": 10,
+    "category": "bug"
+  },
+  {
+    "display": "🐌かたつむり",
+    "lv": 10,
+    "category": "bug"
+  },
+  {
+    "display": "🪳ゴキブリ（笑）",
+    "lv": 11,
+    "category": "bug"
+  },
+  {
+    "display": "🐜カマキリ",
+    "lv": 13,
+    "category": "bug"
+  },
+  {
+    "display": "🦟セミ",
+    "lv": 12,
+    "category": "bug"
+  },
+  {
+    "display": "🏮ホタル",
+    "lv": 14,
+    "category": "bug"
+  }
+]

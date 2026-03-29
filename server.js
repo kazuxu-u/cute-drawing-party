@@ -181,6 +181,88 @@ async function savePlayerData(targetToken = null) {
     }
 }
 
+// 🆕 お題のLVをロードするおッ！💎✨💍
+async function loadWordLvs() {
+    try {
+        let loadedCount = 0;
+        if (MONGO_URI && mongoose.connection.readyState === 1) {
+            const words = await Word.find({});
+            words.forEach(dw => {
+                for (const cat in cuteWords) {
+                    if (!Array.isArray(cuteWords[cat])) continue;
+                    const found = cuteWords[cat].find(w => w.display === dw.display);
+                    if (found) {
+                        found.lv = dw.lv;
+                        loadedCount++;
+                    }
+                }
+            });
+            console.log(`[DB-WORD-LOAD] ${loadedCount} word LVs loaded from MongoDB. ✨💍`);
+        }
+
+        if (fs.existsSync(WORDS_DATA_FILE)) {
+            const content = fs.readFileSync(WORDS_DATA_FILE, 'utf8');
+            const localWords = JSON.parse(content || '[]');
+            localWords.forEach(lw => {
+                for (const cat in cuteWords) {
+                    if (!Array.isArray(cuteWords[cat])) continue;
+                    const found = cuteWords[cat].find(w => w.display === lw.display);
+                    if (found) {
+                        if (!found.lv || found.lv !== lw.lv) {
+                            found.lv = lw.lv;
+                            loadedCount++;
+                        }
+                    }
+                }
+            });
+            console.log(`[JSON-WORD-LOAD] Word LVs merged/loaded from local JSON. ✨💍`);
+        }
+        
+        // 🆕 ロード後に最小LVを再計算ッ！これで制限が効くはずだおッ！💎✨💍
+        calculateMinLvs();
+        
+    } catch (e) {
+        console.error(`[WORD-LOAD-ERR] ${e.message}`);
+    }
+}
+
+// 🆕 お題のLVを保存するおッ！💎✨💍
+async function saveWordLvs() {
+    try {
+        const allWords = [];
+        const seen = new Set();
+        for (const cat in cuteWords) {
+            if (['mix', 'mix_safe'].includes(cat)) continue;
+            cuteWords[cat].forEach(w => {
+                if (!seen.has(w.display)) {
+                    allWords.push({ display: w.display, lv: w.lv, category: cat });
+                    seen.add(w.display);
+                }
+            });
+        }
+        
+        // ローカルに保存
+        fs.writeFileSync(WORDS_DATA_FILE, JSON.stringify(allWords, null, 2));
+
+        // MongoDBに保存
+        if (MONGO_URI && mongoose.connection.readyState === 1) {
+            const ops = allWords.map(w => ({
+                updateOne: {
+                    filter: { display: w.display },
+                    update: { lv: w.lv, category: w.category },
+                    upsert: true
+                }
+            }));
+            if (ops.length > 0) {
+                await Word.bulkWrite(ops);
+                console.log(`[DB-WORD-SAVE] Bulk saved ${ops.length} word LVs to MongoDB. ✨💍`);
+            }
+        }
+    } catch (e) {
+        console.error(`[WORD-SAVE-ERR] ${e.message}`);
+    }
+}
+
 // 🆕 起動時に接続と読み込み！💎✨ (後で一番下で呼ぶおッ！💅)
 const initApp = async () => {
     await connectDB();

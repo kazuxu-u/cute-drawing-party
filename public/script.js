@@ -1063,7 +1063,8 @@ socket.on('update_players', (players) => {
         li.className = 'player-item'; // 🆕 クラス追加ッ！💅✨
         
         // 🆕 XP進捗の計算ッ！💎✨💍 (公式: (Lv + 1) * 5)
-        const nextLvXp = (p.lv || 0 + 1) * 5;
+        const currentLv = p.lv || 0;
+        const nextLvXp = (currentLv + 1) * 5;
         const xpPercent = Math.min(100, Math.floor(((p.xp || 0) / nextLvXp) * 100));
         
         // 🆕 自分の時だけバルーンを出すおッ！🤟💖
@@ -1589,6 +1590,9 @@ function updateCategorySelect(myLv) {
         const catKey = opt.value;
         const minLv = window.minLvPerCategory[catKey] || 1;
         
+        // 🆕 デバッグ用ログ！💍 (ブラウザのコンソールで確認できるお)
+        console.log(`[CAT-CHECK] ${catKey}: PlayerLv=${myLv}, MinLv=${minLv} -> ${myLv < minLv ? 'DISABLED' : 'OK'}`);
+
         if (myLv < minLv) {
             opt.disabled = true;
             opt.style.color = '#ccc';
