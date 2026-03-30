@@ -123,8 +123,8 @@ body {
 
 /* Sidebar & Chat Area Positioning */
 .sidebar {
-    flex: 0 1 300px; /* 👈 さらに身軽に！💎 */
-    min-width: 250px; /* 👈 限界まで削るッ！💅 */
+    flex: 0 0 450px; /* 👈 超ワイドな 450px ！！💎✨💍 */
+    min-width: 450px;
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -132,8 +132,8 @@ body {
 }
 
 .chat-area {
-    flex: 0 1 350px; /* 👈 究極のスリム化ッ！💅 */
-    min-width: 280px; /* 👈 チャットも限界まで！💎 */
+    flex: 0 0 450px; /* 👈 チャットも広々 450px ！！🤟🌈✨ */
+    min-width: 450px;
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -327,8 +327,8 @@ h2, h3 {
 
 /* Tool Buttons */
 .tool-btn {
-    width: 34px; /* 👈 最小クラスへッ！💎 */
-    height: 34px;
+    width: 68px; /* 👈 さらに爆デカにッ！！💎✨ */
+    height: 68px;
     border-radius: 50%;
     border: none;
     background: white;
@@ -336,7 +336,7 @@ h2, h3 {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem; /* 👈 アイコン控えめ！✨ */
+    font-size: 2.2rem; /* 👈 最強でっかアイコンだおッ！！💅🔥 */
     transition: all 0.2s;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
@@ -377,6 +377,7 @@ h2, h3 {
     box-shadow: 0 25px 60px rgba(0,0,0,0.1), var(--dreamy-glow);
     border: 8px solid var(--primary-color);
     transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    margin-top: 15px; /* 👈 キャンバスをさらに 10px 下にシフトッ！💎✨ */
 }
 
 .canvas-container:hover {
@@ -387,30 +388,30 @@ canvas {
     border-radius: 15px;
     cursor: crosshair;
     display: block;
-    width: 660px; /* 1.1倍サイズで安定感アップ！💍✨ */
-    height: 550px; /* これなら絶対に見切れない、究極のフィット感！💎✨ */
     background: white;
-    max-width: 100%; /* はみ出し防止！💅 */
-    height: auto; /* アスペクト比維持！💍 */
+    max-width: 100%; /* 👈 はみ出し防止！💅 */
+    height: auto; /* 👈 アスペクト比維持！💍 */
 }
 
 /* Status Area */
 .horizontal-status {
     display: flex;
-    gap: 20px;
+    gap: 25px;
     background: rgba(255, 255, 255, 0.95);
-    padding: 10px 40px;
+    padding: 18px 50px; /* 👈 内側を広くして「お題まるわかる」バーにッ！💎✨ */
     border-radius: 100px;
     border: 3px solid var(--primary-color);
     box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    margin-top: 65px; /* 👈 お題の枠をさらに 40px 下にシフトッ！💎✨ */
 }
 
 .horizontal-status h3 {
     margin: 0;
-    font-size: 1.4rem;
+    font-size: 2.0rem; /* 👈 お題がハッキリ見える極太大文字に💎✨💍 */
     display: flex;
     align-items: center;
     gap: 12px;
+    font-weight: 900;
 }
 
 /* Chat Bubbles */
@@ -1403,7 +1404,7 @@ input[type="text"]:focus {
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); /* 👈 最小幅を少し狭めて、ノートPCでも数並ぶように！💎 */
     gap: 20px; /* 👈 隙間をさらにエモく詰めるおッ！✨ */
     width: 100%;
-    max-width: 1550px; /* 👈 フルワイドを活かすおッ！🤟 */
+    max-width: 1850px; /* 👈 サイドバー拡張に合わせて、ロビーもさらに広大にッ！！🤟🌈✨💍 */
     margin: 10px auto; 
     padding: 0 15px;
 }

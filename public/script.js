@@ -530,8 +530,8 @@ function createSparkle(x, y, color, isHeartMode = false) {
         
         // ✨ 修正：パーセント（%）で座標を指定するよ！💅
         // これならキャンバスがどんなサイズにリサイズされても、ペン先にピタッと重なるね！💎💍
-        sparkle.style.left = `${(x / 600) * 100}%`;
-        sparkle.style.top = `${(y / 500) * 100}%`;
+        sparkle.style.left = `${(x / 1250) * 100}%`; // 🆕 1250px（枠ギリギリサイズ）に合わせて位置を補正ッ！💎✨💍
+        sparkle.style.top = `${(y / 700) * 100}%`; // 🆕 700px（新しいキャンバス高）に合わせて位置を補正ッ！💍✨
         
         // ランダムな方向に飛ばす！シュババッ！💨
         const angle = Math.random() * Math.PI * 2;
@@ -792,7 +792,7 @@ if (undoBtn) {
         const previousState = drawHistory.pop();
         const img = new Image();
         img.onload = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, 1250, 700);
             ctx.drawImage(img, 0, 0);
             if (!inSoloMode) {
                 socket.emit('sync_canvas', previousState);
@@ -1950,7 +1950,7 @@ function createDanmaku(text, color, isBig = false, type = '') {
     
     requestAnimationFrame(() => {
         const textWidth = div.scrollWidth || div.clientWidth;
-        const containerWidth = danmakuContainer.clientWidth || 600;
+        const containerWidth = danmakuContainer.clientWidth || 1250; // 🆕 1250px（枠ギリギリサイズ）ベースに！💍
         
         // デカい弾幕はちょっとゆっくり見せたいから 7秒、通常は 5秒にするよ✨
         const duration = isBig ? 7 : 5;
@@ -2100,8 +2100,8 @@ function updateScale() {
     // 💎 新時代の「ハイブリッド・フルワイド・スケーリング」開幕っ！💅✨💍
     // 横幅は 100% ギリギリまで使い切るのがギャルの鉄則！🤟💖
     
-    const baseHeight = 850; // 👈 サイドバーの中身が全部入るように高さを確保ッ！💎
-    const baseWidth = 1530;  // 👈 横幅も少し広げてバランスを取るおッ！✨
+    const baseHeight = 1000; // 👈 全体の縦を 100px 広くして、さらに快適にッ！💎✨
+    const baseWidth = 2150;  // 👈 センターパネルのさらなる拡張（1200px）に合わせて 2150px に最適化ッ！✨💍
     
     const currentHeight = window.innerHeight;
     const currentWidth = window.innerWidth;
