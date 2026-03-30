@@ -284,6 +284,7 @@ let currentConfirmAction = null;
 
 let myId = null;
 let myLv = 0; // 🆕 自分のレベルを記憶しておくおッ！💎
+let lastKnownPlayerCount = 0; // 🆕 入室音判定用の新規カウントだおッ！💍✨
 let isDrawing = false;
 let canIDraw = false;
 let inSoloMode = false;
@@ -456,6 +457,22 @@ function playSE(type) {
         gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
         osc.start(t);
         osc.stop(t + 0.1);
+    } else if (type === 'join') {
+        // ✨ チャラリーン♪（入室音） 💍🤟💖
+        [523.25, 659.25].forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            const startT = t + i * 0.12;
+            gain.gain.setValueAtTime(0, startT);
+            gain.gain.linearRampToValueAtTime(0.15, startT + 0.03);
+            gain.gain.exponentialRampToValueAtTime(0.01, startT + 0.25);
+            osc.start(startT);
+            osc.stop(startT + 0.25);
+        });
     }
 }
 
@@ -1115,6 +1132,13 @@ socket.on('connect', () => { myId = socket.id; });
 
 socket.on('update_players', (players) => {
     if (inSoloMode) return;
+
+    // 🆕 誰かが入室した時に音を鳴らすおッ！チャラリーン♪💍🤟💖
+    if (players.length > lastKnownPlayerCount && lastKnownPlayerCount > 0) {
+        playSE('join');
+    }
+    lastKnownPlayerCount = players.length;
+
     lastPlayersList = players; // キャッシュしておくおッ！💎
     playerList.innerHTML = '';
     
@@ -1631,6 +1655,10 @@ socket.on('join_failed', (msg) => {
 socket.on('join_success', (data) => {
     roomSelectScreen.style.opacity = '0';
     roomSelectScreen.style.pointerEvents = 'none';
+    
+    // 🧹 チャットをまっさらにクリア！✨💍
+    if (chatBox) chatBox.innerHTML = '';
+    lastKnownPlayerCount = 0; // 🆕 カウントをリセットして入室音に備えるおッ！！💎✨
     
     setTimeout(() => {
         roomSelectScreen.classList.add('hidden');
