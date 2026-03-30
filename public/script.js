@@ -164,8 +164,10 @@ if (authSubmitBtn) {
 // 🆕 認証レスポンスの処理ッ！✨💍🌈
 socket.on('register_success', (data) => {
     playerToken = data.token;
+    currentPlayerName = data.name; // 🆕 現在のプレイヤー名を更新ッ！✨
     myLv = 0; // 🆕 新規はLV0ッ！🐣
     localStorage.setItem('galPlayerToken', playerToken);
+    localStorage.setItem('galAuthName', currentPlayerName); // 🆕 念のため保存！💎
     transitionToRoomSelection();
 });
 
@@ -173,8 +175,10 @@ socket.on('register_failed', (msg) => { alert(msg); });
 
 socket.on('login_success', (data) => {
     playerToken = data.token;
+    currentPlayerName = data.name; // 🆕 現在のプレイヤー名を更新ッ！✨
     myLv = data.lv || 0; // 🆕 レベルを保存ッ！✨
     localStorage.setItem('galPlayerToken', playerToken);
+    localStorage.setItem('galAuthName', currentPlayerName); // 🆕 念のため保存！💎
     transitionToRoomSelection();
 });
 
@@ -200,7 +204,7 @@ function transitionToRoomSelection() {
     }, 800);
     
     const savedName = localStorage.getItem('galAuthName') || 'かずぅさん';
-    addChatMessage('System', `ウェルカムだお、${savedName}さんッ！💖 今日のバイブスに合うルーム、サクッと選んじゃって！💅🔥`, '#ff66b2');
+    addChatMessage('System', `ウェルカムだお、${savedName}さんッ！💖 今日のバイブスも最高すぎッ！💅💎✨ 最高なパーティーにしちゃおッ！！💍🔥`, '#ff66b2');
 }
 
 if (refreshRoomsBtn) {
@@ -1315,13 +1319,16 @@ socket.on('round_end', (data) => {
 
 socket.on('chat_message', (data) => {
     if (inSoloMode) return;
-    addChatMessage(data.sender, data.text, data.color, data.type); // typeを渡すようにしたよッ！💎
+    addChatMessage(data.sender, data.text, data.color, data.type); 
     
-    if (data.sender !== 'System' || data.type === 'correct') {
-        createDanmaku(data.text, data.color, data.type === 'correct' || data.type === 'correct_user');
+    // 🆕 弾幕（Danmaku）の出し方を調整ッ！💎✨💍
+    if (data.sender !== 'System') {
+        // プレイヤーのメッセージを弾幕にするおッ！🤟
+        // 正解の時は超デカく（isBig=true）して目立たせる！✨💍
+        createDanmaku(data.text, data.color, data.type === 'correct_user', data.type);
     }
     
-    if (data.type === 'correct' || data.type === 'correct_user') {
+    if (data.type === 'correct_user') {
         playSE('correct');
         // キラキラ演出を連発！！✨💎💍
         for(let i=0; i<5; i++) {
@@ -1332,6 +1339,9 @@ socket.on('chat_message', (data) => {
             turnEndBubble.classList.remove('hidden');
             turnEndBubble.textContent = '誰かが正解したよッ！👏✨ はよ「終了」押して次行こ！💖🤙';
         }
+    }
+    else if (data.type === 'correct') {
+        // システムアナウンス（正解おめでとう！）はチャットのみでOK
     }
     else if (data.type === 'oshii') playSE('oshii');
 });
@@ -1887,31 +1897,46 @@ chatInput.addEventListener('keydown', (e) => {
 });
 
 function addChatMessage(sender, text, color, type) {
-    const div = document.createElement('div');
-    const isMe = sender === (currentPlayerName || localStorage.getItem('galDrawingName') || '自分');
+    const container = document.createElement('div');
+    const isMe = sender === (currentPlayerName || localStorage.getItem('galAuthName') || localStorage.getItem('galDrawingName') || '自分');
     
-    // 🆕 正解メッセージならド派手な専用クラスを付与ッ！💎✨💍
-    if (type === 'correct_user') {
-        div.className = 'chat-msg correct-user';
-    } else {
-        div.className = isMe ? 'chat-msg mine' : 'chat-msg';
+    container.className = isMe ? 'chat-msg-container mine' : 'chat-msg-container';
+    
+    let html = '';
+    // 🆕 他人のメッセージかSystemメッセージなら、吹き出しの上に名前を出すおッ！💎✨💍
+    if (!isMe) {
+        html += `<span class="chat-name" style="color: ${color || '#ff66b2'}">${sender}</span>`;
     }
     
-    div.innerHTML = `
-        <strong style="color: ${color || '#333'}">${sender}</strong>
-        <span class="msg-text">${text}</span>
+    // 🆕 吹き出し本体の生成
+    const baseClass = isMe ? 'chat-msg mine' : 'chat-msg';
+    const bubbleClass = (type === 'correct_user') ? `${baseClass} correct-user` : baseClass;
+    html += `
+        <div class="${bubbleClass}">
+            <span class="msg-text">${text}</span>
+        </div>
     `;
-    chatBox.appendChild(div);
+    
+    container.innerHTML = html;
+    chatBox.appendChild(container);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-function createDanmaku(text, color, isBig = false) {
+function createDanmaku(text, color, isBig = false, type = '') {
     if (!danmakuContainer) return;
     
     const div = document.createElement('div');
     // 🆕 正解なら専用のキラキラ＆超巨大クラスを付与ッ！🚀✨💍
     div.className = isBig ? 'danmaku-item danmaku-correct' : 'danmaku-item';
-    div.textContent = isBig ? `💎✨ 正解：${text} ✨💎` : text;
+    
+    if (type === 'correct_user') {
+        // プレイヤーの打ち込んだ答えそのものをデカく出す！✨💍
+        div.textContent = text;
+    } else if (isBig) {
+        div.textContent = `💎✨ 正解：${text} ✨💎`;
+    } else {
+        div.textContent = text;
+    }
     
     // 表示予定の最大の高さ (文字がはみ出さないように)
     const padding = isBig ? 150 : 50;

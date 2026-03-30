@@ -428,37 +428,77 @@ canvas {
     overflow-x: hidden; /* 横はみ出し禁止！💅 */
 }
 
+.chat-msg-container {
+    display: flex;
+    flex-direction: column;
+    max-width: 85%;
+    gap: 5px;
+}
+
+.chat-msg-container.mine {
+    align-self: flex-end;
+    align-items: flex-end;
+}
+
+.chat-msg-container:not(.mine) {
+    align-self: flex-start;
+    align-items: flex-start;
+}
+
+.chat-name {
+    font-size: 0.85rem;
+    font-weight: 900;
+    margin-left: 10px;
+    margin-right: 10px;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.5);
+    opacity: 0.9;
+}
+
 .chat-msg {
-    max-width: 80%;
-    padding: 15px 25px;
-    border-radius: 30px;
+    padding: 12px 22px;
+    border-radius: 25px;
     background: white;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
     position: relative;
-    animation: bubblePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: bubblePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     border: 2px solid var(--glass-border);
-    overflow-wrap: break-word; /* 長い単語を折り返す！💎 */
+    overflow-wrap: break-word;
     word-wrap: break-word;
-    word-break: break-word;
+    word-break: break-all;
+    width: fit-content;
 }
 
 .chat-msg.mine {
-    align-self: flex-end;
     background: linear-gradient(135deg, #ff99ff, #ff66ff);
-    color: #660033; /* 👈 白だと見えにくいので、濃いギャルみピンク（ほぼ黒に近い紫系）に変更！💎 */
-    font-weight: bold; /* 👈 さらに太字にして読みやすく！💅 */
+    color: #660033;
+    font-weight: bold;
     border-bottom-right-radius: 6px;
-    box-shadow: 0 8px 25px rgba(255, 51, 153, 0.3);
-}
-
-.chat-msg.mine strong {
-    color: #33001a; /* 👈 強調部分はさらに濃く！✨ */
-    opacity: 1;
+    box-shadow: 0 8px 25px rgba(255, 51, 153, 0.25);
 }
 
 .chat-msg:not(.mine) {
-    align-self: flex-start;
-    border-bottom-left-radius: 6px;
+    border-top-left-radius: 6px;
+}
+
+.chat-msg.correct-user {
+    background: linear-gradient(135deg, #ffee00, #ffcc00, #ff3399);
+    border: 3px solid #ffd700;
+    color: #440022;
+    font-weight: 900;
+    box-shadow: 0 0 30px rgba(255, 204, 0, 0.6), 0 10px 25px rgba(255, 51, 153, 0.4);
+    animation: correctBubblePop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), correctGlow 1.5s infinite alternate;
+    z-index: 5;
+}
+
+@keyframes correctBubblePop {
+    0% { transform: scale(0.5) rotate(-5deg); opacity: 0; }
+    50% { transform: scale(1.2) rotate(5deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes correctGlow {
+    from { box-shadow: 0 0 20px rgba(255, 204, 0, 0.4), 0 10px 20px rgba(255, 51, 153, 0.3); }
+    to { box-shadow: 0 0 40px rgba(255, 204, 0, 0.8), 0 15px 35px rgba(255, 51, 153, 0.6); }
 }
 
 @keyframes bubblePop {
@@ -1703,7 +1743,7 @@ input[type="text"]:focus {
 
 /* --- 💖 特製確認モーダル 💖 --- */
 #customConfirmOverlay {
-    z-index: 40000;
+    z-index: 1000000; /* 絶対に絶対に最前面ッ！！💎✨💍🤟 */
 }
 
 .confirm-modal {

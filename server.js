@@ -1436,8 +1436,15 @@ async function handleChatMessage(room, player, msg, socket) {
             player.hasGuessed = true;
             if (!room.pointsAwardedThisTurn) {
                 room.pointsAwardedThisTurn = true;
-                // 💎 お題のLVに応じたポイントとXPを付与するおッ！（LV1=+1pt/XP、LV20=+20pt/XP）
                 const wordLv = (room.currentWordObj && room.currentWordObj.lv) ? room.currentWordObj.lv : 1;
+                
+                // 🆕 まずは本人の「正解ッ！」を最優先で届けるおッ！！💎✨💍
+                safeRoomEmit(room, 'chat_message', { sender: player.name, text: msg, color: '#333', type: 'correct_user' });
+
+                // 🆕 次にSystemのお祝いッ！🎉
+                safeRoomEmit(room, 'chat_message', { sender: 'System', text: `やば！${player.name}さんが1番乗りで大正解！🎉✨（回答者+${wordLv}pt,+${wordLv}XP / 出題者+${wordLv}pt,+${wordLv}XP）【LV${wordLv}のお題！】`, color: '#ff66b2', type: 'correct' });
+
+                // 🆕 スコアとXPの反映（ここでレベルアップメッセージが出る可能性があるおッ！）
                 player.score += wordLv;
                 if (player.token) {
                     if (!persistentData[player.token]) {
@@ -1445,8 +1452,6 @@ async function handleChatMessage(room, player, msg, socket) {
                     }
                     persistentData[player.token].score = (persistentData[player.token].score || 0) + wordLv;
                     player.totalScore = persistentData[player.token].score;
-                    persistentData[player.token].xp = player.xp || 0;
-                    persistentData[player.token].lv = player.lv || 0;
                     persistentData[player.token].name = player.name;
                     await savePlayerData(player.token);
                 }
@@ -1462,24 +1467,15 @@ async function handleChatMessage(room, player, msg, socket) {
                         persistentData[drawer.token].name = drawer.name;
                         await savePlayerData(drawer.token);
                     }
-                    // 描き手にもWordLvと同じXP！🎨
                     await addXp(room, drawer, wordLv);
                 }
-                
-                // 回答者にもWordLvと同じXP！🎯
                 await addXp(room, player, wordLv);
-
-                safeRoomEmit(room, 'chat_message', { sender: 'System', text: `やば！${player.name}さんが1番乗りで大正解！🎉✨（回答者+${wordLv}pt,+${wordLv}XP / 出題者+${wordLv}pt,+${wordLv}XP）【LV${wordLv}のお題！】`, color: '#ff66b2', type: 'correct' });
             } else {
+                // 2番目以降の人も同様のパターンダおッ！✨
+                safeRoomEmit(room, 'chat_message', { sender: player.name, text: msg, color: '#333', type: 'correct_user' });
                 safeRoomEmit(room, 'chat_message', { sender: 'System', text: `${player.name}さんも正解！👏（ポイントは最初の人だけだよ！）`, color: '#ff66b2', type: 'correct' });
             }
             safeRoomEmit(room, 'update_players', room.players);
-            if (player.isNpc) {
-                safeRoomEmit(room, 'chat_message', { sender: player.name, text: msg, color: '#333' });
-            } else {
-                // 🆕 人間の正解メッセージも「ド派手タイプ」で送信するおッ！💎✨💍
-                safeRoomEmit(room, 'chat_message', { sender: player.name, text: msg, color: '#333', type: 'correct_user' });
-            }
         } else if (isAlmost && !isCorrect && !isDrawer && !player.hasGuessed) {
             if (!player.isNpc) safeEmit(io.to(player.id), 'chat_message', { sender: 'System', text: `「${msg}」…惜しい！あとちょっと！🥺`, color: '#ff9900', type: 'oshii' });
             safeRoomEmit(room, 'chat_message', { sender: player.name, text: msg, color: '#333' });
