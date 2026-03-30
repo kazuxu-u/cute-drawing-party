@@ -2082,8 +2082,8 @@ function updateScale() {
     // 縦横どっちかキツい方に合わせて縮めるおッ！🚀
     const scale = Math.min(currentHeight / baseHeight, currentWidth / baseWidth);
     
-    // スケールさせる対象リスト
-    const targets = ['.container', '#podiumOverlay', '#galleryOverlay', '#banOverlay', '#wordPopupOverlay', '.full-overlay'];
+    // 👗 メインコンテナだけをスケーリング対象に！💍
+    const targets = ['.container'];
     
     targets.forEach(selector => {
         const els = document.querySelectorAll(selector);
@@ -2118,7 +2118,7 @@ function updateScale() {
             }
 
             if (el.classList.contains('full-overlay')) {
-                el.style.overflowY = 'visible'; 
+                // el.style.overflowY = 'visible'; // 👈 不要ッ！CSSで制御するおッ！💅💍
             }
         });
     });

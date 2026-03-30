@@ -740,15 +740,16 @@ input[type="text"]:focus {
 
 .title-content {
     text-align: center;
-    padding: 60px !important;
+    padding: 40px !important;
     max-width: 900px;
     width: 90%;
+    margin: 20px auto; /* 👈 上下のマージンを少し詰めるおッ！💎 */
     animation: popIn 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .main-title {
-    font-size: 5.5rem;
-    margin-bottom: 20px;
+    font-size: 4.5rem;
+    margin-bottom: 15px;
     background: linear-gradient(to right, #ff3399, #cc99ff, #00d2ff);
     -webkit-background-clip: text;
     background-clip: text;
@@ -759,10 +760,10 @@ input[type="text"]:focus {
 }
 
 .subtitle {
-    font-size: 2rem;
+    font-size: 1.8rem;
     font-weight: 800;
     color: #cc6699;
-    margin-bottom: 50px;
+    margin-bottom: 30px;
 }
 
 .tip {
@@ -787,9 +788,27 @@ input[type="text"]:focus {
 }
 
 @media (max-width: 768px), (max-height: 850px) {
-    .main-title { font-size: 3.2rem; }
-    .subtitle { font-size: 1.4rem; margin-bottom: 30px; }
-    .title-content { padding: 30px !important; padding-bottom: 80px !important; }
+    .main-title { font-size: 3rem; }
+    .subtitle { font-size: 1.2rem; margin-bottom: 20px; }
+    .title-content { padding: 25px !important; margin: 10px auto; }
+}
+
+/* 🆕 1366x768 のようなノートPC・小型デスクトップ向け最強設定！💎✨ */
+@media (max-height: 780px) {
+    .full-overlay { overflow: hidden; } /* スクロールバー抹殺ッ！💍 */
+    .main-title { font-size: 2.22rem; margin-bottom: 5px; }
+    .subtitle { font-size: 1rem; margin-bottom: 10px; }
+    .title-content { 
+        padding: 15px !important; 
+        margin: 0 auto !important; 
+        transform: scale(0.88); /* 88%に縮小して1画面に収めるッ！🚀 */
+        transform-origin: top center;
+    }
+    #authFormArea h2 { font-size: 1.5rem !important; margin-bottom: 10px !important; }
+    #authFormArea div { margin: 8px 0 !important; }
+    #authFormArea input { padding: 8px !important; font-size: 0.95rem !important; border-width: 2px !important; height: 38px; }
+    #authSubmitBtn { padding: 10px !important; font-size: 1.2rem !important; margin-top: 8px !important; }
+    #authBackBtn { padding: 8px !important; font-size: 0.9rem !important; margin-top: 5px !important; }
 }
 
 /* 🆕 縦が超狭い時用の最終防衛ライン！💎✨ */
