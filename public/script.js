@@ -199,7 +199,8 @@ function transitionToRoomSelection() {
         socket.emit('get_rooms');
     }, 800);
     
-    addChatMessage('System', 'パーティーへようこそ！次は遊びに行くルームを選んでね💖✨', '#ff66b2');
+    const savedName = localStorage.getItem('galAuthName') || 'かずぅさん';
+    addChatMessage('System', `ウェルカムだお、${savedName}さんッ！💖 今日のバイブスに合うルーム、サクッと選んじゃって！💅🔥`, '#ff66b2');
 }
 
 if (refreshRoomsBtn) {
@@ -1587,6 +1588,7 @@ socket.on('join_success', (data) => {
             updateCategorySelect(myLv); // 🆕 myLv を使うように修正ッ！✨💍
         }
 
+        if (chatBox) chatBox.innerHTML = ''; // 🆕 チャットをクリアして、ルームのバイブスに集中！💎✨
         addChatMessage('System', `${data.roomName} に参加したよ！盛り上がっていこー！✨💍`, '#ff66b2');
     }, 500);
 });
