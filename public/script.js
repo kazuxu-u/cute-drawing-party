@@ -715,6 +715,57 @@ canvas.addEventListener('mousemove', (e) => {
 canvas.addEventListener('mouseup', () => isDrawing = false);
 canvas.addEventListener('mouseout', () => isDrawing = false);
 
+// ✨ タッチ対応！スマホ・タブレット・タッチパネルでもお絵描きできるように！💍🤟💖
+function getTouchPos(touch) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+        x: (touch.clientX - rect.left) * scaleX,
+        y: (touch.clientY - rect.top) * scaleY
+    };
+}
+
+canvas.addEventListener('touchstart', (e) => {
+    if (!canIDraw) return;
+    e.preventDefault(); // スクロール防止！💅
+    saveState();
+    const touch = e.touches[0];
+    const pos = getTouchPos(touch);
+    if (currentSettings.isFill) {
+        const color = currentSettings.color;
+        floodFill(pos.x, pos.y, color);
+        if (!inSoloMode) {
+            socket.emit('fill', { x: pos.x, y: pos.y, color: color });
+        }
+        return;
+    }
+    isDrawing = true;
+    lastX = pos.x; lastY = pos.y;
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+    if (!isDrawing || !canIDraw) return;
+    e.preventDefault(); // スクロール防止！💅
+    const touch = e.touches[0];
+    const pos = getTouchPos(touch);
+    drawLine(lastX, lastY, pos.x, pos.y, currentSettings.color, currentSettings.size, currentSettings.isEraser, currentSettings.isGlow, currentSettings.isRainbow, currentSettings.isHeart);
+    if (!inSoloMode) {
+        socket.emit('draw', {
+            x0: lastX, y0: lastY, x1: pos.x, y1: pos.y,
+            color: currentSettings.color, size: currentSettings.size,
+            isEraser: currentSettings.isEraser,
+            isGlow: currentSettings.isGlow,
+            isRainbow: currentSettings.isRainbow,
+            isHeart: currentSettings.isHeart
+        });
+    }
+    lastX = pos.x; lastY = pos.y;
+}, { passive: false });
+
+canvas.addEventListener('touchend', () => isDrawing = false);
+canvas.addEventListener('touchcancel', () => isDrawing = false);
+
 function setActiveTool(btn) {
     if (penBtn) penBtn.classList.remove('active');
     if (eraserBtn) eraserBtn.classList.remove('active');
